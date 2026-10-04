@@ -1,0 +1,740 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-16",
+  "scope": "Additive patch candidates only. No GoPlan checkout files changed.",
+  "integration": "Match id, replace programs with merged programs, set levelRestriction and supportedStudyLevels, append/deduplicate sourcesToAdd into sources and graduateConstraints into constraints/eligibility. Preserve supplied AUI scheme, term and source metadata. Apply maxHostCredits repair for Concordia.",
+  "selectionRule": "For graduate users require their explicit program code in programs AND verified graduate access. Null levelRestriction alone is not evidence of graduate eligibility.",
+  "fitCaveat": "Program codes are research-fit inferences from official fields, never course equivalences. Institutional access does not prove AUI nomination, open seats, graduate course availability, funding or approval for the planned semester.",
+  "sourceWindowCaveat": "The user list is Spring 2027 only and its stated AUI application window has passed. Host deadlines do not reopen AUI applications.",
+  "patches": [
+    {
+      "id": "technical-university-of-munich-bilateral",
+      "name": "Technical University of Munich",
+      "scheme": "Bilateral",
+      "addPrograms": [
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MBA"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BSGE",
+        "BSRESE",
+        "BSEMS",
+        "BSESS",
+        "BAIS",
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MBA"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The incoming exchange application explicitly requests bachelor results from applicants currently enrolled in a master program.",
+      "graduateFields": [
+        "informatics and software",
+        "data engineering and analytics",
+        "power/energy engineering",
+        "management"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "Master applicants include prior bachelor achievements in the transcript.",
+        "Department nomination and course prerequisites apply; at least 60% of courses must be in the nominated department.",
+        "Confirm department language evidence and semester/exam dates before planning credit transfer."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "TUM incoming exchange: master applicants and department conditions",
+          "url": "https://www.global.tum.de/en/global/exchange-programs-at-tum/",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "TUM MSc Data Engineering and Analytics: subject evidence",
+          "url": "https://www.tum.de/en/studies/degree-programs/detail/data-engineering-and-analytics-master-of-science-msc",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "TUM MSc Power Engineering: subject evidence",
+          "url": "https://www.ed.tum.de/en/ed/studies/degree-programs/power-engineering-m-sc/",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false
+    },
+    {
+      "id": "university-of-eastern-finland-bilateral",
+      "name": "University of Eastern Finland",
+      "scheme": "Bilateral",
+      "addPrograms": [
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MSDMA",
+        "MAISD",
+        "MBA"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BAIS",
+        "BSESS",
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MSDMA",
+        "MAISD",
+        "MBA"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The exchange page explicitly offers English-taught courses and modules at both bachelor and master levels under bilateral and other exchange routes.",
+      "graduateFields": [
+        "information technology",
+        "digital marketing and analytics",
+        "business",
+        "environmental policy and law",
+        "international environmental governance"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "Nomination and suitable prior studies are required; an approved Learning Agreement is not a course-seat guarantee.",
+        "MSSEM and MAISD matches concern energy/environment policy and international governance; confirm relevant master modules with the host.",
+        "Full-degree program pages establish subject fit only, not automatic exchange access to every module."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "UEF exchange studies: bachelor and master levels",
+          "url": "https://www.uef.fi/en/exchange-studies",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UEF MSc Information Technology: subject evidence",
+          "url": "https://www.uef.fi/en/degree-programme/masters-degree-programme-in-information-technology",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UEF Digital Marketing and Analytics: subject evidence",
+          "url": "https://www.uef.fi/en/degree-programme/masters-degree-programme-in-digital-marketing-and-analytics",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UEF Environmental Policy and Law: subject evidence",
+          "url": "https://www.uef.fi/en/degree-programme/masters-degree-programme-in-environmental-policy-and-law",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UEF climate, energy and environmental law teaching",
+          "url": "https://sites.uef.fi/cceel/education/",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UEF international master fields including business",
+          "url": "https://www.uef.fi/en/international-masters-degree-programmes",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false
+    },
+    {
+      "id": "universiti-teknologi-petronas-bilateral",
+      "name": "Universiti Teknologi PETRONAS",
+      "scheme": "Bilateral",
+      "addPrograms": [
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MBA"
+      ],
+      "programs": [
+        "BSCSC",
+        "BSGE",
+        "BSRESE",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MBA"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The incoming exchange eligibility explicitly includes active postgraduate students at their home institution.",
+      "graduateFields": [
+        "applied computing and information technology",
+        "data analytics research",
+        "energy management",
+        "engineering and environmental engineering"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "Incoming exchange requires CGPA at least 2.75 or equivalent, nomination and accepted English evidence.",
+        "Select courses within the home faculty and academic background.",
+        "Data Science and several other master offerings are listed as open/distance learning. Do not promise that online degrees supply in-person exchange modules.",
+        "MSBDA is a computing/data-research fit requiring confirmation of on-campus modules."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "UTP incoming exchange: undergraduate or postgraduate eligibility",
+          "url": "https://www.utp.edu.my/Pages/Students/Mobility%20Files/Inbound-Student-Exchange.aspx",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UTP postgraduate programs and study modes",
+          "url": "https://www.utp.edu.my/Pages/Admission/Home/Postgraduate.aspx",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UTP postgraduate 2025 academic brochure",
+          "url": "https://www.utp.edu.my/sites/Publishing/PublishingContent/Academic/Brochures/2025/PG%40UTP.pdf",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false
+    },
+    {
+      "id": "concordia-university-pel",
+      "name": "Concordia University",
+      "scheme": "PEL",
+      "addPrograms": [
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MSDMA",
+        "MACDM",
+        "MAISD",
+        "MBA"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BSGE",
+        "BSRESE",
+        "BSEMS",
+        "BAIS",
+        "BSESS",
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MSDMA",
+        "MACDM",
+        "MAISD",
+        "MBA"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The supplied PEL route links to Visiting International Fee-Paying study, whose page explicitly provides graduate and MBA credit loads.",
+      "graduateFields": [
+        "software engineering",
+        "computer science and business analytics",
+        "building energy efficiency",
+        "marketing",
+        "media studies",
+        "political science and public policy",
+        "MBA"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "This is fee-paying PEL study. Faculty-specific application and course permissions apply.",
+        "Graduate students normally take at most 9 Concordia credits per semester; MBA students at most 12.",
+        "Fine Arts does not accept this route. Media Studies is in Arts and Science, but individual course access still requires approval."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "Concordia visiting fee-paying route: graduate and MBA loads",
+          "url": "https://www.concordia.ca/international/students-from-abroad/fee-paying.html",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "Concordia graduate fields: software, analytics, energy, marketing, media, politics and MBA",
+          "url": "https://www.concordia.ca/academics/graduate.html",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false,
+      "maxHostCredits": null,
+      "hostCreditsByLevel": {
+        "undergraduate": {
+          "min": 12,
+          "max": 15
+        },
+        "graduate": {
+          "max": 9
+        },
+        "MBA": {
+          "max": 12
+        }
+      },
+      "fieldRepairNote": "Existing maxHostCredits:15 is undergraduate-only. Replace with level-specific values; do not apply 15 to graduate exchange."
+    },
+    {
+      "id": "kedge-business-school-bilateral",
+      "name": "Kedge Business School",
+      "scheme": "Bilateral",
+      "addPrograms": [
+        "MBA",
+        "MSDMA"
+      ],
+      "programs": [
+        "BBA",
+        "BSEMS",
+        "BACS",
+        "MBA",
+        "MSDMA"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The exchange page explicitly places first- and second-year master students in second-year Master in Management courses.",
+      "graduateFields": [
+        "management",
+        "international business",
+        "marketing",
+        "finance"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "Host year, campus and program determine the available course set; graduate incoming students take second-year master courses.",
+        "English/French evidence is required for the chosen instruction language.",
+        "MSDMA fit is marketing-related; the page does not guarantee a complete digital analytics course package."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "KEDGE exchange course access by home master year and campus",
+          "url": "https://student.kedge.edu/exchange-students",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false
+    },
+    {
+      "id": "em-normandie-bilateral",
+      "name": "EM Normandie",
+      "scheme": "Bilateral",
+      "addPrograms": [
+        "MBA"
+      ],
+      "programs": [
+        "BBA",
+        "BSEMS",
+        "BACS",
+        "MBA"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The international exchange page includes the Master in Management program among its incoming study programs.",
+      "graduateFields": [
+        "management",
+        "business"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "Home nomination and B2 proficiency in the instruction language are required.",
+        "Confirm the master year, campus and current exchange course package; a general business match does not prove digital analytics coverage."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "EM Normandie incoming exchange: Master in Management and requirements",
+          "url": "https://www.em-normandie.com/experience-em-normandie/international/programmes-echange",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false
+    },
+    {
+      "id": "iulm-bilateral",
+      "name": "IULM",
+      "scheme": "Bilateral",
+      "addPrograms": [
+        "MACDM",
+        "MSDMA"
+      ],
+      "programs": [
+        "BACS",
+        "BBA",
+        "BAIS",
+        "MACDM",
+        "MSDMA"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The official incoming exchange factsheet explicitly describes access to master courses and restrictions for some second-year master courses.",
+      "graduateFields": [
+        "strategic communication",
+        "marketing and consumer behaviour",
+        "television, cinema and new media"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "Nomination and required English/Italian certification apply.",
+        "Some second-year master courses, capped courses and courses with special prerequisites require Study Abroad Office approval.",
+        "The opened factsheet is 2025-26: recheck the updated term course catalogue and master course restrictions.",
+        "Maximum 30 ECTS per semester in the cited factsheet."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "IULM incoming exchange factsheet 2025-26: master-course access",
+          "url": "https://www.iulm.it/wps/wcm/connect/iulm/7d72dcef-0cec-40ca-906b-7d8ce97f6b2a/I%2BMILANO05%2BFactsheet%2Ba.y.%2B2025-26.pdf?MOD=AJPERES",
+          "primary": true,
+          "checkedAt": "2026-09-16",
+          "page": 8,
+          "sourceAcademicYear": "2025-26"
+        },
+        {
+          "title": "IULM incoming exchange and current master field navigation",
+          "url": "https://www.iulm.it/wps/wcm/connect/iulm/it/internazionale/studenti-internazionali/incoming-students/erasmus-exchange",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false
+    },
+    {
+      "id": "lakehead-university-bilateral",
+      "name": "Lakehead University",
+      "scheme": "Bilateral",
+      "addPrograms": [
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MBA"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BSGE",
+        "BSRESE",
+        "BSEMS",
+        "BSESS",
+        "BAIS",
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MBA"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The partner inbound exchange page explicitly sets out nomination and course requests for graduate students.",
+      "graduateFields": [
+        "computer science",
+        "electrical/computer engineering",
+        "environmental engineering and management",
+        "business administration"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "Contact the inbound coordinator to discuss master-level eligibility before applying.",
+        "Graduate applicants propose up to three courses per semester within their existing degree discipline. Places are limited and courses are not guaranteed.",
+        "Upper-year undergraduate study is an alternative, not a graduate credit guarantee. Students may not mix undergraduate and graduate courses during their stay.",
+        "MSSEM is an environmental/engineering fit; confirm appropriate energy content and AUI credit transfer."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "Lakehead partner incoming exchange: graduate approvals and course limits",
+          "url": "https://www.lakeheadu.ca/international/globalme/inbound/partners",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "Lakehead master fields: computing, engineering, environment, business",
+          "url": "https://www.lakeheadu.ca/admissions/how-to-apply/applying-to-graduate-studies/masters",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false
+    },
+    {
+      "id": "university-of-new-brunswick-bilateral",
+      "name": "University of New Brunswick",
+      "scheme": "Bilateral",
+      "addPrograms": [
+        "MSSE",
+        "MSBDA",
+        "MAISD",
+        "MBA"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BSGE",
+        "BSRESE",
+        "BSEMS",
+        "BSESS",
+        "BAIS",
+        "MSSE",
+        "MSBDA",
+        "MAISD",
+        "MBA"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The visiting-student page explicitly directs graduate-level exchange applicants from partner universities to UNB Global.",
+      "graduateFields": [
+        "computer science and software engineering",
+        "data management and analytics",
+        "political science and international relations",
+        "business administration"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "Contact UNB Global for the partner graduate exchange pathway; the ordinary visiting-student route is separately administered.",
+        "Graduate visiting study requires host faculty and School of Graduate Studies acceptance. Confirm the exact exchange application route with UNB.",
+        "Campus, course permissions and AUI credit approval remain to be established."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "UNB visiting students: explicit graduate partner-exchange contact and approvals",
+          "url": "https://www.unb.ca/global/incoming/visiting-students.html",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UNB graduate computer science and analytics fields",
+          "url": "https://www.unb.ca/gradstudies/programs/computer-science.html",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UNB graduate political science and international relations",
+          "url": "https://www.unb.ca/gradstudies/programs/political-science.html",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "UNB graduate program directory including business administration",
+          "url": "https://www.unb.ca/gradstudies/programs/index.html",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false
+    },
+    {
+      "id": "university-of-essex-bilateral",
+      "name": "University of Essex",
+      "scheme": "Bilateral",
+      "addPrograms": [
+        "MSBDA",
+        "MSDMA",
+        "MACDM",
+        "MAISD"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BAIS",
+        "BSESS",
+        "MSBDA",
+        "MSDMA",
+        "MACDM",
+        "MAISD"
+      ],
+      "levelRestriction": null,
+      "supportedStudyLevels": [
+        "undergraduate",
+        "graduate"
+      ],
+      "graduateAccessVerified": true,
+      "graduateAccessEvidence": "The incoming exchange page explicitly supplies postgraduate entry/language requirements and says modules must suit the student study level.",
+      "graduateFields": [
+        "data science and analytics",
+        "advertising, marketing and media",
+        "international relations"
+      ],
+      "fitIsInference": true,
+      "graduateConstraints": [
+        "Check the module directory with its incoming Essex Abroad filter; all choices require department approval and matching prerequisites.",
+        "Postgraduate requirements differ for full-year and term-only study. Do not reuse undergraduate language thresholds indiscriminately.",
+        "Spring module exams take place in the summer term; account for this in AUI calendar planning.",
+        "Subject pages show field fit; they do not guarantee access to each master module."
+      ],
+      "sourcesToAdd": [
+        {
+          "title": "Essex incoming exchange: postgraduate requirements and module approval",
+          "url": "https://www.essex.ac.uk/international/visiting-students/exchange-programme",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "Essex on-campus data analytics fields",
+          "url": "https://www.essex.ac.uk/subjects/data-analytics",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "Essex sociology: MA Advertising, Marketing and the Media",
+          "url": "https://www.essex.ac.uk/subjects/sociology",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        },
+        {
+          "title": "Essex MA International Relations: subject evidence",
+          "url": "https://www.essex.ac.uk/courses/PG00641/1/MA-International-Relations",
+          "primary": true,
+          "checkedAt": "2026-09-16"
+        }
+      ],
+      "placementConfirmed": false,
+      "availabilityConfirmed": false
+    }
+  ],
+  "coverageByProgram": {
+    "MSSE": [
+      "technical-university-of-munich-bilateral",
+      "university-of-eastern-finland-bilateral",
+      "universiti-teknologi-petronas-bilateral",
+      "concordia-university-pel",
+      "lakehead-university-bilateral",
+      "university-of-new-brunswick-bilateral"
+    ],
+    "MSSEM": [
+      "technical-university-of-munich-bilateral",
+      "university-of-eastern-finland-bilateral",
+      "universiti-teknologi-petronas-bilateral",
+      "concordia-university-pel",
+      "lakehead-university-bilateral"
+    ],
+    "MSBDA": [
+      "technical-university-of-munich-bilateral",
+      "university-of-eastern-finland-bilateral",
+      "universiti-teknologi-petronas-bilateral",
+      "concordia-university-pel",
+      "lakehead-university-bilateral",
+      "university-of-new-brunswick-bilateral",
+      "university-of-essex-bilateral"
+    ],
+    "MSDMA": [
+      "university-of-eastern-finland-bilateral",
+      "concordia-university-pel",
+      "kedge-business-school-bilateral",
+      "iulm-bilateral",
+      "university-of-essex-bilateral"
+    ],
+    "MACDM": [
+      "concordia-university-pel",
+      "iulm-bilateral",
+      "university-of-essex-bilateral"
+    ],
+    "MAISD": [
+      "university-of-eastern-finland-bilateral",
+      "concordia-university-pel",
+      "university-of-new-brunswick-bilateral",
+      "university-of-essex-bilateral"
+    ],
+    "MBA": [
+      "technical-university-of-munich-bilateral",
+      "university-of-eastern-finland-bilateral",
+      "universiti-teknologi-petronas-bilateral",
+      "concordia-university-pel",
+      "kedge-business-school-bilateral",
+      "em-normandie-bilateral",
+      "lakehead-university-bilateral",
+      "university-of-new-brunswick-bilateral"
+    ]
+  },
+  "countsByProgram": {
+    "MSSE": 6,
+    "MSSEM": 5,
+    "MSBDA": 7,
+    "MSDMA": 5,
+    "MACDM": 3,
+    "MAISD": 4,
+    "MBA": 8
+  },
+  "fewerThanFive": {
+    "MACDM": 3,
+    "MAISD": 4
+  },
+  "insufficientCoverageAction": "Return the supported candidates and a short explanation when fewer than five relevant verified records remain. Do not synthesize institutions, relax academic fit, or treat a research backup as a guaranteed safety.",
+  "notPatched": [
+    {
+      "id": "universidad-carlos-3-madrid-pel",
+      "reason": "The checked freemover route is explicitly undergraduate."
+    },
+    {
+      "id": "sciences-po-paris-bilateral",
+      "reason": "Only undergraduate exchange access was checked in the first pass; a graduate school-specific route needs separate verification."
+    },
+    {
+      "id": "university-of-technology-of-troyes-bilateral",
+      "reason": "Master fields exist, but the opened general partner application page alone does not explicitly establish master exchange access."
+    },
+    {
+      "id": "technical-university-of-ostrava-pel",
+      "reason": "Graduate freemover course access was not independently established; source no-SBA restriction must remain."
+    }
+  ],
+  "formatNotes": [
+    "All 186 existing constraints values are arrays of strings; no non-string array items found.",
+    "eligibility and constraints currently duplicate the same base facts. Rendering both creates duplicate text; combine and deduplicate before display.",
+    "Graduate-specific conditions are string arrays, not objects. Use supportedStudyLevels for structured matching and graduateConstraints for explanatory copy.",
+    "levelRestriction:null means the source does not impose a listed restriction; it does not prove graduate access.",
+    "Concordia maxHostCredits:15 is undergraduate-only; use hostCreditsByLevel instead.",
+    "Document sources use doc and paragraph, not url/page. Do not construct broken links or invent document page numbers.",
+    "minimumGpa:null means unverified, not zero or automatically satisfied.",
+    "Preserve PEL vs Bilateral. A university offering graduate fee-paying study is not proof of a tuition-waived exchange seat."
+  ]
+}

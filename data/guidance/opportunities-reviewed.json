@@ -1,0 +1,856 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-14",
+  "scope": "Planning targets only; no applications submitted, placements promised, vacancy availability certified, or course equivalences assigned.",
+  "matchingNote": "Interest tags and program matching are GoPlan editorial inferences from described fields, not institutional endorsements or eligibility decisions.",
+  "internships": [
+    {
+      "id": "orange-morocco",
+      "name": "Orange Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "tags": [
+        "technology",
+        "computing",
+        "cybersecurity",
+        "data",
+        "business",
+        "marketing",
+        "finance",
+        "communication"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "MSSE",
+        "MSBDA",
+        "MBA",
+        "MSDMA"
+      ],
+      "reason": "Orange Morocco explicitly welcomes internship candidates and lists networks, IT, cybersecurity, data, marketing, finance and project management among its fields.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-program",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://orange.jobs/fr/fr/afrique-moyen-orient/maroc",
+      "sources": [
+        {
+          "title": "Orange jobs — Morocco",
+          "url": "https://orange.jobs/fr/fr/afrique-moyen-orient/maroc",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Choose a currently advertised internship whose study level, duration and location fit your AUI internship requirements. A listing here is a research target, not an offer.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    },
+    {
+      "id": "ocp",
+      "name": "OCP Group",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "tags": [
+        "engineering",
+        "environment",
+        "sustainability",
+        "business",
+        "technology",
+        "research",
+        "marketing"
+      ],
+      "programs": [
+        "BSGE",
+        "BSRESE",
+        "BSEMS",
+        "BSESS",
+        "BSCSC",
+        "BBA",
+        "MSSEM",
+        "MBA"
+      ],
+      "reason": "OCP describes internships for different specializations and education levels; its career areas include industry, innovation, digital, and sales and marketing.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-program",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://careers.ocpgroup.ma/en/careers/join-us/how-you-can-join",
+      "sources": [
+        {
+          "title": "OCP — How you can join",
+          "url": "https://careers.ocpgroup.ma/en/careers/join-us/how-you-can-join",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "OCP — Career areas",
+          "url": "https://careers.ocpgroup.ma/en/careers/your-opportunities/career-areas",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Search the current OCP careers portal or its spontaneous-application route. Team, site, academic background and project approval must be confirmed.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    },
+    {
+      "id": "sqli-morocco",
+      "name": "SQLI Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "tags": [
+        "technology",
+        "computing",
+        "software",
+        "data",
+        "business",
+        "digital-marketing"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "MSSE",
+        "MSBDA",
+        "MSDMA"
+      ],
+      "reason": "SQLI Morocco develops digital and e-commerce solutions from Rabat, Oujda and Casablanca. Its 2024 ESG report documents Moroccan intern intake and a PFE training academy.",
+      "fitIsInference": true,
+      "evidenceStatus": "historical-internship-evidence",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://www.sqli.com/int-en/locations/morocco",
+      "sources": [
+        {
+          "title": "SQLI Morocco",
+          "url": "https://www.sqli.com/int-en/locations/morocco",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "SQLI ESG report 2024",
+          "url": "https://www.sqli.com/sites/default/files/2025-08/ESG%20SQLI%20Report%202024%20-%20EN.pdf",
+          "checkedAt": "2026-09-14",
+          "primary": true,
+          "note": "Historical 2024 evidence of internship activity, not a current intake announcement."
+        }
+      ],
+      "caveat": "The internship evidence is historical. Check for a current student/PFE opening and whether its degree level and duration match your AUI placement.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    },
+    {
+      "id": "capgemini-morocco",
+      "name": "Capgemini Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "tags": [
+        "technology",
+        "computing",
+        "software",
+        "data",
+        "ai",
+        "engineering",
+        "business",
+        "consulting"
+      ],
+      "programs": [
+        "BSCSC",
+        "BSGE",
+        "BSEMS",
+        "BBA",
+        "MSSE",
+        "MSBDA",
+        "MBA"
+      ],
+      "reason": "Capgemini has Moroccan offices and recruitment routes for both technology consulting and engineering; its student and graduate page describes early-career paths across business and technology.",
+      "fitIsInference": true,
+      "evidenceStatus": "employer-and-student-route",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://www.capgemini.com/ma-en/contact-us",
+      "sources": [
+        {
+          "title": "Capgemini Morocco — Contact and recruitment",
+          "url": "https://www.capgemini.com/ma-en/contact-us",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "Capgemini — Students and graduates",
+          "url": "https://www.capgemini.com/us-en/careers/career-paths/students-and-graduates/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Moroccan presence and recruitment are verified; an eligible Moroccan internship vacancy is not. The general student page does not establish local program availability.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    },
+    {
+      "id": "renault",
+      "name": "Renault Group / Renault Technologie Maroc",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco",
+        "Europe"
+      ],
+      "tags": [
+        "engineering",
+        "manufacturing",
+        "automation",
+        "ai",
+        "supply-chain",
+        "business",
+        "energy"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSCSC",
+        "BBA",
+        "MSSEM"
+      ],
+      "reason": "Renault offers student internships across its professions. Its recruitment portal has documented a Tangier engineering internship involving industrial engineering, automation and applied AI.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-program",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://www.renaultgroup.com/carrieres-renault/etudiants-et-jeunes-diplomes/",
+      "sources": [
+        {
+          "title": "Renault — Students and recent graduates",
+          "url": "https://www.renaultgroup.com/carrieres-renault/etudiants-et-jeunes-diplomes/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "Renault — Tangier engineering internship example",
+          "url": "https://alliancewd.wd3.myworkdayjobs.com/en-US/renault-group-careers/job/Tanger/Automotive-Engineering---Development--Engineering--STAGIAIRES-F-H_JOBREQ_50259865",
+          "checkedAt": "2026-09-14",
+          "primary": true,
+          "note": "Example retrieved through the official recruitment listing; availability may have ended."
+        }
+      ],
+      "caveat": "The Tangier role is evidence of a relevant host, not a promise of a current vacancy. Check the live posting and local study-level, language and placement-duration conditions.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    },
+    {
+      "id": "schneider",
+      "name": "Schneider Electric",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Global"
+      ],
+      "tags": [
+        "energy",
+        "engineering",
+        "sustainability",
+        "environment",
+        "digital",
+        "supply-chain",
+        "business"
+      ],
+      "programs": [
+        "BSRESE",
+        "BSGE",
+        "BSEMS",
+        "BSESS",
+        "BBA",
+        "MSSEM",
+        "MBA"
+      ],
+      "reason": "Schneider Electric publishes early-career internships and student development in digital skills, sustainability, supply chain, services, and sales and marketing.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-program",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://careers.se.com/early-careers",
+      "sources": [
+        {
+          "title": "Schneider Electric — Early careers",
+          "url": "https://careers.se.com/early-careers",
+          "checkedAt": "2026-09-14",
+          "primary": true,
+          "note": "Official search-index text verified; direct page returned HTTP 403 during review."
+        },
+        {
+          "title": "Schneider Electric — Careers",
+          "url": "https://www.se.com/ww/en/about-us/careers/overview/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Filter live openings by internship and country. A global internship program does not establish an opening in Morocco; local eligibility and travel/work permissions depend on the role.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    },
+    {
+      "id": "microsoft",
+      "name": "Microsoft",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Global"
+      ],
+      "tags": [
+        "technology",
+        "computing",
+        "software",
+        "ai",
+        "data",
+        "business",
+        "product"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "MSSE",
+        "MSBDA",
+        "MBA"
+      ],
+      "reason": "Microsoft publishes university internships for current students across technical and other job families.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-program",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://careers.microsoft.com/v2/global/en/universityinternship",
+      "sources": [
+        {
+          "title": "Microsoft — University internships",
+          "url": "https://careers.microsoft.com/v2/global/en/universityinternship",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "Microsoft — Internship eligibility",
+          "url": "https://careers.microsoft.com/v2/global/en/internship_eligibility",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Check country-specific eligibility and the individual vacancy, including enrollment/return-to-study rules and work authorization. No location, sponsorship or acceptance is promised.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    },
+    {
+      "id": "publicis",
+      "name": "Publicis Groupe",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Europe",
+        "France"
+      ],
+      "tags": [
+        "communication",
+        "media",
+        "creative",
+        "marketing",
+        "business",
+        "data",
+        "strategy"
+      ],
+      "programs": [
+        "BACS",
+        "BBA",
+        "MACDM",
+        "MSDMA",
+        "MBA"
+      ],
+      "reason": "Publicis France has an established student internship and apprenticeship route, with roles across content, creative, media, marketing communications, strategy and data.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-program",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://france.publicisgroupe.com/carrieres/etudiants/?lang=fr",
+      "sources": [
+        {
+          "title": "Publicis France — Students",
+          "url": "https://france.publicisgroupe.com/carrieres/etudiants/?lang=fr",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "This evidence concerns France. Check internship rather than apprenticeship requirements, language, placement agreement, duration and work permission for each posting.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    },
+    {
+      "id": "undp",
+      "name": "United Nations Development Programme (UNDP)",
+      "kind": "international-organization",
+      "type": "internship-target",
+      "regions": [
+        "Global"
+      ],
+      "tags": [
+        "international-studies",
+        "policy",
+        "development",
+        "environment",
+        "sustainability",
+        "communication",
+        "business"
+      ],
+      "programs": [
+        "BAIS",
+        "BSESS",
+        "BACS",
+        "BBA",
+        "MAISD",
+        "MACDM",
+        "MBA"
+      ],
+      "reason": "UNDP advertises development-related internships by program or management area; its fields also include operations, communications, partnerships and monitoring and evaluation.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-program",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://www.undp.org/careers/frequently-asked-questions",
+      "sources": [
+        {
+          "title": "UNDP — Internship FAQ",
+          "url": "https://www.undp.org/careers/frequently-asked-questions",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Usually eligible in the final bachelor year, during a master, or within one year of graduation. Apply only to a published role; language and timing vary. This is an international organization, not a company.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    },
+    {
+      "id": "unicef",
+      "name": "UNICEF",
+      "kind": "international-organization",
+      "type": "internship-target",
+      "regions": [
+        "Global"
+      ],
+      "tags": [
+        "international-studies",
+        "development",
+        "policy",
+        "communication",
+        "social-impact",
+        "business",
+        "data"
+      ],
+      "programs": [
+        "BAIS",
+        "BACS",
+        "BBA",
+        "MAISD",
+        "MACDM",
+        "MSBDA"
+      ],
+      "reason": "UNICEF offers humanitarian-sector internships for students and recent graduates from different academic backgrounds.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-program",
+      "checkedAt": "2026-09-14",
+      "sourceUrl": "https://www.unicef.org/careers/internships",
+      "sources": [
+        {
+          "title": "UNICEF — Internships",
+          "url": "https://www.unicef.org/careers/internships",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Minimum age 18; enrolled in a degree or graduated within two years; language and individual vacancy requirements apply. Typical duration is 6–26 weeks. This is an international organization, not a company.",
+      "placementConfirmed": false,
+      "vacancyConfirmed": false,
+      "auiPartnershipClaimed": false
+    }
+  ],
+  "exchanges": [
+    {
+      "id": "tum",
+      "name": "Technical University of Munich",
+      "type": "exchange-target",
+      "country": "Germany",
+      "regions": [
+        "Europe"
+      ],
+      "tags": [
+        "technology",
+        "computing",
+        "engineering",
+        "business",
+        "energy",
+        "sustainability"
+      ],
+      "reason": "AUI lists TUM in its exchange finder. TUM publishes exchange study routes, with school-specific course and language requirements.",
+      "fitIsInference": true,
+      "checkedAt": "2026-09-14",
+      "evidenceStatus": "aui-listed-partner",
+      "partnerVerified": true,
+      "auiListingUrl": "https://oip-exchange.aui.ma/",
+      "sourceUrl": "https://www.global.tum.de/en/global/exchange-programs-at-tum/",
+      "sources": [
+        {
+          "title": "AUI Office of International Programs — Exchange finder",
+          "url": "https://oip-exchange.aui.ma/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "TUM — Exchange programs",
+          "url": "https://www.global.tum.de/en/global/exchange-programs-at-tum/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "The exchange agreement must cover the intended school. Language evidence varies by department; German and/or English may be required. TUM examination periods may overlap AUI semesters.",
+      "currentSeatConfirmed": false,
+      "courseEquivalenceConfirmed": false,
+      "commonCaveat": "Confirm the active agreement, nomination route, available places and host eligibility with AUI OIP. Obtain AUI school approval for every transferred course before finalizing the exchange term."
+    },
+    {
+      "id": "uc3m",
+      "name": "Universidad Carlos III de Madrid",
+      "type": "exchange-target",
+      "country": "Spain",
+      "regions": [
+        "Europe"
+      ],
+      "tags": [
+        "business",
+        "international-studies",
+        "communication",
+        "engineering",
+        "computing"
+      ],
+      "reason": "UC3M provides an undergraduate exchange course offer across social sciences, humanities and engineering, with restrictions depending on the exchange route.",
+      "fitIsInference": true,
+      "checkedAt": "2026-09-14",
+      "evidenceStatus": "aui-listed-partner",
+      "partnerVerified": true,
+      "auiListingUrl": "https://oip-exchange.aui.ma/",
+      "sourceUrl": "https://www.uc3m.es/studies/international-exchage-students-in-UC3M/bachelor-degrees/course-offer",
+      "sources": [
+        {
+          "title": "AUI Office of International Programs — Exchange finder",
+          "url": "https://oip-exchange.aui.ma/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "UC3M — Exchange course offer",
+          "url": "https://www.uc3m.es/studies/international-exchage-students-in-UC3M/bachelor-degrees/course-offer",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "UC3M — International exchange students",
+          "url": "https://www.uc3m.es/studies/international-exchange-students-in-UC3M-/bachelor-degrees",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Check permitted school, teaching language, prerequisites and timetable. Some courses are restricted; the published limit is 30 ECTS per semester. ECTS are not automatically equal to AUI SCH.",
+      "currentSeatConfirmed": false,
+      "courseEquivalenceConfirmed": false,
+      "commonCaveat": "Confirm the active agreement, nomination route, available places and host eligibility with AUI OIP. Obtain AUI school approval for every transferred course before finalizing the exchange term."
+    },
+    {
+      "id": "uef",
+      "name": "University of Eastern Finland",
+      "type": "exchange-target",
+      "country": "Finland",
+      "regions": [
+        "Europe"
+      ],
+      "tags": [
+        "environment",
+        "sustainability",
+        "international-studies",
+        "business",
+        "computing",
+        "research"
+      ],
+      "reason": "UEF offers English-taught courses to incoming exchange students at bachelor and master levels, primarily in their own field and related disciplines.",
+      "fitIsInference": true,
+      "checkedAt": "2026-09-14",
+      "evidenceStatus": "aui-listed-partner",
+      "partnerVerified": true,
+      "auiListingUrl": "https://oip-exchange.aui.ma/",
+      "sourceUrl": "https://kamu.uef.fi/en/tietopankki/incoming-exchange-students-and-trainees/studying/courses-for-exchange-students/",
+      "sources": [
+        {
+          "title": "AUI Office of International Programs — Exchange finder",
+          "url": "https://oip-exchange.aui.ma/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "UEF — Courses for exchange students",
+          "url": "https://kamu.uef.fi/en/tietopankki/incoming-exchange-students-and-trainees/studying/courses-for-exchange-students/",
+          "checkedAt": "2026-09-14",
+          "primary": true,
+          "note": "Page last modified 2026-05-19; links to 2026–27 course guide."
+        },
+        {
+          "title": "UEF — Exchange studies and application",
+          "url": "https://www.uef.fi/en/exchange-studies",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Choose one campus for face-to-face courses. Check prerequisites, pass/fail transfer acceptance, and registration capacity. An approved learning agreement does not reserve a course seat.",
+      "currentSeatConfirmed": false,
+      "courseEquivalenceConfirmed": false,
+      "commonCaveat": "Confirm the active agreement, nomination route, available places and host eligibility with AUI OIP. Obtain AUI school approval for every transferred course before finalizing the exchange term."
+    },
+    {
+      "id": "vsb-tuo",
+      "name": "VSB – Technical University of Ostrava",
+      "type": "exchange-target",
+      "country": "Czech Republic",
+      "regions": [
+        "Europe"
+      ],
+      "tags": [
+        "engineering",
+        "computing",
+        "business",
+        "energy",
+        "manufacturing"
+      ],
+      "reason": "VSB-TUO publishes English-taught exchange courses and a partner-university exchange route.",
+      "fitIsInference": true,
+      "checkedAt": "2026-09-14",
+      "evidenceStatus": "aui-listed-partner",
+      "partnerVerified": true,
+      "auiListingUrl": "https://oip-exchange.aui.ma/",
+      "sourceUrl": "https://www.vsb.cz/en/study/exchange-students/",
+      "sources": [
+        {
+          "title": "AUI Office of International Programs — Exchange finder",
+          "url": "https://oip-exchange.aui.ma/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "VSB-TUO — Exchange students",
+          "url": "https://www.vsb.cz/en/study/exchange-students/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "VSB-TUO — Exchange programme",
+          "url": "https://www.vsb.cz/en/study/exchange-students/exchange-programme/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Check faculty course availability, prerequisites, language requirements and current application dates. Tuition arrangements depend on the active exchange agreement; living and travel costs remain to be planned.",
+      "currentSeatConfirmed": false,
+      "courseEquivalenceConfirmed": false,
+      "commonCaveat": "Confirm the active agreement, nomination route, available places and host eligibility with AUI OIP. Obtain AUI school approval for every transferred course before finalizing the exchange term."
+    },
+    {
+      "id": "ucsi",
+      "name": "UCSI University",
+      "type": "exchange-target",
+      "country": "Malaysia",
+      "regions": [
+        "Asia"
+      ],
+      "tags": [
+        "business",
+        "communication",
+        "engineering",
+        "computing",
+        "international-experience"
+      ],
+      "reason": "UCSI publishes a student exchange program and explicitly names Al Akhawayn University among its partners.",
+      "fitIsInference": true,
+      "checkedAt": "2026-09-14",
+      "evidenceStatus": "aui-listed-partner",
+      "partnerVerified": true,
+      "auiListingUrl": "https://oip-exchange.aui.ma/",
+      "sourceUrl": "https://www.ucsiuniversity.edu.my/node/5609",
+      "sources": [
+        {
+          "title": "AUI Office of International Programs — Exchange finder",
+          "url": "https://oip-exchange.aui.ma/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "UCSI — Student Exchange Programme",
+          "url": "https://www.ucsiuniversity.edu.my/node/5609",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "The current inbound factsheet and faculty course mapping must be obtained before selecting a term. The general partner list does not establish available places, campus, courses or transfer credit.",
+      "currentSeatConfirmed": false,
+      "courseEquivalenceConfirmed": false,
+      "commonCaveat": "Confirm the active agreement, nomination route, available places and host eligibility with AUI OIP. Obtain AUI school approval for every transferred course before finalizing the exchange term."
+    },
+    {
+      "id": "montana-state",
+      "name": "Montana State University",
+      "type": "exchange-target",
+      "country": "United States",
+      "regions": [
+        "North America"
+      ],
+      "tags": [
+        "engineering",
+        "environment",
+        "computing",
+        "business",
+        "international-experience"
+      ],
+      "reason": "Montana State provides an incoming exchange application route following home-university nomination, with course planning and published academic requirements.",
+      "fitIsInference": true,
+      "checkedAt": "2026-09-14",
+      "evidenceStatus": "aui-listed-partner",
+      "partnerVerified": true,
+      "auiListingUrl": "https://oip-exchange.aui.ma/",
+      "sourceUrl": "https://www.montana.edu/international/studyabroad/incomingexchange/IncomingHowtoApply.html",
+      "sources": [
+        {
+          "title": "AUI Office of International Programs — Exchange finder",
+          "url": "https://oip-exchange.aui.ma/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "Montana State — Incoming exchange application",
+          "url": "https://www.montana.edu/international/studyabroad/incomingexchange/IncomingHowtoApply.html",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "The published GPA is 3.0 for direct exchange and 2.75 for ISEP; AUI OIP must confirm which route applies. English evidence, funds, housing and immigration requirements also apply.",
+      "currentSeatConfirmed": false,
+      "courseEquivalenceConfirmed": false,
+      "commonCaveat": "Confirm the active agreement, nomination route, available places and host eligibility with AUI OIP. Obtain AUI school approval for every transferred course before finalizing the exchange term."
+    },
+    {
+      "id": "pitzer",
+      "name": "Pitzer College",
+      "type": "exchange-target",
+      "country": "United States",
+      "regions": [
+        "North America"
+      ],
+      "tags": [
+        "environment",
+        "international-studies",
+        "communication",
+        "social-impact",
+        "creative"
+      ],
+      "reason": "Pitzer describes exchange study across liberal arts fields with an emphasis on environmental sustainability, intercultural understanding and social responsibility.",
+      "fitIsInference": true,
+      "checkedAt": "2026-09-14",
+      "evidenceStatus": "aui-listed-partner",
+      "partnerVerified": true,
+      "auiListingUrl": "https://oip-exchange.aui.ma/",
+      "sourceUrl": "https://www.pitzer.edu/offices/international-students/exchange-students",
+      "sources": [
+        {
+          "title": "AUI Office of International Programs — Exchange finder",
+          "url": "https://oip-exchange.aui.ma/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "Pitzer — Exchange students",
+          "url": "https://www.pitzer.edu/offices/international-students/exchange-students",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "Pitzer — Approved programs including AUI exchange",
+          "url": "https://www.pitzer.edu/offices/study-abroad/programs/approved-programs",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        }
+      ],
+      "caveat": "Home nomination and host admission are required. Review English requirements and course access with the advisor; Pitzer course-credit units differ from AUI SCH.",
+      "currentSeatConfirmed": false,
+      "courseEquivalenceConfirmed": false,
+      "commonCaveat": "Confirm the active agreement, nomination route, available places and host eligibility with AUI OIP. Obtain AUI school approval for every transferred course before finalizing the exchange term."
+    },
+    {
+      "id": "wvu",
+      "name": "West Virginia University",
+      "type": "exchange-target",
+      "country": "United States",
+      "regions": [
+        "North America"
+      ],
+      "tags": [
+        "international-experience",
+        "computing",
+        "engineering",
+        "business",
+        "communication"
+      ],
+      "reason": "AUI lists West Virginia University; WVU maintains an incoming exchange page with host preparation and orientation information.",
+      "fitIsInference": true,
+      "checkedAt": "2026-09-14",
+      "evidenceStatus": "aui-listed-partner",
+      "partnerVerified": true,
+      "auiListingUrl": "https://oip-exchange.aui.ma/",
+      "sourceUrl": "https://educationabroad.wvu.edu/incoming",
+      "sources": [
+        {
+          "title": "AUI Office of International Programs — Exchange finder",
+          "url": "https://oip-exchange.aui.ma/",
+          "checkedAt": "2026-09-14",
+          "primary": true
+        },
+        {
+          "title": "WVU — Incoming students",
+          "url": "https://educationabroad.wvu.edu/incoming",
+          "checkedAt": "2026-09-14",
+          "primary": true,
+          "note": "Official search-index text verified; direct fetch returned a temporary error."
+        }
+      ],
+      "caveat": "Ask OIP and the host for the current fact sheet, permitted departments, prerequisites, English/GPA conditions and seats. Academic fit is an exploration suggestion, not confirmed equivalence.",
+      "currentSeatConfirmed": false,
+      "courseEquivalenceConfirmed": false,
+      "commonCaveat": "Confirm the active agreement, nomination route, available places and host eligibility with AUI OIP. Obtain AUI school approval for every transferred course before finalizing the exchange term."
+    }
+  ],
+  "exchangePolicy": {
+    "source": {
+      "filename": "aui academic catalogue.pdf",
+      "pdfPage": 85,
+      "edition": "2025–2026"
+    },
+    "summary": "Exchange is generally one semester; study-abroad experiences normally have a one-calendar-year limit. Transfer requires approval by the appropriate AUI school. Criteria differ by program.",
+    "action": "Shortlist a destination now; confirm OIP nomination, active agreement, current offerings and school-approved equivalences before treating exchange courses as degree requirements."
+  },
+  "researchNotes": [
+    "Eight company targets and two separately labeled international organizations cover the represented student interests.",
+    "All eight exchange destinations appear in the official AUI OIP exchange finder as of the review date. UCSI and Pitzer also provide reciprocal AUI evidence.",
+    "Source pages are linked instead of copying full material. Candidate matching is advisory; data can change after the review date.",
+    "No unverified generic institution is presented as an AUI exchange partner."
+  ]
+}

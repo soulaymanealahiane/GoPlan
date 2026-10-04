@@ -1,0 +1,1356 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-14",
+  "catalogEdition": "2025–2026",
+  "scope": "Undergraduate-to-graduate discovery for eight modeled AUI undergraduate programs. Seven existing graduate planners plus separately identified exploration-only AUI targets. Global topics are search starting points with verified official examples.",
+  "matchingMethod": {
+    "type": "Transparent qualitative matching",
+    "instructions": [
+      "Match selected interests to tags and explain the matched subjects in a sentence.",
+      "Use the student’s chosen degree to distinguish documented preparation from broader thematic exploration.",
+      "Let the student compare and choose; do not assign invented percentages or claim admission eligibility.",
+      "Selecting a graduate target never automatically removes undergraduate credits, counts shared courses, adds foundations or changes course codes.",
+      "AUI is the source for academic facts; interest mappings are GoPlan’s stated inference from those facts.",
+      "No global example implies partnership, scholarship, admission, exchange status or current open applications."
+    ]
+  },
+  "policies": [
+    {
+      "id": "general-graduate",
+      "title": "General AUI graduate admission",
+      "text": "A recognized bachelor’s degree or equivalent, adequate preparation and evidence of graduate-study ability are required. A B average in upper-level work is one stated route; other evidence may be considered. The general recommendation for CGPA 3.0 is not a universal automatic cutoff. Program-specific requirements take precedence. GRE/GMAT are encouraged, not generally mandatory.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 32,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 33,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "id": "sse-admission",
+      "title": "SSE admission and foundations",
+      "text": "For AUI BSc applicants, the catalog states as a rule CGPA at least 2.50 and major-area GPA at least 3.00, with transcript, two faculty recommendations and possible interview. Other applicants normally need GPA 3.00 or at least two Assez Bien distinctions/equivalent and may face an interview and placement exam. Program-specific subject requirements still apply. Up to 24 foundation credits may be assigned.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 346,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 347,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "id": "sse-breadth",
+      "title": "Documented SSE breadth preparation",
+      "text": "The catalog identifies BSCSC as satisfying MSSE breadth; BSCSC with AI or Big Data Analytics specialization for MSBDA breadth; and BSEMS, BSGE or BSRESE for MSSEM breadth. This is preparation evidence, not admission, a universal prerequisite waiver or an accelerated-route approval. Graduate course prerequisites must still be satisfied.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 347,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "id": "sse-final-work",
+      "title": "SSE culminating registration",
+      "text": "General SSE policy permits project/thesis registration after at least four courses in the specific program. Program-specific MSSE, MSSEM and MSBDA requirements prescribe 6 credits over two consecutive semesters, with no more than 3 of those credits in Summer and the other 3 in Fall or Spring. The general statement that a project normally takes one semester conflicts with these more specific provisions. Registration codes have inconsistencies and require coordinator confirmation.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 347,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 349,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 351,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 352,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "id": "ssah-foundations",
+      "title": "SSAH research preparation",
+      "text": "Normally a 6-credit SSAH Research Academy is required before degree courses. AUI graduates entering another field may instead need the 3-credit version; AUI graduates continuing in the same field are normally exempt unless away from university at least five years. The admissions committee can require it after individual assessment. These foundation credits are outside the master’s degree total.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 324,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 328,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 332,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 336,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 340,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "id": "language",
+      "title": "Graduate English requirements vary by program",
+      "text": "The general policy uses TOEFL 550/equivalent for regular study and 450/equivalent for Language Center entry. MACDM/MAISD program provisions instead specify 500–549 for their Language Center route, plus detailed writing/iBT equivalents. Do not calculate admission using a single university-wide English threshold.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 32,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 323,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 327,
+          "edition": "2025–2026"
+        }
+      ]
+    }
+  ],
+  "auiMasters": [
+    {
+      "id": "MSSE",
+      "name": "Master of Science in Software Engineering",
+      "interestTags": [
+        "software",
+        "technology",
+        "product",
+        "design",
+        "entrepreneurship"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 347,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 349,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 350,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Bachelor’s in computer science or a closely related discipline; standard SSE admission and foundation requirements apply.",
+      "degreeCredits": 30,
+      "plannerSupported": true,
+      "notes": [
+        "24 coursework credits + 6 thesis/project credits.",
+        "Cloud and Edge Computing is CSC 5373 in the degree table but CSC 5374 in the course description and supplied sheet."
+      ],
+      "documentedBreadthDegrees": [
+        "BSCSC"
+      ],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MSBDA",
+      "name": "Master of Science in Big Data Analytics",
+      "interestTags": [
+        "ai",
+        "data",
+        "software",
+        "research",
+        "technology"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 347,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 351,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 352,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Engineering graduates; bachelor’s in CS, data science or related disciplines; mathematics with a CS minor; or BA graduates with a CS minor. The catalog’s wording “BA graduates” should be confirmed for an individual BBA or other degree.",
+      "degreeCredits": 30,
+      "plannerSupported": true,
+      "notes": [
+        "18 core + 6 approved elective + 6 thesis/project credits.",
+        "A CS minor alone does not establish every course prerequisite or admission eligibility."
+      ],
+      "documentedBreadthDegrees": [
+        "BSCSC:AI",
+        "BSCSC:BDA"
+      ],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MSSEM",
+      "name": "Master of Science in Sustainable Energy Management",
+      "interestTags": [
+        "energy",
+        "sustainability",
+        "engineering",
+        "management",
+        "climate"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 347,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 350,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 351,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Bachelor’s in engineering; formal selection considers English, GPA, capstone and possible experience/interview. Up to 24 foundation credits may be assigned.",
+      "degreeCredits": 30,
+      "plannerSupported": true,
+      "notes": [
+        "24 coursework + 6 thesis/project credits.",
+        "Environmental Studies and Sustainability is not automatically treated as an engineering bachelor for admission."
+      ],
+      "documentedBreadthDegrees": [
+        "BSEMS",
+        "BSGE",
+        "BSRESE"
+      ],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MBA",
+      "name": "Master of Business Administration",
+      "interestTags": [
+        "business",
+        "entrepreneurship",
+        "finance",
+        "management",
+        "marketing",
+        "operations"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 302,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 303,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 304,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 305,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 308,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Bachelor’s/equivalent with minimum B standing; complete application and interview. Non-business entrants or students missing prerequisites may need foundation courses.",
+      "degreeCredits": 36,
+      "plannerSupported": true,
+      "notes": [
+        "Concentrations depend on enrollment and market opportunities; they are not guaranteed every semester.",
+        "Choose a coherent concentration and a thesis, coursework or internship route. The internship is at least six months full time after coursework.",
+        "Up to 12 foundation credits may be additional to the degree."
+      ],
+      "documentedBreadthDegrees": [],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MSDMA",
+      "name": "Master of Science in Digital Marketing and Analytics",
+      "interestTags": [
+        "marketing",
+        "data",
+        "business",
+        "media",
+        "design"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 316,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 317,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Bachelor’s/equivalent with minimum B standing, some professional experience, interview, application and applicable English evidence. GMAT is highly recommended.",
+      "degreeCredits": 30,
+      "plannerSupported": true,
+      "notes": [
+        "Eight core courses and two electives: 30 degree credits. Up to 12 business foundation credits may be additional.",
+        "The exit section says minimum B in every course; the structure section says repeat below B−. Confirm the governing threshold."
+      ],
+      "documentedBreadthDegrees": [],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MACDM",
+      "name": "Master of Arts in Communication and Digital Media",
+      "interestTags": [
+        "media",
+        "design",
+        "communication",
+        "marketing",
+        "research"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 323,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 324,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 325,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 326,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Formal selection and possible oral interview; AUI candidates need CGPA at least 3.00. Program English, writing and possible SSAHRA preparation requirements apply.",
+      "degreeCredits": 30,
+      "plannerSupported": true,
+      "notes": [
+        "15 required + 15 optional credits, with thesis seminar or applied practicum.",
+        "Thesis II immediately follows Thesis I in Summer; thesis courses must be completed at AUI. The practicum route has separate last-semester/final-project wording."
+      ],
+      "documentedBreadthDegrees": [],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MAISD",
+      "name": "Master of Arts in International Studies and Diplomacy",
+      "interestTags": [
+        "international",
+        "policy",
+        "diplomacy",
+        "research",
+        "society"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 327,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 328,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 329,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 330,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Formal selection and possible oral interview; AUI candidates need CGPA at least 3.00. Program English, writing and possible SSAHRA preparation requirements apply.",
+      "degreeCredits": 30,
+      "plannerSupported": true,
+      "notes": [
+        "Standalone degree: 18 core + 12 optional credits.",
+        "The combined BAIS route instead lists 15 core + 15 optional graduate credits; do not silently substitute the standalone curriculum."
+      ],
+      "documentedBreadthDegrees": [],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MSCSEC",
+      "name": "Master of Science in Cybersecurity",
+      "interestTags": [
+        "cybersecurity",
+        "software",
+        "technology",
+        "governance"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 346,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 347,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 353,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Bachelor’s in computer science or equivalent, with a solid cybersecurity foundation. The catalog identifies BSCSC Cybersecurity specialization as one way to develop that foundation.",
+      "degreeCredits": 30,
+      "plannerSupported": false,
+      "notes": [
+        "Exploration target: a full verified semester roadmap has not been implemented.",
+        "30 credits comprise 21 core, 3 special topics and 6 project/thesis. No approved combined BSCSC/MSCSEC pairing is listed on p348."
+      ],
+      "documentedBreadthDegrees": [],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "NAMES",
+      "name": "Master of Arts in North African and Middle Eastern Studies",
+      "interestTags": [
+        "international",
+        "policy",
+        "society",
+        "history",
+        "culture",
+        "research"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 331,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 332,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 333,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 334,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "BA degree with GPA 3.0 or equivalent; program-specific English and SSAHRA conditions apply. The program welcomes several social-science and humanities backgrounds.",
+      "degreeCredits": 30,
+      "plannerSupported": false,
+      "notes": [
+        "Exploration target; 18 required + 12 optional degree credits.",
+        "BAIS–NAMES combined route is described separately on p344."
+      ],
+      "documentedBreadthDegrees": [],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MSGDP",
+      "name": "Master of Science in Governance, Development and Public Policy",
+      "interestTags": [
+        "policy",
+        "sustainability",
+        "international",
+        "society",
+        "management"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 335,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 336,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 337,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Formal selection and possible oral interview; AUI candidates need CGPA at least 3.00. Program-specific English and SSAHRA requirements apply.",
+      "degreeCredits": 31,
+      "plannerSupported": false,
+      "notes": [
+        "Exploration target; 22 required + 9 optional credits and a field-based final project."
+      ],
+      "documentedBreadthDegrees": [],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MSHRD",
+      "name": "Master of Science in Human Resource Development",
+      "interestTags": [
+        "people",
+        "leadership",
+        "management",
+        "society",
+        "business"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 338,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 339,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 340,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 341,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Formal selection and possible oral interview; AUI candidates need CGPA at least 3.00. Program-specific English and SSAHRA requirements apply.",
+      "degreeCredits": 30,
+      "plannerSupported": false,
+      "notes": [
+        "Exploration target; 24 required + 6 optional credits, including thesis research methods and thesis seminar."
+      ],
+      "documentedBreadthDegrees": [],
+      "eligibilityStatus": "Requires admissions review"
+    },
+    {
+      "id": "MSFinTech",
+      "name": "Master of Science in Financial Technology",
+      "interestTags": [
+        "finance",
+        "technology",
+        "data",
+        "business"
+      ],
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 346,
+          "edition": "2025–2026"
+        }
+      ],
+      "admissionSummary": "Listed among SSE graduate programs. A complete program-specific admissions and curriculum description was not verified in this extraction; ask AUI about current intake and requirements.",
+      "degreeCredits": null,
+      "plannerSupported": false,
+      "notes": [
+        "Listing-only exploration target. Do not create an automatic course plan or eligibility claim from this listing."
+      ],
+      "documentedBreadthDegrees": [],
+      "eligibilityStatus": "Requires admissions review"
+    }
+  ],
+  "undergraduatePathways": {
+    "BSCSC": {
+      "documentedPreparation": [
+        "MSSE"
+      ],
+      "conditionalDocumentedPreparation": [
+        {
+          "master": "MSBDA",
+          "condition": "AI or BDA specialization satisfies the named breadth pathway; other specializations need review."
+        },
+        {
+          "master": "MSCSEC",
+          "condition": "Cybersecurity specialization provides the stated cybersecurity foundation."
+        }
+      ],
+      "thematicExploration": [
+        "MBA",
+        "MSFinTech"
+      ],
+      "combinedRoutes": [
+        "bscsc-msse",
+        "bscsc-msbda",
+        "accelerated-mba"
+      ]
+    },
+    "BBA": {
+      "documentedPreparation": [],
+      "thematicExploration": [
+        "MBA",
+        "MSDMA",
+        "MSHRD",
+        "MSFinTech"
+      ],
+      "conditionalExploration": [
+        {
+          "master": "MSBDA",
+          "condition": "CS minor and committee confirmation of how the catalog’s BA wording applies."
+        }
+      ],
+      "combinedRoutes": [
+        "accelerated-mba"
+      ]
+    },
+    "BACS": {
+      "documentedPreparation": [],
+      "thematicExploration": [
+        "MACDM",
+        "MSDMA",
+        "MBA",
+        "MSHRD"
+      ],
+      "conditionalExploration": [
+        {
+          "master": "MSBDA",
+          "condition": "CS minor and adequate subject prerequisites."
+        }
+      ],
+      "combinedRoutes": [
+        "accelerated-mba"
+      ]
+    },
+    "BAIS": {
+      "documentedPreparation": [],
+      "thematicExploration": [
+        "MAISD",
+        "NAMES",
+        "MSGDP",
+        "MBA"
+      ],
+      "conditionalExploration": [
+        {
+          "master": "MSBDA",
+          "condition": "CS minor and adequate subject prerequisites."
+        }
+      ],
+      "combinedRoutes": [
+        "bais-maisd",
+        "bais-names",
+        "accelerated-mba"
+      ]
+    },
+    "BSESS": {
+      "documentedPreparation": [],
+      "thematicExploration": [
+        "MSGDP",
+        "MBA",
+        "MSDMA"
+      ],
+      "notAutomaticallyQualified": [
+        {
+          "master": "MSSEM",
+          "reason": "Program-specific admission calls for an engineering bachelor; environmental subject overlap alone is insufficient."
+        }
+      ],
+      "combinedRoutes": [
+        "accelerated-mba"
+      ]
+    },
+    "BSGE": {
+      "documentedPreparation": [
+        "MSSEM"
+      ],
+      "thematicExploration": [
+        "MBA",
+        "MSBDA"
+      ],
+      "combinedRoutes": [
+        "engineering-mssem",
+        "accelerated-mba"
+      ]
+    },
+    "BSRESE": {
+      "documentedPreparation": [
+        "MSSEM"
+      ],
+      "thematicExploration": [
+        "MBA",
+        "MSBDA"
+      ],
+      "combinedRoutes": [
+        "engineering-mssem",
+        "accelerated-mba"
+      ]
+    },
+    "BSEMS": {
+      "documentedPreparation": [
+        "MSSEM"
+      ],
+      "thematicExploration": [
+        "MBA",
+        "MSBDA",
+        "MSHRD"
+      ],
+      "combinedRoutes": [
+        "engineering-mssem",
+        "accelerated-mba"
+      ]
+    }
+  },
+  "combinedRoutes": [
+    {
+      "id": "bscsc-msse",
+      "name": "Combined BSCSC–MSSE",
+      "undergraduatePrograms": [
+        "BSCSC"
+      ],
+      "graduateProgram": "MSSE",
+      "requiredTracks": [],
+      "route": "SSE combined BS/MS",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 348,
+          "edition": "2025–2026"
+        }
+      ],
+      "constraints": [
+        "Select an approved combination and obtain admission.",
+        "Direct Fast-Track entry may apply with Mention Bien/equivalent and fewer than 48 accumulated credits.",
+        "In-study applicants need 48–129 completed credits, including at least 9 in the relevant major area (or 6 in each if more than one), CGPA ≥2.5, major-area GPA ≥3.0, faculty recommendations and available space.",
+        "Maintain CGPA ≥2.5 and at least B− in all undergraduate and graduate courses in the major area.",
+        "The approved combined plan waives the undergraduate capstone and up to 6 free-elective credits; apply waivers only after the individual route is confirmed.",
+        "Graduate requirements, foundations and prerequisites still apply."
+      ],
+      "automaticCreditWaiver": false
+    },
+    {
+      "id": "bscsc-msbda",
+      "name": "Combined BSCSC–MSBDA",
+      "undergraduatePrograms": [
+        "BSCSC"
+      ],
+      "graduateProgram": "MSBDA",
+      "requiredTracks": [
+        "AI",
+        "BDA"
+      ],
+      "route": "SSE combined BS/MS",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 348,
+          "edition": "2025–2026"
+        }
+      ],
+      "sameAdmissionConditionsAs": "bscsc-msse",
+      "constraints": [
+        "BSCSC specialization must be Artificial Intelligence or Big Data Analytics.",
+        "BSCCBDA–MSBDA is also listed but BSCCBDA is not one of the eight currently modeled undergraduate programs."
+      ],
+      "automaticCreditWaiver": false
+    },
+    {
+      "id": "engineering-mssem",
+      "name": "Combined engineering bachelor–MSSEM",
+      "undergraduatePrograms": [
+        "BSEMS",
+        "BSGE",
+        "BSRESE"
+      ],
+      "graduateProgram": "MSSEM",
+      "requiredTracks": [],
+      "route": "SSE combined BS/MS",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 348,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 349,
+          "edition": "2025–2026"
+        }
+      ],
+      "sameAdmissionConditionsAs": "bscsc-msse",
+      "constraints": [
+        "The approved-pairing text covers engineering or engineering-and-management bachelors.",
+        "The specific Fast-Track structure covers BSEMS, BSGE and BSRESE and counts 12 MSSEM credits toward undergraduate thematic requirements and the graduate degree.",
+        "BSGE must also take EGR 3392 for the remaining thematic credits; BSRESE uses EGR 3392 as a free elective.",
+        "Specific Fast-Track retention: CGPA ≥2.5, major CGPA ≥3.0 and at least B− in graduate coursework.",
+        "The p349 specific route invokes requirements 1, 3 and 4 of p348, not its generic requirement 2. Do not automatically combine 12-credit sharing with the generic capstone/free-elective waiver."
+      ],
+      "automaticCreditWaiver": false
+    },
+    {
+      "id": "bais-maisd",
+      "name": "Combined BAIS–MAISD",
+      "undergraduatePrograms": [
+        "BAIS"
+      ],
+      "graduateProgram": "MAISD",
+      "requiredTracks": [],
+      "route": "Combined BA/MA",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 164,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 342,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 343,
+          "edition": "2025–2026"
+        }
+      ],
+      "constraints": [
+        "At least 60 completed credits and CGPA ≥3.00, plus declaration of intent/admission.",
+        "Maintain CGPA ≥3.00; one probation semester is described before removal for a continued shortfall.",
+        "Approved students retain the undergraduate internship, complete graduate thesis/policy work, and are exempt from the undergraduate senior capstone. SSAHRA/foundation wording differs between pp342–343.",
+        "The combined graduate table uses 15 required + 15 optional credits, unlike the standalone MAISD table.",
+        "Catalog p342 says 148 combined credits; p164 says 150. Obtain the governing combined plan before fixing a total or waivers."
+      ],
+      "automaticCreditWaiver": false
+    },
+    {
+      "id": "bais-names",
+      "name": "Combined BAIS–NAMES",
+      "undergraduatePrograms": [
+        "BAIS"
+      ],
+      "graduateProgram": "NAMES",
+      "requiredTracks": [],
+      "route": "Combined BA/MA",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 344,
+          "edition": "2025–2026"
+        }
+      ],
+      "constraints": [
+        "At least 60 completed credits, CGPA ≥3.00 and declaration/admission.",
+        "Maintain CGPA ≥3.00; one probation semester is described before removal for a continued shortfall.",
+        "Catalog states 148 combined credits, capstone exemption, retained undergraduate internship and graduate thesis.",
+        "Complete the applicable foundations during BAIS; this route is an exploration target, with no automated combined roadmap."
+      ],
+      "automaticCreditWaiver": false
+    },
+    {
+      "id": "accelerated-mba",
+      "name": "Accelerated Bachelor–MBA",
+      "undergraduatePrograms": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BAIS",
+        "BSESS",
+        "BSGE",
+        "BSRESE",
+        "BSEMS"
+      ],
+      "graduateProgram": "MBA",
+      "requiredTracks": [],
+      "route": "A-MBA",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 312,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 313,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 314,
+          "edition": "2025–2026"
+        }
+      ],
+      "constraints": [
+        "Declare Accelerated Bachelor/MBA and use the required course-registration form signed by the SBA Graduate Programs Director.",
+        "Meet prerequisites and remain in good standing; individual pathway and foundation review is required.",
+        "Up to 9 MBA credits may count as undergraduate electives depending on the undergraduate program; at most 12 MBA core credits may be taken while in undergraduate status.",
+        "The operative course/residency rule on p313 specifies eligible MBA core courses, despite broader introductory language on p312.",
+        "MBA courses under this route must be taken at AUI, not on exchange.",
+        "After transition to MBA status, complete at least one year / 24 credits as an MBA student on campus.",
+        "Minimum B− (80%) for MBA credit and C (70%) for undergraduate elective credit.",
+        "Undergraduate elective registrations use XXX 3398 coding and formal later MBA equivalency; do not substitute a normal graduate-code elective without approval.",
+        "Additional graduate-coded credits have different aid/registration conditions."
+      ],
+      "automaticCreditWaiver": false,
+      "pathwayTable": [
+        {
+          "program": "BBA",
+          "condition": "BBA",
+          "undergraduateUse": "9 MBA credits as electives",
+          "additional": "3 additional MBA credits"
+        },
+        {
+          "program": "BSCSC",
+          "condition": "Business minor",
+          "undergraduateUse": "6 MBA credits as electives",
+          "additional": "6 additional MBA credits"
+        },
+        {
+          "program": "BSCSC",
+          "condition": "Other minors",
+          "undergraduateUse": "6 foundation credits as electives",
+          "additional": "Up to 12 additional MBA credits"
+        },
+        {
+          "program": "BSEMS",
+          "condition": "Finance or other thematic areas",
+          "undergraduateUse": "6 MBA credits as electives",
+          "additional": "6 additional MBA credits"
+        },
+        {
+          "program": "BSGE",
+          "condition": "BSGE",
+          "undergraduateUse": "6 foundation credits as electives",
+          "additional": "Up to 12 additional MBA credits"
+        },
+        {
+          "program": "BSRESE",
+          "condition": "Other minors, as labeled in the table",
+          "undergraduateUse": "6 foundation credits as electives",
+          "additional": "Up to 12 additional MBA credits"
+        },
+        {
+          "program": "BAIS",
+          "condition": "Business minor",
+          "undergraduateUse": "9 MBA credits as electives",
+          "additional": "3 additional MBA credits"
+        },
+        {
+          "program": "BACS",
+          "condition": "Business minor",
+          "undergraduateUse": "9 MBA credits as electives",
+          "additional": "3 additional MBA credits plus Advanced Quantitative Methods foundation"
+        },
+        {
+          "program": "BSESS",
+          "condition": "Business minor",
+          "undergraduateUse": "9 MBA credits as electives",
+          "additional": "3 additional MBA credits plus Advanced Quantitative Methods foundation"
+        },
+        {
+          "program": "BAIS",
+          "condition": "Other minors",
+          "undergraduateUse": "9 foundation credits as electives",
+          "additional": "Up to 12 additional MBA credits"
+        },
+        {
+          "program": "BACS",
+          "condition": "Other minors",
+          "undergraduateUse": "9 foundation credits as electives",
+          "additional": "Up to 12 additional MBA credits"
+        },
+        {
+          "program": "BSESS",
+          "condition": "Other minors",
+          "undergraduateUse": "9 foundation credits as electives",
+          "additional": "Up to 12 additional MBA credits"
+        }
+      ]
+    }
+  ],
+  "globalTopics": [
+    {
+      "id": "ai-data",
+      "topic": "Artificial intelligence and machine learning",
+      "interestTags": [
+        "ai",
+        "data",
+        "software",
+        "research"
+      ],
+      "suggestedSearch": "MSc artificial intelligence machine learning computer science research",
+      "matchType": "Qualitative topic suggestion, not admission prediction",
+      "example": {
+        "university": "Imperial College London",
+        "program": "MSc Computing (Artificial Intelligence and Machine Learning)",
+        "url": "https://www.imperial.ac.uk/study/courses/postgraduate-taught/computing-artificial-intelligence-msc/",
+        "verifiedAt": "2026-09-14",
+        "whyRelevant": "An advanced computing route focused on AI techniques and applications.",
+        "checkBeforeApplying": "Requires a substantial computing background. Imperial’s separate MSc Artificial Intelligence is a conversion degree and is not the interchangeable choice for a CS graduate."
+      }
+    },
+    {
+      "id": "advanced-computing",
+      "topic": "Advanced computer science and dependable software",
+      "interestTags": [
+        "software",
+        "cybersecurity",
+        "technology",
+        "research"
+      ],
+      "suggestedSearch": "MSc advanced computer science software verification security",
+      "matchType": "Qualitative topic suggestion, not admission prediction",
+      "example": {
+        "university": "University of Oxford",
+        "program": "MSc in Advanced Computer Science",
+        "url": "https://www.ox.ac.uk/admissions/graduate/courses/msc-advanced-computer-science",
+        "verifiedAt": "2026-09-14",
+        "whyRelevant": "Combines advanced computing theory and practice, including security and formal verification.",
+        "checkBeforeApplying": "Check the current entry year, CS/mathematics preparation, international grade equivalence and English requirements."
+      }
+    },
+    {
+      "id": "sustainable-energy",
+      "topic": "Sustainable energy engineering and energy systems",
+      "interestTags": [
+        "energy",
+        "engineering",
+        "sustainability",
+        "climate"
+      ],
+      "suggestedSearch": "MSc sustainable energy engineering energy systems",
+      "matchType": "Qualitative topic suggestion, not admission prediction",
+      "example": {
+        "university": "KTH Royal Institute of Technology",
+        "program": "MSc Sustainable Energy Engineering",
+        "url": "https://www.kth.se/studies/master/sustainable-energy-engineering/",
+        "verifiedAt": "2026-09-14",
+        "whyRelevant": "Studies energy conversion, supply and use alongside environmental and economic considerations.",
+        "checkBeforeApplying": "Review the specific engineering and mathematics prerequisites; an environmental interest is not equivalent to engineering preparation."
+      }
+    },
+    {
+      "id": "environment-policy",
+      "topic": "Environmental management and policy",
+      "interestTags": [
+        "sustainability",
+        "climate",
+        "policy",
+        "society",
+        "business"
+      ],
+      "suggestedSearch": "masters environmental management policy sustainability",
+      "matchType": "Qualitative topic suggestion, not admission prediction",
+      "example": {
+        "university": "Lund University",
+        "program": "Environmental Management and Policy – Master’s Programme",
+        "url": "https://www.lunduniversity.lu.se/study/environmental-management-and-policy-masters-programme-XAMIS",
+        "verifiedAt": "2026-09-14",
+        "whyRelevant": "Combines environmental policy with organizational and business approaches to environmental problems.",
+        "checkBeforeApplying": "Compare entry requirements, subject preparation and current intake details on the university page."
+      }
+    },
+    {
+      "id": "entrepreneurship",
+      "topic": "Entrepreneurship and venture development",
+      "interestTags": [
+        "entrepreneurship",
+        "business",
+        "product",
+        "management"
+      ],
+      "suggestedSearch": "MSc entrepreneurship venture development innovation",
+      "matchType": "Qualitative topic suggestion, not admission prediction",
+      "example": {
+        "university": "University College London",
+        "program": "Entrepreneurship MSc",
+        "url": "https://www.ucl.ac.uk/prospective-students/graduate/taught-degrees/entrepreneurship-msc",
+        "verifiedAt": "2026-09-14",
+        "whyRelevant": "Emphasizes developing and scaling ventures through customer discovery, prototyping and pitching.",
+        "checkBeforeApplying": "The program expects evidence of entrepreneurial activity, alongside academic requirements; aspiration alone is insufficient."
+      }
+    },
+    {
+      "id": "marketing-analytics",
+      "topic": "Strategic marketing and marketing analytics",
+      "interestTags": [
+        "marketing",
+        "data",
+        "business",
+        "media"
+      ],
+      "suggestedSearch": "MSc strategic marketing analytics digital marketing",
+      "matchType": "Qualitative topic suggestion, not admission prediction",
+      "example": {
+        "university": "Imperial College London",
+        "program": "MSc Strategic Marketing",
+        "url": "https://www.imperial.ac.uk/study/courses/postgraduate-taught/strategic-marketing/",
+        "verifiedAt": "2026-09-14",
+        "whyRelevant": "Connects marketing fundamentals, technology and data-informed business decisions.",
+        "checkBeforeApplying": "Check the accepted undergraduate backgrounds, current intake and program format; this example is the full-time course."
+      }
+    },
+    {
+      "id": "media-society",
+      "topic": "Media, communications and digital society",
+      "interestTags": [
+        "media",
+        "communication",
+        "design",
+        "society",
+        "policy"
+      ],
+      "suggestedSearch": "MSc media communications digital society",
+      "matchType": "Qualitative topic suggestion, not admission prediction",
+      "example": {
+        "university": "London School of Economics and Political Science",
+        "program": "MSc Media and Communications",
+        "url": "https://www.lse.ac.uk/study-at-lse/graduate/msc-media-and-communications",
+        "verifiedAt": "2026-09-14",
+        "whyRelevant": "Examines media and communications through social science, theory and research methods.",
+        "checkBeforeApplying": "Entry normally requires social-science preparation, or another degree plus relevant professional experience; review the current requirements."
+      }
+    },
+    {
+      "id": "governance-diplomacy",
+      "topic": "International governance, diplomacy and public policy",
+      "interestTags": [
+        "international",
+        "diplomacy",
+        "policy",
+        "society"
+      ],
+      "suggestedSearch": "masters international governance diplomacy public policy",
+      "matchType": "Qualitative topic suggestion, not admission prediction",
+      "example": {
+        "university": "Sciences Po",
+        "program": "Master in International Governance and Diplomacy",
+        "url": "https://www.sciencespo.fr/psia/academics/masters/master-international-governance-diplomacy/",
+        "verifiedAt": "2026-09-14",
+        "whyRelevant": "Integrates diplomacy with governance, policy analysis, economics, law and management.",
+        "checkBeforeApplying": "Use the official admissions route for your prior qualification and verify language, funding and current application dates."
+      }
+    }
+  ],
+  "auditCorrections": [
+    {
+      "severity": "high",
+      "location": "GoPlan/scripts/graduate-data.py: finaltracks",
+      "problem": "Requiring every core course before first thesis/project registration is unsupported and can unnecessarily delay the plan.",
+      "correction": "Use the catalog p347 minimum of four successfully completed courses in that specific program, together with individual prerequisites/permission; retain the program-specific two-consecutive-semester requirement.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 347,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 349,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 351,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 352,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "severity": "high",
+      "location": "GoPlan/dist/planner.js: coursesFor unrestricted choices",
+      "problem": "A choice with an empty options array currently accepts almost any known catalog course. An undergraduate minor/free-elective slot can thereby accept a graduate course without its formal route or satisfy a constrained requirement with an unrelated course.",
+      "correction": "Enforce category, level, minor membership and approved-route constraints. Separate an unverified proposed substitution from a valid resolved requirement. Keep unresolved status until approval is recorded for a non-listed choice.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 312,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 313,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "severity": "high",
+      "location": "GoPlan/scripts/build-data.py: CSC3308 rule",
+      "problem": "The reviewed rule checks a programming alternative but drops the statistics alternative from the source prerequisite.",
+      "correction": "Represent (CSC1402 OR CSC1401 OR BAI3301) AND (EGR3393 OR GBU2301); retain review for individual program equivalencies.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 219,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "severity": "medium",
+      "location": "GoPlan/scripts/graduate-data.py: MACDM/MAISD final requirement timing",
+      "problem": "The shared thesis/practicum choice imposes the thesis-specific immediate-following-semester rule before the route has been selected.",
+      "correction": "Attach immediate SSC5302 predecessor/residency rules to actual thesis selections COM5391 or SSC5310. Apply documented last-semester/final-project rules to practicum separately and flag unresolved timing rather than inventing the same prerequisite.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 326,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 330,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "severity": "medium",
+      "location": "GoPlan/scripts/build-data.py: MBA options",
+      "problem": "Pooling all concentration courses into one list is not enough to certify a coherent MBA concentration. Existing review text helps but a guided recommendation must not present any arbitrary three/four courses as a completed concentration.",
+      "correction": "Group exact course options by the chosen concentration or label the set as a proposed course collection requiring coordinator confirmation.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 302,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 305,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 306,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 307,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 308,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "severity": "medium",
+      "location": "Program selection / guided discovery",
+      "problem": "The current seven graduate roadmaps are not the complete AUI graduate catalog. Hiding all other choices can imply nonexistence.",
+      "correction": "Use “programs currently supported by the planner” and expose separately sourced exploration targets for MSCSEC, NAMES, MSGDP, MSHRD and MSFinTech, without pretending their roadmaps have been implemented.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 331,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 335,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 338,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 346,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 353,
+          "edition": "2025–2026"
+        }
+      ]
+    },
+    {
+      "severity": "medium",
+      "location": "Recommendation claims",
+      "problem": "Interest tags and UG-to-master thematic connections are recommendations inferred from curriculum content, not official AUI admission or career-outcome rules.",
+      "correction": "Show the matched interest and supporting subject matter in plain language. Keep admissions conditions, approved combined pairings and course-credit waivers separate. Avoid percentage-fit scores or automatic eligibility badges.",
+      "sources": [
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 32,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 33,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 347,
+          "edition": "2025–2026"
+        },
+        {
+          "file": "aui academic catalogue.pdf",
+          "page": 348,
+          "edition": "2025–2026"
+        }
+      ]
+    }
+  ]
+}

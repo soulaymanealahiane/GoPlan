@@ -1,0 +1,1433 @@
+{
+  "schemaVersion": 2,
+  "reviewedAt": "2026-09-16",
+  "scope": "Verified organizations with Morocco presence for researching internships; no live vacancy or placement claim.",
+  "matchingNote": "Degree and field fit are GoPlan editorial suggestions. Official source facts and student-specific recommendation reasoning must remain distinct.",
+  "tiers": {
+    "reach": "A stretch direction that may require building additional evidence of skill or a stronger portfolio.",
+    "target": "A direction closely aligned with the selected academic preparation and interests.",
+    "safety": "A backup direction with a broader or simpler search route; not a safe or guaranteed acceptance."
+  },
+  "tierWarning": "No acceptance statistics were found. Do not label a company easy or hard to enter, assign numeric chances, or imply that the 3 reach / 1 target / 1 safety mix predicts selection.",
+  "internships": [
+    {
+      "id": "orange-morocco",
+      "name": "Orange Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "telecommunications",
+        "fintech"
+      ],
+      "tags": [
+        "telecommunications",
+        "fintech",
+        "networks",
+        "cybersecurity",
+        "data",
+        "software",
+        "marketing",
+        "finance",
+        "project-management",
+        "communication"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BAIS",
+        "BSGE",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "fields": [
+        "networks",
+        "cybersecurity",
+        "data",
+        "software",
+        "marketing",
+        "finance",
+        "project-management",
+        "communication"
+      ],
+      "reason": "Its Morocco careers page welcomes interns and describes networks, cybersecurity, data, Orange Money, marketing and finance. Relevant for digital products, connectivity and mobile-payment goals.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-internship-program",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://orange.jobs/fr/fr/afrique-moyen-orient/maroc",
+      "sources": [
+        {
+          "title": "Orange Morocco official source",
+          "url": "https://orange.jobs/fr/fr/afrique-moyen-orient/maroc",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "ocp",
+      "name": "OCP Group",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "agriculture-food",
+        "industrial-engineering",
+        "energy-water"
+      ],
+      "tags": [
+        "agriculture-food",
+        "industrial-engineering",
+        "energy-water",
+        "agriculture",
+        "process-engineering",
+        "sustainability",
+        "supply-chain",
+        "water",
+        "data",
+        "international-trade"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BAIS",
+        "BSGE",
+        "BSRESE",
+        "BSEMS",
+        "BSESS",
+        "MSBDA",
+        "MSSEM",
+        "MBA"
+      ],
+      "fields": [
+        "agriculture",
+        "process-engineering",
+        "sustainability",
+        "supply-chain",
+        "water",
+        "data",
+        "international-trade"
+      ],
+      "reason": "OCP operates phosphate and fertilizer activities in Morocco and publishes a student internship route. Consider projects in industrial operations, agricultural technology, water, supply chains or business analysis.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-program",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://careers.ocpgroup.ma/en/careers/join-us/how-you-can-join",
+      "sources": [
+        {
+          "title": "OCP Group official source",
+          "url": "https://careers.ocpgroup.ma/en/careers/join-us/how-you-can-join",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "OCP operations in Morocco",
+          "url": "https://www.ocpgroup.ma/en/who-we-are/glance",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "sqli-morocco",
+      "name": "SQLI Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "software-services",
+        "ecommerce"
+      ],
+      "tags": [
+        "software-services",
+        "ecommerce",
+        "software",
+        "web-development",
+        "data",
+        "customer-experience",
+        "design",
+        "digital-marketing"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA"
+      ],
+      "fields": [
+        "software",
+        "web-development",
+        "data",
+        "customer-experience",
+        "design",
+        "digital-marketing"
+      ],
+      "reason": "SQLI describes digital and e-commerce work from Rabat, Oujda and Casablanca, including design, engineering, customer engagement and data. Relevant for product-building and online-commerce interests.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-careers-location",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.sqli.com/int-en/locations/morocco",
+      "sources": [
+        {
+          "title": "SQLI Morocco official source",
+          "url": "https://www.sqli.com/int-en/locations/morocco",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "capgemini-morocco",
+      "name": "Capgemini Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "software-services",
+        "consulting",
+        "industrial-engineering"
+      ],
+      "tags": [
+        "software-services",
+        "consulting",
+        "industrial-engineering",
+        "software",
+        "cloud",
+        "cybersecurity",
+        "data",
+        "automation",
+        "sustainability",
+        "business-transformation"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BSGE",
+        "BSRESE",
+        "BSEMS",
+        "BSESS",
+        "MSSE",
+        "MSBDA",
+        "MSSEM",
+        "MBA"
+      ],
+      "fields": [
+        "software",
+        "cloud",
+        "cybersecurity",
+        "data",
+        "automation",
+        "sustainability",
+        "business-transformation"
+      ],
+      "reason": "Capgemini has a Morocco careers presence and describes technology, consulting and engineering fields. Explore a Morocco-based role matching software, data, industrial systems or transformation skills.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-careers-location",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.capgemini.com/ma-en/contact-us",
+      "sources": [
+        {
+          "title": "Capgemini Morocco official source",
+          "url": "https://www.capgemini.com/ma-en/contact-us",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "renault",
+      "name": "Renault Group Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "automotive",
+        "manufacturing"
+      ],
+      "tags": [
+        "automotive",
+        "manufacturing",
+        "industrial-engineering",
+        "supply-chain",
+        "automation",
+        "quality",
+        "mobility",
+        "energy-efficiency",
+        "data"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BBA",
+        "BSCSC",
+        "BSESS",
+        "MSSEM",
+        "MBA"
+      ],
+      "fields": [
+        "industrial-engineering",
+        "supply-chain",
+        "automation",
+        "quality",
+        "mobility",
+        "energy-efficiency",
+        "data"
+      ],
+      "reason": "Renault operates manufacturing plants in Tangier and Casablanca and publishes a group internship route. Morocco operations are relevant to automotive production, quality, logistics and industrial efficiency.",
+      "fitIsInference": true,
+      "evidenceStatus": "group-internship-program-morocco-presence",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.renaultgroup.com/carrieres-renault/etudiants-et-jeunes-diplomes/",
+      "sources": [
+        {
+          "title": "Renault Group Morocco official source",
+          "url": "https://www.renaultgroup.com/carrieres-renault/etudiants-et-jeunes-diplomes/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Renault Casablanca plant",
+          "url": "https://www.renaultgroup.com/en/group/locations/casablanca-plant-somaca",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Renault Tangier plant",
+          "url": "https://www.renaultgroup.com/groupe/implantations/usine-tanger",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Use the group internship search and confirm that the specific placement is in Morocco. The global internship page does not guarantee a Morocco opening.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "hps",
+      "name": "HPS",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "fintech",
+        "software-services"
+      ],
+      "tags": [
+        "fintech",
+        "software-services",
+        "payments",
+        "software",
+        "cybersecurity",
+        "finance",
+        "product-management",
+        "international-business"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "MSSE",
+        "MSBDA",
+        "MBA"
+      ],
+      "fields": [
+        "payments",
+        "software",
+        "cybersecurity",
+        "finance",
+        "product-management",
+        "international-business"
+      ],
+      "reason": "HPS develops electronic payment platforms and is based in Casablanca. A relevant research target for payment software, financial technology and secure transaction systems.",
+      "fitIsInference": true,
+      "evidenceStatus": "careers-route",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.hps-worldwide.com/careers",
+      "sources": [
+        {
+          "title": "HPS official source",
+          "url": "https://www.hps-worldwide.com/careers",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "HPS payment platform and Casablanca address",
+          "url": "https://www.hps-worldwide.com/sites/default/files/investor/HPS%20Q1%202025.pdf",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "HPS career contact",
+          "url": "https://www.hps-worldwide.com/contact-us",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "safran-morocco",
+      "name": "Safran Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "aerospace",
+        "manufacturing"
+      ],
+      "tags": [
+        "aerospace",
+        "manufacturing",
+        "aerospace",
+        "industrial-engineering",
+        "electrical-systems",
+        "quality",
+        "supply-chain",
+        "finance",
+        "human-resources"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSCSC",
+        "BBA",
+        "BSRESE"
+      ],
+      "fields": [
+        "aerospace",
+        "industrial-engineering",
+        "electrical-systems",
+        "quality",
+        "supply-chain",
+        "finance",
+        "human-resources"
+      ],
+      "reason": "Safran describes Moroccan aerospace production, engineering and maintenance operations as well as shared finance, HR and purchasing services. Match the target team to engineering or business preparation.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-operations",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.safran-group.com/countries/morocco",
+      "sources": [
+        {
+          "title": "Safran Morocco official source",
+          "url": "https://www.safran-group.com/countries/morocco",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Safran careers search",
+          "url": "https://www.safran-group.com/jobs",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Use Safran job search with country Morocco and internship contract filters; no current internship vacancy is certified.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "inwi",
+      "name": "inwi",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "telecommunications",
+        "fintech",
+        "cloud"
+      ],
+      "tags": [
+        "telecommunications",
+        "fintech",
+        "cloud",
+        "networks",
+        "software",
+        "cloud",
+        "payments",
+        "brand-communication",
+        "marketing",
+        "customer-experience"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BAIS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "fields": [
+        "networks",
+        "software",
+        "cloud",
+        "payments",
+        "brand-communication",
+        "marketing",
+        "customer-experience"
+      ],
+      "reason": "inwi describes its Moroccan telecom, digital-service, cloud and mobile-money activity and lists technical, commercial and brand/communication teams. Useful for digital-service and consumer-technology goals.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-careers-location",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://jobs.inwi.ma/",
+      "sources": [
+        {
+          "title": "inwi official source",
+          "url": "https://jobs.inwi.ma/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "sothema",
+      "name": "Sothema",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "pharmaceuticals-biotech",
+        "manufacturing"
+      ],
+      "tags": [
+        "pharmaceuticals-biotech",
+        "manufacturing",
+        "biotechnology",
+        "manufacturing",
+        "quality",
+        "supply-chain",
+        "regulatory-affairs",
+        "marketing",
+        "data"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BBA",
+        "BSCSC",
+        "BACS"
+      ],
+      "fields": [
+        "biotechnology",
+        "manufacturing",
+        "quality",
+        "supply-chain",
+        "regulatory-affairs",
+        "marketing",
+        "data"
+      ],
+      "reason": "Sothema manufactures medicines in Morocco and describes biotechnology activity. Its 2025 report discusses internships across industrial, marketing, regulatory, medical and supply-chain functions; role qualifications still need checking.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-policy-careers-route",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.sothema.com/carrieres/",
+      "sources": [
+        {
+          "title": "Sothema official source",
+          "url": "https://www.sothema.com/carrieres/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Sothema activities in Morocco",
+          "url": "https://www.sothema.com/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Sothema 2025 annual report",
+          "url": "https://www.sothema.com/static/uploads/2026/05/SOTHEMA-RFA-2025-1105-17h58-1.pdf",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "pharma5",
+      "name": "Pharma 5",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "pharmaceuticals-biotech",
+        "healthcare"
+      ],
+      "tags": [
+        "pharmaceuticals-biotech",
+        "healthcare",
+        "pharmaceutical-manufacturing",
+        "quality",
+        "marketing",
+        "supply-chain",
+        "health-products",
+        "data"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BBA",
+        "BACS",
+        "BSCSC"
+      ],
+      "fields": [
+        "pharmaceutical-manufacturing",
+        "quality",
+        "marketing",
+        "supply-chain",
+        "health-products",
+        "data"
+      ],
+      "reason": "Pharma 5 identifies itself as a Casablanca pharmaceutical manufacturer. Explore the business, manufacturing, quality or digital side of healthcare, with technical qualifications checked for each role.",
+      "fitIsInference": true,
+      "evidenceStatus": "official-company-profile",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://fr.linkedin.com/company/pharma-5-officiel",
+      "sources": [
+        {
+          "title": "Pharma 5 official source",
+          "url": "https://fr.linkedin.com/company/pharma-5-officiel",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Pharma 5 official recruitment invitation",
+          "url": "https://fr.linkedin.com/posts/pharma-5-officiel_nous-avons-%C3%A9t%C3%A9-ravies-d%C3%A9changer-avec-nos-activity-7072316197014233088-JDe1",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Pharma 5 website (automated access blocked)",
+          "url": "https://www.pharma5.ma/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Consult the official company profile and current recruitment posts; a prior official post invited spontaneous applications. No present internship offer is verified.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "lesieur-cristal",
+      "name": "Lesieur Cristal",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "agriculture-food",
+        "consumer-products"
+      ],
+      "tags": [
+        "agriculture-food",
+        "consumer-products",
+        "agriculture",
+        "food-manufacturing",
+        "sustainability",
+        "supply-chain",
+        "marketing",
+        "human-resources",
+        "international-trade"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BBA",
+        "BACS",
+        "BAIS"
+      ],
+      "fields": [
+        "agriculture",
+        "food-manufacturing",
+        "sustainability",
+        "supply-chain",
+        "marketing",
+        "human-resources",
+        "international-trade"
+      ],
+      "reason": "This Moroccan agro-industrial group works in oils, food products and agricultural supply chains. Its HR page explicitly describes welcoming interns, making it a relevant route for operations, food systems and consumer-brand projects.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-internship-program",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://lesieur-cristal.com/capital-humain/",
+      "sources": [
+        {
+          "title": "Lesieur Cristal official source",
+          "url": "https://lesieur-cristal.com/capital-humain/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Lesieur Cristal business activities",
+          "url": "https://lesieur-cristal.com/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "attijariwafa",
+      "name": "Attijariwafa bank",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "banking",
+        "fintech"
+      ],
+      "tags": [
+        "banking",
+        "fintech",
+        "finance",
+        "risk",
+        "data",
+        "digital-banking",
+        "international-business",
+        "communication"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA"
+      ],
+      "fields": [
+        "finance",
+        "risk",
+        "data",
+        "digital-banking",
+        "international-business",
+        "communication"
+      ],
+      "reason": "Attijariwafa bank publishes Morocco recruitment routes and describes a pan-African financial-services network. Relevant to banking, financial analysis, digital services and international-business goals.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-careers-location",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.attijariwafabank.com/fr/emploi-carrieres",
+      "sources": [
+        {
+          "title": "Attijariwafa bank official source",
+          "url": "https://www.attijariwafabank.com/fr/emploi-carrieres",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Group financial businesses",
+          "url": "https://www.attijariwafabank.com/fr/services-du-groupe",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "deloitte-morocco",
+      "name": "Deloitte Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "consulting",
+        "professional-services"
+      ],
+      "tags": [
+        "consulting",
+        "professional-services",
+        "consulting",
+        "business-analysis",
+        "finance",
+        "risk",
+        "data",
+        "transformation",
+        "sustainability"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BAIS",
+        "BSEMS",
+        "BSGE",
+        "BSESS",
+        "MSBDA",
+        "MBA"
+      ],
+      "fields": [
+        "consulting",
+        "business-analysis",
+        "finance",
+        "risk",
+        "data",
+        "transformation",
+        "sustainability"
+      ],
+      "reason": "Deloitte documents a Casablanca consulting presence. Its recruitment FAQ includes internships and the Morocco application route through its careers platform. Explore the practice that matches the student’s analytical and sector interests.",
+      "fitIsInference": true,
+      "evidenceStatus": "internship-route-morocco-presence",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.deloitte.com/fr/fr/careers/join-deloitte.html",
+      "sources": [
+        {
+          "title": "Deloitte Morocco official source",
+          "url": "https://www.deloitte.com/fr/fr/careers/join-deloitte.html",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Deloitte francophone Africa consulting and Morocco office",
+          "url": "https://www2.deloitte.com/content/dam/Deloitte/fpc/Documents/en-savoir-plus/deloitte-afrique-francophone/plaquette-daf-conseil.pdf",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Deloitte requires applications through its careers site; filter for the Morocco office and internship contract. Do not send a speculative email to generic office contacts.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "pwc-morocco",
+      "name": "PwC Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "consulting",
+        "professional-services"
+      ],
+      "tags": [
+        "consulting",
+        "professional-services",
+        "audit",
+        "finance",
+        "consulting",
+        "data",
+        "business-analysis",
+        "transformation",
+        "governance"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BAIS",
+        "BSEMS",
+        "BSESS",
+        "MSBDA",
+        "MBA"
+      ],
+      "fields": [
+        "audit",
+        "finance",
+        "consulting",
+        "data",
+        "business-analysis",
+        "transformation",
+        "governance"
+      ],
+      "reason": "PwC’s Morocco careers site provides a local route into professional services and shows Casablanca practices including assurance and data analytics. Relevant for finance, analytical consulting and organizational transformation.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-careers-location",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://pwcmaroc.pwc.fr/fr/pwc-au-maroc/carrieres.html",
+      "sources": [
+        {
+          "title": "PwC Morocco official source",
+          "url": "https://pwcmaroc.pwc.fr/fr/pwc-au-maroc/carrieres.html",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "PwC Morocco listed fields and offices",
+          "url": "https://pwcmaroc.pwc.fr/fr/pwc-au-maroc/carrieres/experienced-jobs.html",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Use the Morocco careers site and the student/graduate route. Experienced-role listings are evidence of local fields, not a claim that an undergraduate is eligible.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "publicis-morocco",
+      "name": "Publicis Groupe — Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "advertising",
+        "media"
+      ],
+      "tags": [
+        "advertising",
+        "media",
+        "advertising",
+        "media",
+        "brand-strategy",
+        "digital-marketing",
+        "data",
+        "communication"
+      ],
+      "programs": [
+        "BACS",
+        "BBA",
+        "BSCSC",
+        "BAIS",
+        "MACDM",
+        "MSDMA"
+      ],
+      "fields": [
+        "advertising",
+        "media",
+        "brand-strategy",
+        "digital-marketing",
+        "data",
+        "communication"
+      ],
+      "reason": "Publicis’ official recruitment location directory lists Casablanca and Morocco. Research a local agency team for advertising, media, communications or data-informed marketing work.",
+      "fitIsInference": true,
+      "evidenceStatus": "official-careers-location-directory",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://careers.publicisgroupe.com/talent/jobs/locations?lang=en-US",
+      "sources": [
+        {
+          "title": "Publicis Groupe — Morocco official source",
+          "url": "https://careers.publicisgroupe.com/talent/jobs/locations?lang=en-US",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Use the official careers directory to filter Casablanca/Morocco. Local internship availability and relevant agency must be confirmed.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "havas-madcom",
+      "name": "Havas Madcom",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "advertising",
+        "media",
+        "events"
+      ],
+      "tags": [
+        "advertising",
+        "media",
+        "events",
+        "brand-strategy",
+        "creative-production",
+        "social-media",
+        "events",
+        "market-research",
+        "communication"
+      ],
+      "programs": [
+        "BACS",
+        "BBA",
+        "BAIS",
+        "MACDM",
+        "MSDMA"
+      ],
+      "fields": [
+        "brand-strategy",
+        "creative-production",
+        "social-media",
+        "events",
+        "market-research",
+        "communication"
+      ],
+      "reason": "Havas Madcom presents creative, events and media work and identifies Casablanca as its headquarters. Relevant to brand storytelling, campaigns, communications and audience research.",
+      "fitIsInference": true,
+      "evidenceStatus": "official-company-contact",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://havasmad.com/",
+      "sources": [
+        {
+          "title": "Havas Madcom official source",
+          "url": "https://havasmad.com/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Havas Madcom official company profile and Casablanca location",
+          "url": "https://www.linkedin.com/company/havas-maroc",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Use the company website or official company profile to identify its current recruitment route. A public contact is not a confirmed internship application channel.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "maroc-soir",
+      "name": "Groupe Maroc Soir / Le Matin",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "media-publishing"
+      ],
+      "tags": [
+        "media-publishing",
+        "journalism",
+        "publishing",
+        "editorial",
+        "communication",
+        "international-affairs",
+        "digital-media"
+      ],
+      "programs": [
+        "BACS",
+        "BAIS",
+        "BBA",
+        "MACDM",
+        "MSDMA"
+      ],
+      "fields": [
+        "journalism",
+        "publishing",
+        "editorial",
+        "communication",
+        "international-affairs",
+        "digital-media"
+      ],
+      "reason": "Groupe Maroc Soir operates Le Matin and related media from Casablanca. A relevant organization to research for journalism, editorial production, public affairs and digital-publishing interests.",
+      "fitIsInference": true,
+      "evidenceStatus": "official-company-presence",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://boutique.lematin.ma/politique-de-vie-privee/",
+      "sources": [
+        {
+          "title": "Groupe Maroc Soir / Le Matin official source",
+          "url": "https://boutique.lematin.ma/politique-de-vie-privee/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Le Matin",
+          "url": "https://lematin.ma/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Group network in Morocco",
+          "url": "https://boutique.lematin.ma/contact/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Identify an editorial or HR recruitment contact through the official outlet. The linked customer-service form is not a verified internship application route.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "nareva",
+      "name": "Nareva",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "renewable-energy",
+        "energy-water"
+      ],
+      "tags": [
+        "renewable-energy",
+        "energy-water",
+        "wind-energy",
+        "solar-energy",
+        "water",
+        "desalination",
+        "green-hydrogen",
+        "project-analysis",
+        "sustainability"
+      ],
+      "programs": [
+        "BSRESE",
+        "BSGE",
+        "BSEMS",
+        "BSESS",
+        "BBA",
+        "BAIS",
+        "MSSEM",
+        "MBA"
+      ],
+      "fields": [
+        "wind-energy",
+        "solar-energy",
+        "water",
+        "desalination",
+        "green-hydrogen",
+        "project-analysis",
+        "sustainability"
+      ],
+      "reason": "Nareva’s Morocco careers page describes wind and solar generation, water, desalination and green-hydrogen projects. Relevant to energy systems, project analysis and environmental or water-related goals.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-careers-route",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.nareva.ma/carrieres/",
+      "sources": [
+        {
+          "title": "Nareva official source",
+          "url": "https://www.nareva.ma/carrieres/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Nareva projects",
+          "url": "https://www.nareva.ma/nos-projets/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Follow the official careers page’s CV and motivation-letter instructions. Internship availability, duration and eligibility need confirmation.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "taqa-morocco",
+      "name": "TAQA Morocco",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "power-generation",
+        "energy-water"
+      ],
+      "tags": [
+        "power-generation",
+        "energy-water",
+        "power-systems",
+        "maintenance",
+        "industrial-operations",
+        "water",
+        "environment",
+        "energy-management"
+      ],
+      "programs": [
+        "BSRESE",
+        "BSGE",
+        "BSEMS",
+        "BSESS",
+        "BBA",
+        "MSSEM"
+      ],
+      "fields": [
+        "power-systems",
+        "maintenance",
+        "industrial-operations",
+        "water",
+        "environment",
+        "energy-management"
+      ],
+      "reason": "TAQA Morocco operates the Jorf Lasfar thermal complex, with power-generation, maintenance and water infrastructure. Relevant to energy operations and efficiency; this is not being described as a purely renewable-energy employer.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-operations",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.taqamorocco.ma/fr/activite/centrale-thermique",
+      "sources": [
+        {
+          "title": "TAQA Morocco official source",
+          "url": "https://www.taqamorocco.ma/fr/activite/centrale-thermique",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "TAQA Morocco 2025 ESG report",
+          "url": "https://www.taqamorocco.ma/sites/default/files/2026-06/ESG2025.pdf",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Use official corporate recruitment information to locate a current student opportunity. No internship route or vacancy was confirmed in the reviewed source.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "tanger-med",
+      "name": "Tanger Med Group",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "logistics-trade",
+        "ports",
+        "industrial-infrastructure"
+      ],
+      "tags": [
+        "logistics-trade",
+        "ports",
+        "industrial-infrastructure",
+        "logistics",
+        "international-trade",
+        "supply-chain",
+        "industrial-engineering",
+        "finance",
+        "data",
+        "operations"
+      ],
+      "programs": [
+        "BBA",
+        "BAIS",
+        "BSGE",
+        "BSEMS",
+        "BSCSC",
+        "BSESS",
+        "MBA"
+      ],
+      "fields": [
+        "logistics",
+        "international-trade",
+        "supply-chain",
+        "industrial-engineering",
+        "finance",
+        "data",
+        "operations"
+      ],
+      "reason": "Tanger Med’s official careers page addresses students and graduates; its 2025 report describes port, logistics, industrial, financial and technology expertise. Relevant to trade, supply chains and infrastructure interests.",
+      "fitIsInference": true,
+      "evidenceStatus": "student-careers-route",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.tangermed.ma/fr/cadre-de-travail/",
+      "sources": [
+        {
+          "title": "Tanger Med Group official source",
+          "url": "https://www.tangermed.ma/fr/cadre-de-travail/",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Tanger Med 2025 report and role families",
+          "url": "https://www.tangermed.ma/wp-content/uploads/documentations/2026/Rapport-Financier-2025.pdf",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "jesa",
+      "name": "JESA",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "industrial-engineering",
+        "consulting",
+        "energy-water"
+      ],
+      "tags": [
+        "industrial-engineering",
+        "consulting",
+        "energy-water",
+        "engineering",
+        "design",
+        "environment",
+        "safety",
+        "supply-chain",
+        "project-controls",
+        "digital",
+        "finance",
+        "communication"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "BACS",
+        "BAIS",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "fields": [
+        "engineering",
+        "design",
+        "environment",
+        "safety",
+        "supply-chain",
+        "project-controls",
+        "digital",
+        "finance",
+        "communication"
+      ],
+      "reason": "JESA publishes an internship program and describes Casablanca headquarters plus roles in engineering, HSE, supply chain, project control, digital and corporate functions. Match a specific team to the student’s goal.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-internship-program",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://careers.jesagroup.com/content/Internships/?locale=en_US",
+      "sources": [
+        {
+          "title": "JESA official source",
+          "url": "https://careers.jesagroup.com/content/Internships/?locale=en_US",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "JESA applicant support: Morocco presence and job families",
+          "url": "https://careers.jesagroup.com/content/Applicant-Support/?locale=en_US",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "managem",
+      "name": "Managem",
+      "kind": "company",
+      "type": "internship-target",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "mining-materials",
+        "industrial-engineering"
+      ],
+      "tags": [
+        "mining-materials",
+        "industrial-engineering",
+        "materials",
+        "mining",
+        "process-engineering",
+        "environment",
+        "operations",
+        "international-business",
+        "data"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSESS",
+        "BSRESE",
+        "BBA",
+        "BAIS",
+        "BSCSC",
+        "MSSEM",
+        "MBA"
+      ],
+      "fields": [
+        "materials",
+        "mining",
+        "process-engineering",
+        "environment",
+        "operations",
+        "international-business",
+        "data"
+      ],
+      "reason": "Managem is a Moroccan mining group with local copper assets and a corporate careers route. Relevant for materials, industrial processes, environmental management and resource-sector business interests.",
+      "fitIsInference": true,
+      "evidenceStatus": "morocco-operations-careers-route",
+      "checkedAt": "2026-09-16",
+      "sourceUrl": "https://www.managemgroup.com/en",
+      "sources": [
+        {
+          "title": "Managem official source",
+          "url": "https://www.managemgroup.com/en",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Managem copper operations in Morocco",
+          "url": "https://www.managemgroup.com/en/our-products/copper",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        },
+        {
+          "title": "Managem 2025 report and talent development",
+          "url": "https://www.managemgroup.com/sites/default/files/2026-04/RFA%20Managem%202025%2023H20.pdf",
+          "checkedAt": "2026-09-16",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Official careers page; filter for Morocco and verify internship eligibility and timing.",
+      "availability": "Research target; no current internship vacancy, selection outcome, or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    }
+  ]
+}

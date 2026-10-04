@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict';
+import {advise,availableTargets} from './server/advisor.mjs';
+import {extractResearch,publicUrl,researchFor} from './server/research.mjs';
+import {agentContext,feedbackFor} from './dist/agent-context.js';
+import {acceptAdvice,adviceFingerprint} from './dist/journey-state.js';
+import {newJourney,emptyWorkspace,validateSavedWorkspace,makePlan} from './dist/guidance.js';
+import {journeyView,planView} from './dist/views.js';
+const env={OPENAI_API_KEY:'fixture',OPENAI_WEB_RESEARCH:'off'};
+const j=newJourney();j.profile.track='AI';j.questionnaire={ambitions:'Build useful software for Moroccan merchants.',activities:'Develop products and investigate data.',strengths:'Mathematics and programming.'};
+j.refinements={targets:'Add startups, keep exchange institutions.'};j.agentChoices={'bscsc-free-1':'MTH2304'};j.profile.choices={'bscsc-free-1':'MTH2304','bscsc-free-2':'CSC3331'};
+assert.equal(feedbackFor(j,'direction'),'');assert.equal(agentContext(j,'targets').refinement,j.refinements.targets);assert.deepEqual(agentContext(j,'courses').replaceableChoices,['bscsc-free-1']);
+const directionStamp=adviceFingerprint('direction',j);j.refinements.targets='Do not select startups.';assert.equal(adviceFingerprint('direction',j),directionStamp);j.refinements.targets='Add startups, keep exchange institutions.';
+const primary='https://examplecompany.ma/about';
+const candidate={name:'Example Company',organizationType:'startup',officialUrl:primary,sourceUrl:primary,sourceKind:'company',moroccoEvidence:'Based in Casablanca.',activity:'Logistics software.',fit:'Product engineering.'};
+const payload=data=>({status:'completed',output:[{type:'web_search_call',status:'completed',action:{sources:[{url:primary}]}},{type:'message',content:[{type:'output_text',text:JSON.stringify(data)}]}]});
+let researched=extractResearch(payload({summary:'Untrusted summary must not leak rejected entities.',companies:[candidate,{...candidate,name:'Invented',sourceUrl:'https://invented.ma'}],facts:[]}),j.profile.program);
+assert.equal(researched.companies.length,1);assert.ok(!researched.summary.includes('Untrusted'));
+const accelerator='https://www.startgate.ma/startups';
+const acceleratorPayload=payload({companies:[{...candidate,name:'HappyTaux',sourceKind:'accelerator',officialUrl:accelerator,sourceUrl:accelerator}],facts:[]});acceleratorPayload.output[0].action.sources=[{url:accelerator}];
+const supported=extractResearch(acceleratorPayload,'BSCSC');assert.equal(supported.companies[0].officialUrl,undefined);assert.equal(supported.companies[0].sourceUrl,accelerator);assert.equal(supported.companies[0].id,'research-happytaux');
+assert.throws(()=>extractResearch(payload({companies:[],facts:[]}), 'BSCSC'),/primary sources/);
+assert.equal(publicUrl('https://127.0.0.1/private'),'');assert.equal(publicUrl('javascript:alert(1)'),'');assert.equal(publicUrl('https://key:secret@example.com'),'');
+assert.throws(()=>extractResearch({output:[]},'BSCSC'),/search/);
+const failed=await researchFor({profile:j.profile,questionnaire:j.questionnaire,refinement:''},'targets',{...env,OPENAI_WEB_RESEARCH:'on'},async()=>Response.json({error:{}},{status:503}));assert.equal(failed.status,'unavailable');
+let privacyChecked=false;await researchFor({profile:{...j.profile,name:'PRIVATE NAME',gpa:3.8},questionnaire:{...j.questionnaire,constraints:'PRIVATE HEALTH NOTE',ambitions:'Email me at student@example.org about fintech.'},refinement:''},'targets',{...env,OPENAI_WEB_RESEARCH:'on'},async(_,init)=>{privacyChecked=true;assert.ok(!init.body.includes('PRIVATE NAME'));assert.ok(!init.body.includes('PRIVATE HEALTH NOTE'));assert.ok(!init.body.includes('student@example.org'));assert.equal(JSON.parse(init.body).max_tool_calls,3);return Response.json(payload({summary:'Sourced',companies:[candidate],facts:[]}));});assert.ok(privacyChecked);
+const earlier=Object.fromEntries(['internships','exchanges'].map(type=>[type,availableTargets(type,j.profile).slice(0,5)]));j.details={summary:'Existing choices',...earlier};
+const response=data=>Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(data)}]}]});
+const item=(t,i)=>({id:t.id,tier:i<3?'reach':i===3?'target':'safety',reason:'Relates to the stated product ambition.',tierReason:'A search strategy only.',industryReason:'A qualified inference from the digital economy evidence.',answerIds:['ambitions'],evidenceIds:['ita-digital-morocco-2025']});
+let attempts=0;const result=await advise({...j,...agentContext(j,'targets'),stage:'targets'},env,async(_,init)=>{
+ attempts++;const p=JSON.parse(init.body),c=JSON.parse(p.input);assert.equal(p.reasoning.effort,'medium');assert.equal(c.currentRecommendation.internships.length,5);assert.equal(c.request.refinement,'Add startups, keep exchange institutions.');
+ const companies=attempts===1?earlier.internships:[...c.companies.filter(t=>['chari','freterium','yakeey'].includes(t.id)),...earlier.internships.slice(0,2)];
+ if(attempts===2)assert.match(c.repair.reason,/No destinations changed/);
+ return response({summary:'Startup options with unchanged exchanges.',internships:companies.map(item),exchanges:earlier.exchanges.map(item),update:{summary:'Added startup exposure.',changes:['Included startups'],limitations:[]}});
+});
+assert.equal(attempts,2);assert.equal(result.update.added.length,3);assert.equal(result.update.removed.length,3);assert.equal(result.exchanges[0].id,earlier.exchanges[0].id);
+const savedPlan=makePlan(j),savedBefore=JSON.stringify(savedPlan),previewJourney=newJourney(savedPlan);acceptAdvice(previewJourney,'targets',result);assert.equal(JSON.stringify(savedPlan),savedBefore,'A preview must not change the saved plan before acceptance.');
+acceptAdvice(j,'targets',result);assert.equal(j.feedbackHistory.targets.length,1);assert.ok(agentContext(j,'targets').feedbackHistory[0].request.includes('startups'));
+const restored=validateSavedWorkspace({...emptyWorkspace(),journey:j});assert.equal(restored.journey.feedbackHistory.targets.length,1);
+j.step=4;const html=journeyView({journey:j});assert.ok(html.includes('How your feedback changed the plan'));assert.ok(html.includes('Chari'));assert.ok(html.includes('data-feedback="targets"'));
+assert.ok(planView(makePlan(j),false).includes('data-action="agent-targets"'));
+// A revised course suggestion must be unlocked, while the manual selection remains locked.
+j.refinements.courses='Change the AI mathematics elective, retain the other selected course.';
+await advise({...j,...agentContext(j,'courses'),stage:'courses'},env,async(_,init)=>{
+ const c=JSON.parse(JSON.parse(init.body).input);assert.equal(c.request.profile.choices['bscsc-free-1'],undefined);assert.equal(c.request.profile.choices['bscsc-free-2'],'CSC3331');assert.equal(c.currentRecommendation.choices['bscsc-free-1'],'MTH2304');
+ return response({summary:'Retain selections until alternatives are confirmed.',choices:[],openItems:[],update:{summary:'No verified replacement chosen.',changes:[],limitations:['The remaining elective needs further comparison.']}});
+});
+console.log('Passed sourced discovery, rejected-source filtering, research privacy/failure handling, stage-specific feedback memory, actual target changes, no-op repair, backup roundtrip and editable AI vs locked manual courses.');

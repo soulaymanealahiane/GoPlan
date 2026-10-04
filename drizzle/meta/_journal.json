@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1790516660540,
+      "tag": "0000_right_tusk",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790604597677,
+      "tag": "0001_past_golden_guardian",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790697001396,
+      "tag": "0002_kind_omega_flight",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791034023266,
+      "tag": "0003_pale_karnak",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791077732967,
+      "tag": "0004_warm_amphibian",
+      "breakpoints": true
+    }
+  ]
+}

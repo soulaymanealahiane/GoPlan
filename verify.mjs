@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import {DATA,DEFAULT_PROFILE,coursesFor,generatePlan,normalizeProfile,validatePlan,moveCourse,creditsOf,restoreState} from './dist/planner.js';
+import {createWorkbook} from './dist/export.js';
+let scenarios=0;
+assert.equal(DATA.programs.length,15);
+for(const program of DATA.programs)for(const track of program.tracks.length?program.tracks:[{id:''}])for(const summers of [false,true])for(const pace of ['balanced','accelerated']){
+ const p=normalizeProfile({program:program.id,track:track.id,summers,pace,gpa:3.2}),cs=coursesFor(p),terms=generatePlan(p);
+ assert.equal(new Set(cs.map(c=>c.id)).size,cs.length,`${program.id}: unique requirements`);
+ assert.equal(new Set(terms.flatMap(t=>t.courses)).size,cs.length,`${program.id}: every requirement retained`);
+ assert.ok(cs.every(c=>Number.isFinite(c.credits)&&c.credits>=0&&c.source.file&&c.source.page));
+ const serial={version:2,dataVersion:DATA.version,profile:p,terms,completed:[]};assert.deepEqual(restoreState(JSON.parse(JSON.stringify(serial))),serial);
+ const ruleConflicts=validatePlan(terms,cs,p).filter(x=>x.level==='conflict'&&!x.text.includes('manual placement'));
+ assert.equal(ruleConflicts.length,0,JSON.stringify({program:program.id,track:track.id,summers,ruleConflicts}));scenarios++;
+}
+const cs=coursesFor(),p=normalizeProfile(DEFAULT_PROFILE),terms=generatePlan(p),first=terms.find(t=>t.id!=='prior'&&t.id!=='pending').id;
+assert.equal(creditsOf(cs),134);
+assert.deepEqual(cs.find(c=>c.code==='CSC3324').rule.all,['CSC3326']);
+assert.deepEqual(cs.find(c=>c.code==='CSC3374').rule.all,['CSC3324','CSC3351']);
+assert.deepEqual(cs.find(c=>c.code==='CSC2305').rule.coreq,['PHY1402']);
+assert.deepEqual(cs.find(c=>c.code==='CSC4307').rule.all,['CSC3324','CSC3351']);
+const moved=moveCourse(terms,'csc3324',first);assert.ok(validatePlan(moved,cs,p).some(x=>x.id==='csc3324'&&x.text.includes('CSC3326')));
+const phyTerm=terms.find(t=>t.courses.includes('phy1402'));assert.ok(phyTerm.courses.includes('csc2305'));
+const selected=normalizeProfile({...p,choices:{'bscsc-french':'FRN3210'}});assert.equal(coursesFor(selected).find(c=>c.id==='bscsc-french').code,'FRN3210');
+const dup=normalizeProfile({...p,choices:{'bscsc-free-1':'CSC1401'}});assert.ok(validatePlan(generatePlan(dup),coursesFor(dup),dup).some(x=>x.text.includes('counted twice')));
+assert.throws(()=>restoreState({version:1}));
+for(const id of ['MSSE','MSSEM','MSBDA','MSDMA','MACDM','MAISD'])assert.equal(creditsOf(coursesFor({program:id})),30);
+assert.equal(creditsOf(coursesFor({program:'MBA'})),36);
+assert.equal(creditsOf(coursesFor({program:'BSGE'})),133);
+assert.ok(validatePlan(generatePlan({program:'BSGE'}),coursesFor({program:'BSGE'}),{program:'BSGE'}).some(x=>x.level==='source'));
+const cy=coursesFor({program:'BSCSC',track:'CSEC',choices:{'bscsc-csec-topic-1':'CSEC-TOPIC-1'}}).find(c=>c.id==='bscsc-csec-topic-1');assert.equal(cy.credits,1);assert.ok(cy.title.includes('Holistic'));assert.ok(cy.unresolved);assert.equal(cy.code,'');
+const styles=await fs.readFile('dist/template-styles.xml','utf8');
+await fs.mkdir('.sites-runtime',{recursive:true});
+await fs.writeFile('.sites-runtime/verified-export.xlsx',await createWorkbook(terms,cs,p,[],validatePlan(terms,cs,p),styles));
+console.log(`Passed ${scenarios} program/track/pace scenarios plus prerequisite, corequisite, duplicate, credit, storage and export checks.`);

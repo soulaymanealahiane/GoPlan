@@ -1,0 +1,24 @@
+.sites-runtime/
+node_modules/
+*.zip
+*.log
+*.idsig
+.env
+.env.*
+!.env.example
+dist/server/
+dist/client/
+dist/.openai/
+# Public release hygiene
+*.sqlite
+*.sqlite-*
+*.db
+*.jks
+*.keystore
+*.p12
+*.pem
+*.apk
+*.tar.gz
+coverage/
+.DS_Store
+Thumbs.db

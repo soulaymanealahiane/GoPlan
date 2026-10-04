@@ -1,0 +1,180 @@
+{
+  "reviewedAt": "2026-09-21",
+  "internships": [
+    {
+      "id": "chari",
+      "name": "Chari",
+      "organizationType": "scaleup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "fintech",
+        "merchant-commerce"
+      ],
+      "tags": [
+        "fintech",
+        "merchant-commerce",
+        "software",
+        "data",
+        "entrepreneurship"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "BSGE",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "fields": [
+        "software",
+        "data",
+        "product",
+        "operations",
+        "marketing"
+      ],
+      "reason": "YC-backed Moroccan commerce and fintech company serving merchants. Its official site describes payment services and infrastructure for Moroccan individuals and small merchants. Growth-stage environment; internship availability is unverified.",
+      "fitIsInference": true,
+      "evidenceStatus": "startup-research-target",
+      "checkedAt": "2026-09-21",
+      "sourceUrl": "https://www.ycombinator.com/companies/chari",
+      "officialUrl": "https://www.chari.com/en/a-propos",
+      "sources": [
+        {
+          "title": "Chari primary evidence",
+          "url": "https://www.ycombinator.com/companies/chari",
+          "checkedAt": "2026-09-21",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Check the official company careers or contact page for student opportunities.",
+      "availability": "Research target; no current internship vacancy, acceptance probability or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "yakeey",
+      "name": "Yakeey",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "proptech",
+        "real-estate",
+        "data"
+      ],
+      "tags": [
+        "proptech",
+        "real-estate",
+        "data",
+        "software",
+        "data",
+        "entrepreneurship"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "BSGE",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "fields": [
+        "software",
+        "data",
+        "product",
+        "operations",
+        "marketing"
+      ],
+      "reason": "IFC reported a January 2026 investment in this Moroccan technology company, founded in 2023. Its platform connects property search, valuation, brokerage and financing. Potential exposure to digitizing fragmented workflows; hiring is unverified.",
+      "fitIsInference": true,
+      "evidenceStatus": "startup-research-target",
+      "checkedAt": "2026-09-21",
+      "sourceUrl": "https://www.ifc.org/en/pressroom/2026/yakeey-and-ifc-partner-to-expand-digital-real-estate-infrastructure-in-morocco",
+      "officialUrl": "https://yakeey.com",
+      "sources": [
+        {
+          "title": "Yakeey primary evidence",
+          "url": "https://www.ifc.org/en/pressroom/2026/yakeey-and-ifc-partner-to-expand-digital-real-estate-infrastructure-in-morocco",
+          "checkedAt": "2026-09-21",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Check the official company careers or contact page for student opportunities.",
+      "availability": "Research target; no current internship vacancy, acceptance probability or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "freterium",
+      "name": "Freterium",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "logistics",
+        "supply-chain",
+        "saas"
+      ],
+      "tags": [
+        "logistics",
+        "supply-chain",
+        "saas",
+        "software",
+        "data",
+        "entrepreneurship"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "BSGE",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "fields": [
+        "software",
+        "data",
+        "product",
+        "operations",
+        "marketing"
+      ],
+      "reason": "YC lists this active transport-management technology company in Casablanca. Its official company page describes logistics planning, execution and visibility. YC displayed no job listings when reviewed; this remains an outreach research target.",
+      "fitIsInference": true,
+      "evidenceStatus": "startup-research-target",
+      "checkedAt": "2026-09-21",
+      "sourceUrl": "https://www.ycombinator.com/companies/freterium/jobs",
+      "officialUrl": "https://freterium.ai/company",
+      "sources": [
+        {
+          "title": "Freterium primary evidence",
+          "url": "https://www.ycombinator.com/companies/freterium/jobs",
+          "checkedAt": "2026-09-21",
+          "primary": true
+        }
+      ],
+      "applicationRoute": "Check the official company careers or contact page for student opportunities.",
+      "availability": "Research target; no current internship vacancy, acceptance probability or AUI partnership is asserted.",
+      "selectionProbabilityKnown": false
+    }
+  ]
+}

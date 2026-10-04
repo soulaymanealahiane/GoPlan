@@ -1,0 +1,24 @@
+{
+  "name": "goplan-aui",
+  "version": "0.10.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node verify.mjs && node verify-guided.mjs && node verify-academic-v4.mjs && node verify-ai.mjs && node verify-agent-v5.mjs && node verify-intelligence.mjs && node verify-workspace-flow.mjs && node verify-minor-loads.mjs && node verify-feedback.mjs && node verify-analytics.mjs && node verify-admin.mjs && node verify-accounts.mjs && node verify-account-client.mjs && node verify-auth.mjs",
+    "build:opportunities": "node scripts/build-opportunities.mjs",
+    "db:generate": "drizzle-kit generate",
+    "dashboard": "node scripts/admin-console.mjs",
+    "analytics": "node scripts/analytics.mjs"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "0.31.10",
+    "drizzle-orm": "0.45.2",
+    "esbuild": "0.28.2"
+  },
+  "packageManager": "pnpm@11.19.0"
+}
