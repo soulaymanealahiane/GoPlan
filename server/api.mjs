@@ -55,7 +55,8 @@ export async function handleApi(request,env,options={}){
   job=Promise.resolve().then(()=>advise(data,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections},measuredFetch)).then(value=>{
    metric.outcome='success';
    while(recent.size>=200)recent.delete(recent.keys().next().value);
-   recent.set(key,{value,expires:Date.now()+600000});return value;
+   // A temporary research failure must not pin the next retry to old evidence.
+   if(value.research?.status!=='unavailable')recent.set(key,{value,expires:Date.now()+600000});return value;
   }).finally(async()=>{pending.delete(key);const n=activeSessions.get(scope)-1;if(n)activeSessions.set(scope,n);else activeSessions.delete(scope);metric.durationMs=Date.now()-now;await recordSafely(env,metric);});
   pending.set(key,job);
  }

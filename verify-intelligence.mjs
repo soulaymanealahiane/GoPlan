@@ -49,3 +49,47 @@ await advise({...j,...agentContext(j,'courses'),stage:'courses'},env,async(_,ini
  return response({summary:'Retain selections until alternatives are confirmed.',choices:[],openItems:[],update:{summary:'No verified replacement chosen.',changes:[],limitations:['The remaining elective needs further comparison.']}});
 });
 console.log('Passed sourced discovery, rejected-source filtering, research privacy/failure handling, stage-specific feedback memory, actual target changes, no-op repair, backup roundtrip and editable AI vs locked manual courses.');
+
+// Research recovery is bounded and never retries billing/access failures.
+let semanticCalls=0;
+const recovered=await researchFor({profile:j.profile,questionnaire:j.questionnaire},'targets',{...env,GROQ_WEB_RESEARCH:'on'},async()=>{
+ semanticCalls++;
+ if(semanticCalls===1)return groqFixture({error:{code:'tool_use_failed',message:'PRIVATE PROVIDER DETAIL'}},{status:400});
+ if(semanticCalls===2)return groqFixture(receipt(primary));
+ return groqFixture(payload({companies:[candidate],facts:[]}));
+});
+assert.equal(recovered.status,'live');assert.equal(semanticCalls,3);
+let budgetCalls=0;
+const budgetStopped=await researchFor({profile:j.profile,questionnaire:j.questionnaire},'direction',{...env,GROQ_WEB_RESEARCH:'on'},async()=>{budgetCalls++;return groqFixture({error:{code:'blocked_api_access',message:'PRIVATE PROVIDER DETAIL'}},{status:400});});
+assert.equal(budgetCalls,1);assert.equal(budgetStopped.reasonCode,'budget');assert.ok(!JSON.stringify(budgetStopped).includes('PRIVATE PROVIDER DETAIL'));
+const marketUrl='https://www.oecd.org/en/topics/policy-issues/future-of-work.html';
+const marketFact={claim:'OECD discusses how AI changes skills and work.',sourceUrl:marketUrl,limitation:'International evidence; not a Moroccan hiring forecast.'};
+assert.equal(extractResearch(payload({companies:[],facts:[marketFact]}),'BSCSC',searchEvidence(receipt(marketUrl))).facts.length,1);
+let focusedCalls=0;
+const focused=await researchFor({profile:j.profile,questionnaire:j.questionnaire},'direction',{...env,GROQ_WEB_RESEARCH:'on'},async(_,init)=>{
+ focusedCalls++;
+ if(focusedCalls===1)return groqFixture(receipt(primary));
+ if(focusedCalls===2)return groqFixture(payload({companies:[candidate],facts:[]}));
+ if(focusedCalls===3){assert.ok(JSON.parse(init.body).messages[0].content.includes('labour-market evidence'));return groqFixture(receipt(marketUrl));}
+ return groqFixture(payload({companies:[],facts:[marketFact]}));
+});
+assert.equal(focused.status,'live');assert.equal(focusedCalls,4);assert.equal(focused.facts.length,1);
+const {researchView}=await import('./dist/journey-view.js');
+assert.ok(researchView(budgetStopped,'direction').includes('data-agent-stage="direction"'));
+assert.ok(!researchView(budgetStopped).includes('data-agent-stage'));
+// A research fallback is not cached; a subsequent successful search is cached.
+const {handleApi}=await import('./server/api.mjs');
+const apiEnv={...env,GROQ_WEB_RESEARCH:'on',AI_ACCESS_CODE:'research-fixture'};
+const directionValue={kind:'recommend',summary:'A provisional software direction.',themes:['Software'],questions:[],academic:{program:'BSCSC',track:'SE',secondTrack:'',minor:'',rationale:'Fits the stated programming work.',focusRationale:'Software foundations.',secondFocusRationale:'Keep workload manageable.',minorRationale:'Leave open.'},tradeoffs:[],assessment:Object.keys((await import('./dist/evidence.js')).AXES).map(axis=>({axis,explanation:'A qualified inference from the supplied interests and evidence.',answerIds:['activities'],evidenceIds:[]})),update:{summary:'Recommended a direction.',changes:[],limitations:[]}};
+const apiRequest=()=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json','X-GoPlan-Access':'research-fixture','X-GoPlan-Session':'research-cache-regression-20261005'},body:JSON.stringify({...newJourney(),stage:'direction',flowVersion:5,questionnaire:j.questionnaire})});
+let apiCalls=0;
+const apiFetch=async(_,init)=>{
+ apiCalls++;const body=JSON.parse(init.body);
+ if(body.tools)return apiCalls===1?groqFixture({error:{code:'denied'}},{status:403}):groqFixture(receipt(marketUrl));
+ if(body.response_format.json_schema.name==='goplan_research')return groqFixture(payload({companies:[],facts:[marketFact]}));
+ return groqFixture(payload(directionValue));
+};
+const fallback=await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal(fallback.status,200);assert.equal((await fallback.json()).research.status,'unavailable');assert.equal(apiCalls,2);
+const refreshed=await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal(refreshed.status,200);assert.equal((await refreshed.json()).research.status,'live');assert.equal(apiCalls,5);
+await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal(apiCalls,5);
+console.log('Passed research recovery, stage-specific market evidence, private diagnostics, visible retry and successful-only research caching.');
