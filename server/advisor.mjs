@@ -1,4 +1,5 @@
-import {fetchOpenAI} from './openai-transport.mjs';
+import {fetchGroqCompletion} from './groq-completion.mjs';
+import {groqServiceError} from './groq-transport.mjs';
 import {DATA,normalizeProfile,programFor,coursesFor,generatePlan,validatePlan} from '../dist/planner.js';
 import {eligibleMinors,allowedChoices} from '../dist/guidance.js';
 import OPPORTUNITIES from '../dist/opportunities.js';
@@ -124,16 +125,14 @@ export async function advise(input,env,fetcher=fetch){
  }
  let correction='';
  for(let attempt=0;attempt<2;attempt++){
-  const response=await fetchOpenAI('https://api.openai.com/v1/responses',{method:'POST',signal:AbortSignal.timeout(90000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-5.4-mini',store:false,instructions:instructions+correction,input:JSON.stringify(context),max_output_tokens:8000,text:{format:{type:'json_schema',name:direction?'goplan_direction':'goplan_plan',strict:true,schema}}})},fetcher);
-  if(!response.ok){let error;try{error=(await response.json()).error;}catch{}
-   const billing=error?.type==='insufficient_quota'||['insufficient_quota','credit_balance_exhausted'].includes(error?.code);
-   const e=new Error(billing?'AI advice is unavailable until the GoPlan team restores API credits. Your plan has not changed.':response.status===429?'The AI service is busy. Please wait a moment and try again.':'The AI service could not complete this request. Your plan has not changed.');e.status=billing?503:502;throw e;}
+  const response=await fetchGroqCompletion({method:'POST',signal:AbortSignal.timeout(90000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.GROQ_API_KEY},body:JSON.stringify({model:env.GROQ_MODEL||'openai/gpt-oss-120b',store:false,instructions:instructions+correction,input:JSON.stringify(context),max_output_tokens:8000,text:{format:{type:'json_schema',name:direction?'goplan_direction':'goplan_plan',strict:true,schema}}})},fetcher);
+  if(!response.ok){let error;try{error=(await response.json()).error;}catch{}throw groqServiceError(response,error);}
   const payload=await response.json();
   if(payload.status!=='completed')throw Error('The AI response was incomplete. Please try again.');
   const content=(payload.output||[]).flatMap(x=>x.content||[]);
   if(content.some(c=>c.type==='refusal'))throw Error('GoPlan could not prepare advice for that request. Try describing your academic goals.');
   let parsed;
-  try{parsed=JSON.parse(content.filter(c=>c.type==='output_text').map(c=>c.text).join(''));return {source:'openai',model:payload.model||env.OPENAI_MODEL||'gpt-5.4-mini',generatedAt:new Date().toISOString(),...(direction?validateDirection(parsed,request):attempt===1?recoverDetails(parsed,request):validateDetails(parsed,request))};}
+  try{parsed=JSON.parse(content.filter(c=>c.type==='output_text').map(c=>c.text).join(''));return {source:'groq',model:payload.model||env.GROQ_MODEL||'openai/gpt-oss-120b',generatedAt:new Date().toISOString(),...(direction?validateDirection(parsed,request):attempt===1?recoverDetails(parsed,request):validateDetails(parsed,request))};}
   catch(e){if(attempt===1)throw Error('GoPlan could not verify these recommendations. Your choices are unchanged. You can retry or continue to review courses yourself.');context.repair={reason:e.message,previousProposal:parsed||null};correction='\nThe previous proposal in repair failed validation. Correct that specific proposal using the reported reason and valid choices. Omit any course that cannot be verified; it can remain open for review.';}
  }
 }

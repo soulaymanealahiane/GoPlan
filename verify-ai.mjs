@@ -1,7 +1,8 @@
+import {groqFixture} from './tests/groq-fixture.mjs';
 import assert from 'node:assert/strict';
 import {requestAdvice,setAccessCode,hasAccessCode} from './dist/ai-client.js';
 import {sanitizeRequest,validateDirection,validateDetails,availableTargets,advise} from './server/advisor.mjs';
-import {fetchOpenAI} from './server/openai-transport.mjs';
+import {fetchGroq} from './server/groq-transport.mjs';
 import {handleApi} from './server/api.mjs';
 import {normalizeProfile,DATA} from './dist/planner.js';
 import {emptyWorkspace,validateSavedWorkspace} from './dist/guidance.js';
@@ -25,8 +26,8 @@ const lockedRequest=sanitizeRequest({...input,stage:'details',profile:{...p,choi
 assert.throws(()=>validateDetails({summary:'Do not overwrite the student edit',choices:[{requirementId:'bscsc-free-1',courseCode:'CSC3331',reason:'Another option'}],...targets},lockedRequest),/Preserve the current selected course/);
 for(const program of DATA.programs){const profile=normalizeProfile({program:program.id}),lists=Object.fromEntries(['internships','exchanges'].map(type=>{const ts=availableTargets(type,profile).slice(0,5);return [type,ts.map((t,i)=>tier(t,i,ts.length))];}));validateDetails({summary:'Evidence-bounded research targets.',choices:[],...lists},sanitizeRequest({...input,level:program.level,stage:'details',profile}));if(program.level==='undergraduate')for(const ts of Object.values(lists))assert.equal(ts.length,5);}
 let calls=0;
-const provider=async(url,init)=>{calls++;assert.equal(url,'https://api.openai.com/v1/responses');assert.equal(init.headers.Authorization,'Bearer fixture-secret');const payload=JSON.parse(init.body);assert.equal(payload.store,false);assert.equal(payload.text.format.strict,true);assert.ok(!init.body.includes('fixture-secret'));return Response.json({status:'completed',model:'fixture-provider',output:[{content:[{type:'output_text',text:JSON.stringify(direction)}]}]});};
-const env={OPENAI_WEB_RESEARCH:'off',OPENAI_API_KEY:'fixture-secret',AI_ACCESS_CODE:'fixture-access'};
+const provider=async(url,init)=>{calls++;assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');assert.equal(init.headers.Authorization,'Bearer fixture-secret');const payload=JSON.parse(init.body);assert.equal(payload.store,undefined);assert.equal(payload.response_format.json_schema.strict,true);assert.ok(!init.body.includes('fixture-secret'));return groqFixture({status:'completed',model:'fixture-provider',output:[{content:[{type:'output_text',text:JSON.stringify(direction)}]}]});};
+const env={GROQ_WEB_RESEARCH:'off',GROQ_API_KEY:'fixture-secret',AI_ACCESS_CODE:'fixture-access'};
 assert.equal(needsPersonalConfirmation({id:'bscsc-specialization-option',title:'Natural Language Processing and Text Mining'}),false);
 assert.equal(needsPersonalConfirmation({id:'bscsc-specialization-option',title:'Languages and Compilers'}),false);
 assert.equal(needsPersonalConfirmation({id:'minor-replacement-1',title:'Approved minor replacement'}),false);
@@ -34,13 +35,13 @@ assert.equal(needsPersonalConfirmation({id:'minor-course-1',code:'PSY3397',title
 assert.equal(needsPersonalConfirmation({id:'free-elective-1',code:'ARB1241',title:'Arabic Literature'}),false);
 assert.equal(needsPersonalConfirmation({id:'bscsc-french',title:'FRN3210'}),true);
 await advise({...input,stage:'details',profile:{program:'BSCSC',track:'AI',secondTrack:'SE',minor:'mathematics'}},env,async(url,init)=>{
- const context=JSON.parse(JSON.parse(init.body).input),fixed=new Set(context.requiredCourses.map(c=>c.code));
+ const context=JSON.parse(JSON.parse(init.body).messages.at(-1).content),fixed=new Set(context.requiredCourses.map(c=>c.code));
  for(const r of context.requirements){if(r.approvalOnly||r.placementDependent)assert.deepEqual(r.options,[]);for(const id of r.options){assert.ok(!DATA.courses[id]?.creditsProvisional,id);assert.ok(!fixed.has(id),'Do not offer required course twice: '+id);}}
  assert.ok(!context.catalog.some(c=>['BIO1402','CSC3357','CSC3359'].includes(c.code)));
- return Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({summary:'Reviewed options',choices:[],...targets})}]}]});
+ return groqFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({summary:'Reviewed options',choices:[],...targets})}]}]});
 });
-await assert.rejects(()=>advise(input,env,async()=>Response.json({error:{type:'insufficient_quota',code:'credit_balance_exhausted'}},{status:429})),e=>e.status===503&&e.message.includes('restores API credits'));
-await assert.rejects(()=>advise(input,env,async()=>Response.json({error:{type:'rate_limit_exceeded'}},{status:429})),e=>e.status===502&&e.message.includes('busy'));
+await assert.rejects(()=>advise(input,env,async()=>groqFixture({error:{type:'insufficient_quota',code:'credit_balance_exhausted'}},{status:429})),e=>e.status===503&&e.message.includes('service budget'));
+await assert.rejects(()=>advise(input,env,async()=>groqFixture({error:{type:'rate_limit_exceeded'}},{status:429})),e=>e.status===502&&e.message.includes('busy'));
 const req=(body=input,headers={})=>new Request('http://127.0.0.1:4317/api/advice',{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':'fixture-access',...headers},body:typeof body==='string'?body:JSON.stringify(body)});
 assert.equal((await handleApi(req(),{})).status,503);
 assert.equal((await handleApi(req(input,{'X-GoPlan-Access':'wrong'}),env)).status,401);
@@ -65,14 +66,14 @@ assert.equal((await handleApi(req(input,{'X-GoPlan-Session':'independent-session
 release();assert.ok((await Promise.all(jobs)).every(r=>r.status===200));
 assert.equal((await handleApi(req({...input,goal:input.goal+' Busy 2'}),env,{...opts,fetcher:provider})).status,200);
 let transportCalls=0,delays=[];
-const transport=()=>fetchOpenAI('fixture',{},async()=>++transportCalls<3?Response.json({error:{code:'rate_limit_exceeded'}},{status:429}):Response.json({ok:true}),{pause:async ms=>delays.push(ms),random:()=>0});
+const transport=()=>fetchGroq('fixture',{},async()=>++transportCalls<3?groqFixture({error:{code:'rate_limit_exceeded'}},{status:429}):groqFixture({ok:true}),{pause:async ms=>delays.push(ms),random:()=>0});
 assert.equal((await transport()).status,200);assert.equal(transportCalls,3);assert.deepEqual(delays,[2000,4000]);
 transportCalls=0;
-await fetchOpenAI('fixture',{},async()=>{transportCalls++;return Response.json({error:{code:'insufficient_quota'}},{status:429});},{pause:async()=>assert.fail('Never retry exhausted credit')});assert.equal(transportCalls,1);
+await fetchGroq('fixture',{},async()=>{transportCalls++;return groqFixture({error:{code:'insufficient_quota'}},{status:429});},{pause:async()=>assert.fail('Never retry exhausted credit')});assert.equal(transportCalls,1);
 const failOpts={clientAddress:'failed-fixture',fetcher:async()=>{throw Error('fixture failure');}};
 for(let i=0;i<3;i++)assert.equal((await handleApi(req(),env,failOpts)).status,422);
 assert.equal((await handleApi(req(),env,{...failOpts,fetcher:provider})).status,200);
-let attempts=0;await advise(input,env,async()=>{attempts++;return Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(attempts===1?{...direction,academic:{...direction.academic,program:'FAKE'}}:direction)}]}]});});assert.equal(attempts,2);
+let attempts=0;await advise(input,env,async()=>{attempts++;return groqFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(attempts===1?{...direction,academic:{...direction.academic,program:'FAKE'}}:direction)}]}]});});assert.equal(attempts,2);
 const state=emptyWorkspace();state.journey.advice=direction;state.journey.goal=input.goal;state.journey.details={...details,summary:'Specific test recommendations'};
 for(let step=0;step<6;step++){state.journey.step=step;assert.ok(journeyView(state).includes('journey'));}
 assert.ok(!journeyView({...state,journey:{...state.journey,step:4}}).includes('data-target='));
@@ -84,10 +85,10 @@ const savedFetch=globalThis.fetch,savedTimer=globalThis.setTimeout;
 let clientCalls=0,clientBodies=[],clientSessions=[];
 try{
  globalThis.setTimeout=fn=>{fn();return 0;};
- globalThis.fetch=async(url,init)=>{clientCalls++;clientBodies.push(init.body);clientSessions.push(init.headers['X-GoPlan-Session']);return clientCalls<3?Response.json({code:'AGENT_BUSY',retryAfterSeconds:2},{status:429}):Response.json({summary:'Ready'});};
+ globalThis.fetch=async(url,init)=>{clientCalls++;clientBodies.push(init.body);clientSessions.push(init.headers['X-GoPlan-Session']);return clientCalls<3?groqFixture({code:'AGENT_BUSY',retryAfterSeconds:2},{status:429}):groqFixture({summary:'Ready'});};
  setAccessCode('fixture');const journey={profile:{program:'BSCSC',choices:{}},goal:'Build useful software'},before=JSON.stringify(journey);
  assert.equal((await requestAdvice('pace',journey)).summary,'Ready');assert.equal(clientCalls,3);assert.equal(new Set(clientBodies).size,1);assert.equal(new Set(clientSessions).size,1);assert.equal(JSON.stringify(journey),before);
- clientCalls=0;globalThis.fetch=async()=>{clientCalls++;return Response.json({error:'Credit unavailable'},{status:503});};
+ clientCalls=0;globalThis.fetch=async()=>{clientCalls++;return groqFixture({error:'Credit unavailable'},{status:503});};
  await assert.rejects(()=>requestAdvice('pace',journey),/Credit unavailable/);assert.equal(clientCalls,1);
 }finally{globalThis.fetch=savedFetch;globalThis.setTimeout=savedTimer;setAccessCode('');}
 console.log('Passed client automatic busy retry, stable session/request, draft preservation and no billing retry.');
@@ -97,14 +98,14 @@ const authFetch=globalThis.fetch,authStorage=globalThis.sessionStorage;
 const stored=new Map();globalThis.sessionStorage={getItem:key=>stored.get(key)||null,setItem:(key,value)=>stored.set(key,value),removeItem:key=>stored.delete(key)};
 try{
  const journey={profile:{program:'BSCSC',choices:{}},questionnaire:{ambitions:'Build useful technology.'}},before=JSON.stringify(journey);
- setAccessCode('wrong');globalThis.fetch=async()=>Response.json({code:'ACCESS_REQUIRED'},{status:401});
+ setAccessCode('wrong');globalThis.fetch=async()=>groqFixture({code:'ACCESS_REQUIRED'},{status:401});
  await assert.rejects(()=>requestAdvice('direction',journey),e=>e.code==='ACCESS_REQUIRED');assert.equal(hasAccessCode(),false);assert.equal(JSON.stringify(journey),before);
  const workspace=emptyWorkspace();workspace.journey.step=1;
  assert.ok(journeyView(workspace,{hasAccess:hasAccessCode(),aiStatus:{available:true},aiError:'Code rejected'}).includes('id="ai-access-code"'));
  setAccessCode('valid-fixture');assert.equal(stored.has('goplan-verified-demo-access'),false);
- globalThis.fetch=async()=>Response.json({summary:'Accepted'});await requestAdvice('direction',journey);
+ globalThis.fetch=async()=>groqFixture({summary:'Accepted'});await requestAdvice('direction',journey);
  assert.equal(stored.get('goplan-verified-demo-access'),'valid-fixture');
  const reloaded=await import('./dist/ai-client.js?auth-reload-test');assert.equal(reloaded.hasAccessCode(),true);
- globalThis.fetch=async()=>Response.json({code:'ACCESS_REQUIRED'},{status:401});await assert.rejects(()=>reloaded.requestAdvice('direction',journey));assert.equal(reloaded.hasAccessCode(),false);assert.equal(stored.has('goplan-verified-demo-access'),false);
+ globalThis.fetch=async()=>groqFixture({code:'ACCESS_REQUIRED'},{status:401});await assert.rejects(()=>reloaded.requestAdvice('direction',journey));assert.equal(reloaded.hasAccessCode(),false);assert.equal(stored.has('goplan-verified-demo-access'),false);
 }finally{setAccessCode('');globalThis.fetch=authFetch;if(authStorage===undefined)delete globalThis.sessionStorage;else globalThis.sessionStorage=authStorage;}
 console.log('Passed rejected-code recovery, visible entry at step two, preserved questionnaire, verified-only session storage and expired-code invalidation.');

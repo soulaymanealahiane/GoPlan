@@ -1,3 +1,4 @@
+import {groqFixture} from './tests/groq-fixture.mjs';
 import assert from 'node:assert/strict';
 import {advise} from './server/advisor.mjs';
 import {DATA,normalizeProfile,coursesFor,generatePlan,termOrder} from './dist/planner.js';
@@ -9,8 +10,8 @@ import {journeyView,planView} from './dist/views.js';
 import {proposeReplan,replanSnapshot,restoreSnapshot} from './dist/replanning.js';
 const q={...emptyQuestionnaire(),ambitions:'Build fraud detection products for small Moroccan businesses.',activities:'Program reliable software and test mathematical models.',strengths:'I enjoy mathematics and programming projects.',industries:'Digital payments and financial technology.',priorities:'Useful products and stable technical skills.',entrepreneurship:'Start a service for merchants after gaining experience.',automation:'Build and use AI while learning security and human judgment.',constraints:'Keep a normal workload and study in summers.'};
 const input={stage:'direction',flowVersion:5,questionnaire:q,level:'undergraduate',preferredDegree:'undecided',profile:normalizeProfile({program:'BSCSC',track:'SE'})};
-const env={OPENAI_WEB_RESEARCH:'off',OPENAI_API_KEY:'fixture-secret',AI_ACCESS_CODE:'fixture-code'};
-const response=value=>Response.json({status:'completed',model:'test-fixture',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});
+const env={GROQ_WEB_RESEARCH:'off',GROQ_API_KEY:'fixture-secret',AI_ACCESS_CODE:'fixture-code'};
+const response=value=>groqFixture({status:'completed',model:'test-fixture',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});
 const assessment=Object.keys(AXES).map(axis=>({axis,explanation:'A qualified inference connected to the stated product goal.',answerIds:['ambitions'],evidenceIds:['ita-digital-morocco-2025']}));
 const direction={kind:'recommend',summary:'Build reliable payment software.',themes:['Secure software'],questions:[],academic:{program:'BSCSC',track:'SE',secondTrack:'',minor:'',rationale:'Software foundations for your product.',focusRationale:'Practice reliable engineering.',secondFocusRationale:'Keep workload manageable.',minorRationale:'Leave open until you compare complements.'},tradeoffs:['Check placement separately.'],assessment};
 // Regression: only the three required responses, with every optional field blank.
@@ -19,7 +20,7 @@ assert.equal(missingAnswers(partial).length,0);
 for(const answers of [partial,emptyQuestionnaire(),q]){
  const allowed=QUESTIONS.filter(x=>answers[x.id]).map(x=>x.id);
  await advise({...input,questionnaire:answers},env,async(_,init)=>{
-  const body=JSON.parse(init.body),context=JSON.parse(body.input),links=body.text.format.schema.properties.assessment.items.properties.answerIds;
+  const body=JSON.parse(init.body),context=JSON.parse(body.messages.at(-1).content),links=body.response_format.json_schema.schema.properties.assessment.items.properties.answerIds;
   assert.deepEqual(context.allowedAnswerIds,allowed);
   assert.deepEqual(context.questionLabels.map(x=>x.id),allowed);
   if(allowed.length)assert.deepEqual(links.items.enum,allowed);
@@ -29,7 +30,7 @@ for(const answers of [partial,emptyQuestionnaire(),q]){
 }
 let partialCalls=0;
 await advise({...input,questionnaire:partial},env,async(_,init)=>{
- partialCalls++;const context=JSON.parse(JSON.parse(init.body).input);
+ partialCalls++;const context=JSON.parse(JSON.parse(init.body).messages.at(-1).content);
  if(partialCalls===2)assert.match(context.repair.reason,/answers actually supplied/);
  return response({...direction,assessment:assessment.map(x=>({...x,answerIds:[partialCalls===1?'entrepreneurship':'activities']}))});
 });
@@ -40,7 +41,7 @@ const j=newJourney();j.questionnaire=q;j.goal='Build secure financial products.'
 for(const stage of ['setup','direction','courses','targets','pace']){
  let calls=0;
  const result=await advise({...input,stage,profile:j.profile,background:j.background},env,async(_,init)=>{
-  calls++;const payload=JSON.parse(init.body),c=JSON.parse(payload.input);assert.equal(payload.store,false);assert.equal(c.request.questionnaire.activities,q.activities);assert.ok(!init.body.includes('fixture-secret'));
+  calls++;const payload=JSON.parse(init.body),c=JSON.parse(payload.messages.at(-1).content);assert.equal(payload.store,undefined);assert.equal(c.request.questionnaire.activities,q.activities);assert.ok(!init.body.includes('fixture-secret'));
   if(stage==='setup')return response({summary:'Explore undergraduate programs.',level:'undergraduate',preferredDegree:'undecided',reason:'You are completing secondary education.',questions:['Which work do you enjoy?']});
   if(stage==='direction')return response(direction);
   if(stage==='courses'){
@@ -49,7 +50,7 @@ for(const stage of ['setup','direction','courses','targets','pace']){
    return response({summary:'Suggested electives.',choices:[{requirementId:'bscsc-free-1',courseCode:'FIN4308',reason:'Finance applications.'},{requirementId:'bscsc-free-2',courseCode:'MTH2304',reason:'Mathematical modeling.'}],openItems:[]});
   }
   if(stage==='targets'){
-   const s=payload.text.format.schema;const companyIds=s.properties.internships.properties.reach.items.properties.id.enum,exchangeIds=s.properties.exchanges.properties.reach.items.properties.id.enum;assert.ok(companyIds.every(id=>!exchangeIds.includes(id)),'Separate destination enums');
+   const s=payload.response_format.json_schema.schema;const companyIds=s.properties.internships.properties.reach.items.properties.id.enum,exchangeIds=s.properties.exchanges.properties.reach.items.properties.id.enum;assert.ok(companyIds.every(id=>!exchangeIds.includes(id)),'Separate destination enums');
    const items=(records)=>records.slice(0,5).map((r,i)=>({id:r.id,tier:i<3?'reach':i===3?'target':'safety',reason:'Explore skills for your merchant-product goal.',tierReason:'Research fit, not admission probability.',industryReason:'A qualified digital-sector opportunity, not an opening.',answerIds:['ambitions'],evidenceIds:['ita-digital-morocco-2025']}));
    return response({summary:'Research these sourced opportunities.',internships:items(c.companies),exchanges:items(c.exchangeDestinations)});
   }

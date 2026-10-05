@@ -10,3 +10,9 @@
 Do not switch a live site to email sign-in before SMTP and auth configuration work. Existing profile IDs and roadmaps are retained; a confirmed matching email reconnects an unambiguous legacy profile. Back up the production database using the hosting provider's supported workflow before migration.
 
 The Node development server listens only on loopback. It is not a hardened internet-facing production server. The public repository is source for review and development, not an unattended one-command production deployment.
+
+## Groq inference
+
+Set `GROQ_API_KEY` as a server-only secret and `GROQ_MODEL=openai/gpt-oss-120b`. `GROQ_WEB_RESEARCH=off` disables external browser research; normal advice still uses the reviewed academic and opportunity data. Remove obsolete OpenAI environment variables after switching the runtime. Do not expose provider credentials in frontend configuration.
+
+Before publishing a provider change, run the fixture suite and the opt-in `scripts/verify-live-agent.mjs` and `scripts/verify-intelligence-live.mjs` with synthetic inputs. Groq project rate limits and browser-search charges are separate from per-token model prices; check your account’s limits and billing before broadening the pilot.

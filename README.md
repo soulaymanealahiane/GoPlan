@@ -8,7 +8,7 @@ GoPlan helps students turn their interests into an editable degree plan: academi
 
 ## Engineering highlights
 
-- **Constrained AI recommendations:** server-side Responses API calls produce structured proposals that are validated against reviewed program data before they can change a plan.
+- **Constrained AI recommendations:** server-side Groq Chat Completions API calls produce structured proposals that are validated against reviewed program data before they can change a plan.
 - **Deterministic academic scheduling:** prerequisite and corequisite checks, credit limits, independent regular/summer loads, minor requirements and preserved completed courses.
 - **Progress-aware replanning:** unavailable courses and changed goals produce a preview; delayed graduation is surfaced before acceptance.
 - **Evidence-aware research:** bounded web research for opportunities, with source attribution and explicit uncertainty about current availability.
@@ -20,7 +20,9 @@ GoPlan helps students turn their interests into an editable degree plan: academi
 
 ## Stack
 
-Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; OpenAI for advice and bounded research. Production email delivery requires a configured SMTP service.
+Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; Groq-hosted GPT-OSS 120B for advice and browser research. Production email delivery requires a configured SMTP service.
+
+Groq is the sole inference provider. Recommendations use strict JSON schemas; browser research runs separately and only retrieved primary-source URLs can support its extracted findings. Academic validators remain authoritative. There is no automatic OpenAI fallback.
 
 ## Run locally
 

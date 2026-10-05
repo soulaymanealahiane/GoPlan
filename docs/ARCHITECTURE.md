@@ -7,7 +7,7 @@ flowchart LR
     API --> Auth[Supabase email verification]
     API --> Store[(SQLite / D1)]
     API --> Agent[AI proposal service]
-    Agent --> Model[OpenAI Responses API]
+    Agent --> Model[Groq GPT-OSS 120B]
     Agent --> Rules[Academic validator]
     Student --> Scheduler[Deterministic planner]
     Rules --> Proposal[Validated proposal]

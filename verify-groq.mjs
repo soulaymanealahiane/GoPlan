@@ -1,0 +1,33 @@
+import {groqFixture} from './tests/groq-fixture.mjs';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {handleApi} from './server/api.mjs';
+import {fetchGroq,groqServiceError} from './server/groq-transport.mjs';
+import {fetchGroqCompletion} from './server/groq-completion.mjs';
+import {newJourney} from './dist/guidance.js';
+const site='https://planwithgoplan.com';
+const status=env=>handleApi(new Request(site+'/api/status'),env);
+const oldEnv={OPENAI_API_KEY:'legacy-fixture',AI_ACCESS_CODE:'test-demo'};
+assert.equal((await (await status(oldEnv)).json()).available,false,'An old OpenAI credential must never activate Groq or a fallback');
+const env={GROQ_API_KEY:'fixture',GROQ_MODEL:'openai/gpt-oss-120b',AI_ACCESS_CODE:'test-demo',GROQ_WEB_RESEARCH:'off'};
+const current=await (await status(env)).json();assert.equal(current.available,true);assert.equal(current.provider,'groq');assert.equal(current.model,env.GROQ_MODEL);assert.ok(!JSON.stringify(current).includes('fixture'));
+const j=newJourney();const request=new Request(site+'/api/advice',{method:'POST',headers:{Origin:site,'Content-Type':'application/json','X-GoPlan-Access':'test-demo'},body:JSON.stringify({...j,stage:'setup',flowVersion:5})});
+let calls=0;assert.equal((await handleApi(request,oldEnv,{fetcher:async()=>{calls++;throw Error('Must not call OpenAI');}})).status,503);assert.equal(calls,0);
+const retryInit={};let attempts=0;const restored=await fetchGroq('https://api.groq.com/openai/v1/responses',retryInit,async()=>++attempts===1?groqFixture({error:{code:'internal_server_error'}},{status:503}):groqFixture({status:'completed'}),{pause:async()=>{},random:()=>0});assert.equal(restored.status,200);assert.equal(attempts,2);
+attempts=0;await fetchGroq('https://api.groq.com/openai/v1/responses',retryInit,async()=>{attempts++;return groqFixture({error:{code:'rate_limit_exceeded',type:'tokens'}},{status:413});},{pause:async()=>{throw Error('Cannot retry oversized free-tier request');}});assert.equal(attempts,1);
+const schema={type:'object',properties:{answer:{type:'string'}},required:['answer'],additionalProperties:false};
+const init={method:'POST',headers:{Authorization:'Bearer fixture'},body:JSON.stringify({model:env.GROQ_MODEL,store:false,instructions:'Answer briefly.',input:'Synthetic question',max_output_tokens:1000,reasoning:{effort:'medium'},text:{format:{type:'json_schema',name:'protocol_test',strict:true,schema}}})};
+const wire=await fetchGroqCompletion(init,async(url,request)=>{
+ assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');const b=JSON.parse(request.body);assert.equal(b.reasoning_effort,'medium');assert.equal(b.max_completion_tokens,1000);assert.equal(b.store,undefined);assert.equal(b.tools,undefined);assert.equal(b.response_format.json_schema.strict,true);assert.deepEqual(b.response_format.json_schema.schema,schema);assert.equal(b.messages.at(-1).content,'Synthetic question');
+ return groqFixture({choices:[{finish_reason:'stop',message:{content:'{"answer":"Example"}'}}],usage:{prompt_tokens:20,completion_tokens:4},model:env.GROQ_MODEL});
+});const normalized=await wire.json();assert.equal(normalized.status,'completed');assert.equal(normalized.usage.input_tokens,20);assert.equal(normalized.output[0].content[0].text,'{"answer":"Example"}');
+const truncated=await fetchGroqCompletion(init,async()=>groqFixture({choices:[{finish_reason:'length',message:{content:'{'}}]}));assert.equal((await truncated.json()).incomplete_details.reason,'max_output_tokens');
+assert.equal(groqServiceError({status:400},{code:'blocked_api_access'}).status,503);
+let repairs=0;const repaired=await fetchGroqCompletion(init,async(_,request)=>{
+ repairs++;const b=JSON.parse(request.body);assert.deepEqual(b.response_format.json_schema.schema,schema);
+ if(repairs===1)return groqFixture({error:{code:'json_validate_failed',message:'answer must be a string',failed_generation:'{"answer":null}'}},{status:400});
+ assert.ok(b.messages.at(-1).content.includes('rejectedProposal'));return groqFixture({choices:[{finish_reason:'stop',message:{content:'{"answer":"Repaired"}'}}]});
+});assert.equal(repairs,2);assert.equal(repaired.status,200);
+attempts=0;const recovered=await fetchGroq('https://api.groq.com/openai/v1/chat/completions',{},async()=>{if(++attempts===1)throw new TypeError('fetch failed',{cause:{code:'ECONNRESET'}});return groqFixture({ok:true});},{pause:async()=>{},random:()=>0});assert.equal(recovered.status,200);assert.equal(attempts,2);
+for(const file of ['server/advisor.mjs','server/journey-agent.mjs','server/research.mjs'])assert.ok(!fs.readFileSync(file,'utf8').includes('api.openai.com'),'No OpenAI inference endpoint in '+file);
+console.log('Groq-only activation, provider status, no OpenAI fallback, transient retry and oversized-request rejection passed. No live calls.');

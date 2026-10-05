@@ -1,3 +1,4 @@
+import {groqFixture} from './tests/groq-fixture.mjs';
 import assert from 'node:assert/strict';
 import {normalizeProfile,coursesFor,generatePlan,limits,validatePlan} from './dist/planner.js';
 import {minorSummary} from './dist/minor-summary.js';
@@ -8,8 +9,8 @@ import {editJourney,buildProposal} from './dist/workspace-flow.js';
 import {replanSnapshot,proposeReplan} from './dist/replanning.js';
 import {advise,detailsContext} from './server/advisor.mjs';
 
-const env={OPENAI_API_KEY:'fixture-secret',OPENAI_WEB_RESEARCH:'off'};
-const response=value=>Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});
+const env={GROQ_API_KEY:'fixture-secret',GROQ_WEB_RESEARCH:'off'};
+const response=value=>groqFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});
 const j=newJourney();j.programChosen=true;j.profile=normalizeProfile({program:'BSCSC',track:'SE',minor:'mathematics',gpa:3.4});j.goal='Build useful software and learn mathematical modelling.';
 const math=minorSummary(j.profile);assert.equal(math.requiredCourses,5);assert.equal(math.requiredCredits,15);assert.equal(math.selectedCourses,4);assert.equal(math.selectedCredits,12);assert.equal(math.complete,false);assert.ok(math.rows[4].approvalRequired);assert.equal(math.rows[4].code,'');
 assert.equal(math.rows.filter(c=>c.code).length,4);assert.ok(!math.rows.some(c=>c.id.startsWith('support-')));
@@ -37,9 +38,9 @@ j.step=5;const html=journeyView({journey:j});assert.ok(html.includes('data-profi
 const stamp=adviceFingerprint('pace',j);j.profile.summerCourses=3;assert.notEqual(adviceFingerprint('pace',j),stamp);j.profile.summerCourses=2;
 const before=JSON.stringify(j);let calls=0;
 const explanation=await advise({...j,stage:'question',question:'Why are only four courses selected for my minor?',profile:{...j.profile,name:'PRIVATE NAME',gpa:3.4}},env,async(_,init)=>{
- calls++;assert.ok(!init.body.includes('PRIVATE NAME'));assert.ok(!init.body.includes('fixture-secret'));const context=JSON.parse(JSON.parse(init.body).input);assert.equal(context.questionFacts.minorChecklist.requiredCourses,5);assert.equal(context.questionFacts.minorChecklist.selectedCourses,4);return response({answer:'The four named courses provide 12 credits. A fifth approved math-intensive course is still required for the 15-credit Individual Minor.'});
+ calls++;assert.ok(!init.body.includes('PRIVATE NAME'));assert.ok(!init.body.includes('fixture-secret'));const context=JSON.parse(JSON.parse(init.body).messages.at(-1).content);assert.equal(context.questionFacts.minorChecklist.requiredCourses,5);assert.equal(context.questionFacts.minorChecklist.selectedCourses,4);return response({answer:'The four named courses provide 12 credits. A fifth approved math-intensive course is still required for the 15-credit Individual Minor.'});
 });assert.equal(calls,1);acceptAdvice(j,'question',explanation);assert.equal(JSON.stringify(j),before,'An explanation cannot alter any draft choices');
-await advise({...newJourney(),stage:'question',question:'What is my degree?'},env,async(_,init)=>{const c=JSON.parse(JSON.parse(init.body).input);assert.equal(c.questionFacts.degree,undefined);assert.equal(c.request.profile.program,'');return response({answer:'You have not selected a degree yet.'});});
+await advise({...newJourney(),stage:'question',question:'What is my degree?'},env,async(_,init)=>{const c=JSON.parse(JSON.parse(init.body).messages.at(-1).content);assert.equal(c.questionFacts.degree,undefined);assert.equal(c.request.profile.program,'');return response({answer:'You have not selected a degree yet.'});});
 // A question entered into the change/refinement field stays read-only, too.
 const answer=await advise({...j,stage:'courses',refinement:'Why only four minor courses?',replaceableChoices:[]},env,async()=>response({intent:'answer',answer:'The fifth requirement needs school approval.',choices:[{requirementId:'bad',courseCode:'INVENTED',reason:'Must never be applied'}]}));acceptAdvice(j,'courses',answer);assert.equal(JSON.stringify(j),before);
 const routed=await advise({...j,stage:'change',changeRequest:'Why only four courses for my minor?'},env,async()=>response({kind:'answer',startStep:3,summary:'A fifth approved slot is required.',questions:[]}));assert.equal(routed.kind,'answer');

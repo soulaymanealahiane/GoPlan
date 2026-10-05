@@ -1,9 +1,10 @@
+import {groqFixture} from './tests/groq-fixture.mjs';
 import assert from 'node:assert/strict';
 import {localDatabase} from './server/local-db.mjs';
 import {recordUsage,analyticsSnapshot,channelFor} from './server/analytics.mjs';
 import {handleApi} from './server/api.mjs';
 import {newJourney} from './dist/guidance.js';
-const DB=localDatabase(':memory:'),env={DB,ANALYTICS_ENABLED:'true',AI_ACCESS_CODE:'fixture-demo',FEEDBACK_REVIEW_KEY:'fixture-private',OPENAI_API_KEY:'fixture',OPENAI_WEB_RESEARCH:'off'},live='https://goplan-aui-demo-k7m9.salahiane9.chatgpt.site';
+const DB=localDatabase(':memory:'),env={DB,ANALYTICS_ENABLED:'true',AI_ACCESS_CODE:'fixture-demo',FEEDBACK_REVIEW_KEY:'fixture-private',GROQ_API_KEY:'fixture',GROQ_WEB_RESEARCH:'off'},live='https://goplan-aui-demo-k7m9.salahiane9.chatgpt.site';
 const admin=(key='fixture-private',origin=live)=>handleApi(new Request(live+'/api/admin/analytics',{headers:{Authorization:'Bearer '+key,Origin:origin}}),env);
 assert.equal((await admin('fixture-demo')).status,401);assert.equal((await admin('fixture-private','https://other.example')).status,403);
 assert.equal(channelFor('https://app.goplan.local'),'android');assert.equal(channelFor('http://localhost:4317'),'local');
@@ -16,7 +17,7 @@ assert.equal((await handleApi(post('/api/usage',{event:'plan_saved',name:'PRIVAT
 assert.equal((await handleApi(post('/api/usage',{event:'plan_saved'},{'X-GoPlan-Access':'bad'}),env)).status,401);
 assert.equal((await handleApi(post('/api/usage',{event:'plan_saved'}),env)).status,200);
 const j=newJourney();j.programChosen=true;j.profile.program='BSCSC';const query={...j,stage:'question',question:'Does every minor requirement need to be satisfied?'};let calls=0;
-const fetcher=async()=>{calls++;return Response.json({status:'completed',usage:{input_tokens:120,output_tokens:45},output:[{content:[{type:'output_text',text:JSON.stringify({answer:'Check all minor requirements with your adviser.',update:{summary:'Explained requirements.',changes:[],limitations:[]}})}]}]});};
+const fetcher=async()=>{calls++;return groqFixture({status:'completed',usage:{input_tokens:120,output_tokens:45},output:[{content:[{type:'output_text',text:JSON.stringify({answer:'Check all minor requirements with your adviser.',update:{summary:'Explained requirements.',changes:[],limitations:[]}})}]}]});};
 const response=await handleApi(post('/api/advice',query,{'X-GoPlan-Session':'analytics-fixture-session'}),env,{fetcher});assert.equal(response.status,200);
 assert.equal((await handleApi(post('/api/advice',query,{'X-GoPlan-Session':'analytics-fixture-session'}),env,{fetcher})).status,200);assert.equal(calls,1);
 data=await (await admin()).json();assert.equal(data.totals.operations,5);assert.equal(data.totals.cached,1);assert.equal(data.totals.providerCalls,7);assert.equal(data.totals.inputTokens,1020);assert.equal(data.totals.outputTokens,120);
