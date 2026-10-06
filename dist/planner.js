@@ -4,6 +4,7 @@ import {withMinor,selectedMinor} from './minors.js';
 import {withSecondFocus} from './second-focus.js';
 import {courseOptions} from './course-options.js';
 import {businessRule,BUSINESS_SOURCE,describeRule} from './program-rules.js';
+import {normalizeScheduling,courseAvailability} from './course-availability.js';
 for(const x of GUIDED.supplementaryCourses||[])if(!DATA.courses[x.id]||DATA.courses[x.id].creditsProvisional)DATA.courses[x.id]={code:x.id,title:x.title,credits:x.credits,source:x.source,prerequisiteText:x.prerequisiteStatus,rule:{all:[],any:[],coreq:[],minCredits:0,review:true}};
 for(const m of GUIDED.minors)for(const r of [...m.requirements,...(m.variants||[]).flatMap(v=>v.requirements)])for(const id of [r.courseCode,...(r.allowedCourses||[])].filter(Boolean))if(!DATA.courses[id])DATA.courses[id]={code:id,title:r.courseCode===id?r.title:id+' · source-listed option',credits:r.credits,creditsProvisional:true,source:r.source,prerequisiteText:'Course is listed in the minor source; confirm its current course description, credits and prerequisites.',rule:{all:[],any:[],coreq:[],minCredits:0,review:true}};
 export {DATA};
@@ -61,7 +62,7 @@ function eligible(c,done,credits,same=[]){const r=c.rule;return r.all.every(x=>d
 export const termOrder=t=>t.year*3+({Spring:0,Summer:1,Fall:2}[t.season]??0);
 export function generatePlan(raw=DEFAULT_PROFILE,scheduling={}){
  const p=normalizeProfile(raw),cs=coursesFor(p),remaining=new Set(cs.map(c=>c.id)),done=new Set(p.priorCodes),terms=[];
- const fixed=scheduling.fixedTerms||[],fixedIds=new Set(fixed.flatMap(t=>t.courses)),unavailable=scheduling.unavailable||[];
+ const fixed=scheduling.fixedTerms||[],fixedIds=new Set(fixed.flatMap(t=>t.courses)),offeringReports=normalizeScheduling(scheduling);
  for(const id of fixedIds)remaining.delete(id);
  let earlier=p.priorCodes.reduce((s,id)=>s+(DATA.courses[id]?.credits||0),0),lc=p.lc,regular=0;
  const prior=cs.filter(c=>c.code&&done.has(c.code)&&!fixedIds.has(c.id));if(prior.length){terms.push({id:'prior',season:'Prior',year:p.startYear,courses:prior.map(c=>c.id),exchange:false,lc:false});prior.forEach(c=>remaining.delete(c.id));}
@@ -75,6 +76,7 @@ export function generatePlan(raw=DEFAULT_PROFILE,scheduling={}){
   if(summer&&!p.summers&&!internshipOnly&&!frozen)continue;
   const term=frozen?structuredClone(frozen):{id:`${season}-${year}`,season,year,courses:[],exchange:false,lc:false};
   if(scheduling.notBefore&&termOrder(term)<termOrder(scheduling.notBefore)){
+   if(lc&&!summer&&!term.courses.length){term.lc=true;lc--;terms.push(term);continue;}
    if(term.courses.length){terms.push(term);for(const id of term.courses){const c=cs.find(c=>c.id===id);if(c?.code)done.add(c.code);earlier+=c?.credits||0;}}
    continue;
   }
@@ -82,18 +84,18 @@ export function generatePlan(raw=DEFAULT_PROFILE,scheduling={}){
   if(lc){if(summer)continue;term.lc=true;lc--;terms.push(term);continue;}if(!summer)regular++;
  const cap=limits(p,summer);let used=term.courses.reduce((sum,id)=>sum+(cs.find(c=>c.id===id)?.loadCredits||0),0),count=term.courses.filter(id=>cs.find(c=>c.id===id)?.loadCredits>0).length;
   const finals=cs.filter(c=>remaining.has(c.id)&&(c.rule.finalTerm||['GBU4101','MGT4301'].includes(c.code))).map(c=>c.id);
-  const sorted=cs.filter(c=>remaining.has(c.id)).sort((a,b)=>{const score=c=>cs.filter(x=>x.rule.all.includes(c.code)||x.rule.any.includes(c.code)||x.rule.coreq.includes(c.code)).length*8-(c.recommendedSemester||5)*2+(c.code==='FAS0210'?100:0)+(/^FYE110[12]$/.test(c.code)?90:0);return score(b)-score(a);});
+  const sorted=cs.filter(c=>remaining.has(c.id)).sort((a,b)=>{const score=c=>cs.filter(x=>x.rule.all.includes(c.code)||x.rule.any.includes(c.code)||x.rule.coreq.includes(c.code)).length*8-(c.recommendedSemester||5)*2+(c.code==='FAS0210'?100:0)+(/^FYE110[12]$/.test(c.code)?90:0)+(courseAvailability(c.code,term.id,offeringReports).status==='reported-offered'?60:0);return score(b)-score(a);});
   for(const c of sorted){
-   if(unavailable.some(x=>x.courseCode===c.code&&x.termId===term.id))continue;
+   if(!courseAvailability(c.code,term.id,offeringReports).allowed)continue;
    if(isFieldwork(c)&&(!summer||year<internshipYear)||internshipOnly&&!isFieldwork(c))continue;
    if(term.courses.includes(c.id)||c.rule.finalTerm&&summer)continue;
    if(finals.includes(c.id)&&(remaining.size>cap.count||cs.filter(x=>remaining.has(x.id)).reduce((n,x)=>n+x.loadCredits,0)>cap.credits))continue;
    if(c.offeredTerms&&!c.offeredTerms.includes(season))continue;
    if(c.rule.previousId&&!terms.at(-1)?.courses.includes(c.rule.previousId))continue;
    if(c.rule.previousSeason&&(terms.at(-1)?.season!==c.rule.previousSeason||terms.at(-1)?.year!==year))continue;
-   const co=cs.filter(x=>remaining.has(x.id)&&c.rule.coreq.includes(x.code)&&!term.courses.includes(x.id));
-   const bundle=[c,...co],same=[...term.courses.map(id=>cs.find(x=>x.id===id).code),...bundle.map(x=>x.code)];
-   if(bundle.some(x=>!eligible(x,done,earlier,same)||unavailable.some(u=>u.courseCode===x.code&&u.termId===term.id)))continue;
+   const bundle=[c];for(let i=0;i<bundle.length;i++)for(const x of cs.filter(x=>remaining.has(x.id)&&bundle[i].rule.coreq.includes(x.code)&&!term.courses.includes(x.id)))if(!bundle.some(y=>y.id===x.id))bundle.push(x);
+   const same=[...term.courses.map(id=>cs.find(x=>x.id===id).code),...bundle.map(x=>x.code)];
+   if(bundle.some(x=>!eligible(x,done,earlier,same)||!courseAvailability(x.code,term.id,offeringReports).allowed||x.offeredTerms&&!x.offeredTerms.includes(season)||isFieldwork(x)&&(!summer||year<internshipYear)||internshipOnly&&!isFieldwork(x)||x.rule.finalTerm&&summer||x.rule.previousId&&!terms.at(-1)?.courses.includes(x.rule.previousId)||x.rule.previousSeason&&(terms.at(-1)?.season!==x.rule.previousSeason||terms.at(-1)?.year!==year)))continue;
    const load=bundle.reduce((n,x)=>n+x.loadCredits,0),n=bundle.filter(x=>x.loadCredits>0).length;
    if(count+n>cap.count||used+load>cap.credits)continue;
    if(summer&&[...term.courses.map(id=>cs.find(x=>x.id===id)),...bundle].filter(x=>x.lab).length>1)continue;
@@ -108,19 +110,18 @@ export function generatePlan(raw=DEFAULT_PROFILE,scheduling={}){
   const lastOriginal=terms.filter(t=>t.courses.some(id=>finalCourses.some(c=>c.id===id))).at(-1);
   for(const t of terms)t.courses=t.courses.filter(id=>!finalCourses.some(c=>c.id===id));
   let last=terms.filter(t=>t.id!=='prior'&&!t.lc&&t.courses.length).at(-1);
-  const cap=limits(p,false),load=last?last.courses.map(id=>cs.find(c=>c.id===id)):[];
+  const cap=limits(p,false);
   if(lastOriginal&&(!last||terms.indexOf(last)<terms.indexOf(lastOriginal)))last=lastOriginal;
-  const currentLoad=last?last.courses.map(id=>cs.find(c=>c.id===id)):[];
-  if(!last||last.season==='Summer'||currentLoad.length+finalCourses.length>cap.count||[...currentLoad,...finalCourses].reduce((n,c)=>n+c.loadCredits,0)>cap.credits){
-   const season=last?.season==='Fall'?'Spring':'Fall',year=last?last.year+(last.season==='Fall'?1:0):p.startYear;
-   last={id:`${season}-${year}`,season,year,courses:[],exchange:false,lc:false};
-   const existing=terms.find(t=>t.id===last.id);if(existing)last=existing;else terms.push(last);
+  const fits=t=>{if(!t||t.season==='Summer'||t.lc||finalCourses.some(c=>!courseAvailability(c.code,t.id,offeringReports).allowed||c.offeredTerms&&!c.offeredTerms.includes(t.season)))return false;const load=t.courses.map(id=>cs.find(c=>c.id===id));return [...load,...finalCourses].filter(c=>c.loadCredits>0).length<=cap.count&&[...load,...finalCourses].reduce((n,c)=>n+c.loadCredits,0)<=cap.credits;};
+  if(!fits(last)){
+   let cursor=last||{season:'Spring',year:p.startYear};last=null;
+   for(let attempt=0;attempt<42;attempt++){const season=cursor.season==='Fall'?'Spring':'Fall',year=cursor.year+(cursor.season==='Fall'?1:0);cursor={id:`${season}-${year}`,season,year,courses:[],exchange:false,lc:false};const existing=terms.find(t=>t.id===cursor.id);if(fits(existing||cursor)){last=existing||cursor;if(!existing)terms.push(last);break;}}
   }
-  last.courses.push(...finalCourses.map(c=>c.id));
+  if(last)last.courses.push(...finalCourses.map(c=>c.id));else finalCourses.forEach(c=>remaining.add(c.id));
  }
  if(remaining.size)terms.push({id:'pending',season:'Pending',year:0,courses:[...remaining],exchange:false,lc:false});return terms.filter(t=>t.courses.length||t.lc||t.internshipOnly);
 }
-export function validatePlan(terms,cs,raw){
+export function validatePlan(terms,cs,raw,scheduling={}){
  const p=normalizeProfile(raw),program=programFor(p),map=new Map(cs.map(c=>[c.id,c])),seen=new Set(),done=new Set(p.priorCodes),issues=[];
  let earlier=p.priorCodes.reduce((s,id)=>s+(DATA.courses[id]?.credits||0),0),taken=new Set(p.priorCodes);
  const add=(text,level='conflict',id='')=>issues.push({text,level,id}),final=terms.filter(t=>!['pending','prior'].includes(t.id)&&t.season!=='Summer'&&t.courses.length).at(-1)?.id;
@@ -134,6 +135,7 @@ export function validatePlan(terms,cs,raw){
   if(t.lc&&list.length)add(`${term}: degree courses overlap the selected language-center buffer.`);
   if(t.season==='Summer'&&list.filter(c=>c.lab).length>1)add(`${term}: more than one laboratory course needs a separate eligibility review.`);
   for(const c of list){
+   if(!courseAvailability(c.code,t.id,scheduling).allowed)add(`${c.code||c.title} in ${term}: ${courseAvailability(c.code,t.id,scheduling).reason}`,'conflict',c.id);
    if(c.code&&taken.has(c.code)&&!c.repeatable)add(`${c.code} is counted twice. Choose a distinct course for this requirement.`,'conflict',c.id);
    const missing=c.rule.all.filter(x=>!done.has(x));if(missing.length)add(`${c.code||c.title} in ${term}: complete ${missing.join(', ')} first.`,'conflict',c.id);
    if(c.rule.any.length&&!c.rule.any.some(x=>done.has(x)))add(`${c.code||c.title} in ${term}: needs one of ${c.rule.any.join(' / ')} in an earlier term.`,'conflict',c.id);

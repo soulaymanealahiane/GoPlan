@@ -2,6 +2,7 @@ import {DATA,DEFAULT_PROFILE,normalizeProfile,coursesFor,generatePlan,validatePl
 import GUIDED from './guided-data.js';
 import {selectedMinor} from './minors.js';
 import {courseOptions} from './course-options.js';
+import {normalizeScheduling} from './course-availability.js';
 import {emptyQuestionnaire,cleanQuestionnaire} from './questionnaire.js';
 export {GUIDED};
 export const INTERESTS=[
@@ -45,7 +46,7 @@ export function makePlan(j,previous){
  return {id:Date.now().toString(36),dataVersion:DATA.version,createdAt:new Date().toISOString(),finalizedAt:null,profile,courses,terms:generatePlan(profile),program:structuredClone(program),minor:minor?structuredClone(minor):null,decisions:structuredClone(j),tracking,reports:[],targets:{internships:structuredClone(j.details?.internships||[]),exchanges:structuredClone(j.details?.exchanges||[]),auiMasters:[],globalMasters:[]}};
 }
 export function planIssues(plan){
- const issues=validatePlan(plan.terms,plan.courses,plan.profile);
+ const issues=validatePlan(plan.terms,plan.courses,plan.profile,plan.scheduling);
  for(const c of plan.courses){const progress=plan.tracking?.[c.id];if(progress?.status==='retake')issues.push({level:'conflict',id:c.id,text:`${c.code||c.title} needs a retake. Move it to a new semester and review dependent courses before treating their prerequisites as satisfied.`});if(progress?.status==='completed'&&plan.program.level==='graduate'&&['C+','C','C−','D+','D','F'].includes(progress.grade))issues.push({level:'conflict',id:c.id,text:`${c.code||c.title}: recorded grade ${progress.grade} is below the graduate minimum B− stated in the catalog; some programs require B. Confirm repeat and degree-credit rules.`});}
  if(plan.minor?.reviewRequired)issues.push({level:'review',text:`${plan.minor.name}: source differences, eligibility or overlap approvals still require review.`});
  for(const r of plan.reports||[])if(r.status==='open')issues.push({level:'conflict',id:r.courseId,text:`Reported ${r.type}: ${r.detail||'Course availability or registration conflict'} (${r.termId}).`});
@@ -76,6 +77,7 @@ export function validateSavedWorkspace(raw){
   if(!Array.isArray(plan.courses)||plan.courses.length>300||!Array.isArray(plan.terms)||plan.terms.length>100)throw Error('The saved roadmap is invalid.');
   if(plan.courses.some(c=>!object(c)||typeof c.id!=='string'||!number(c.credits)||!number(c.loadCredits)||!['focus','general','foundation','core','experience'].includes(c.kind)||!object(c.rule)||!strings(c.rule.all)||!strings(c.rule.any)||!strings(c.rule.coreq)||!number(c.rule.minCredits)))throw Error('Invalid saved course information.');
   for(const c of plan.courses){if(c.options&&!strings(c.options)||c.excludedCourses&&!strings(c.excludedCourses)||c.offeredTerms&&!strings(c.offeredTerms)||c.allowedOptions&&(!Array.isArray(c.allowedOptions)||c.allowedOptions.some(x=>!object(x)))||c.rule.minProgramCourses&&(!number(c.rule.minProgramCourses)||!strings(c.rule.programCourseCodes)))throw Error('Invalid saved requirement options.');}
+  if(plan.scheduling)plan.scheduling=normalizeScheduling(plan.scheduling);
   if(new Set(plan.courses.map(c=>c.id)).size!==plan.courses.length)throw Error('Duplicate saved course identifiers.');
   if(new Set(plan.terms.map(t=>t.id)).size!==plan.terms.length)throw Error('Duplicate semester identifiers.');
   let order=-Infinity;for(const t of plan.terms){if(t.id==='prior'||t.id==='pending')continue;const n=t.year*3+({Spring:0,Summer:1,Fall:2}[t.season]??NaN);if(!Number.isInteger(t.year)||t.year<2000||t.year>2100||!Number.isFinite(n)||n<=order||t.id!==`${t.season}-${t.year}`)throw Error('Invalid semester order.');order=n;}

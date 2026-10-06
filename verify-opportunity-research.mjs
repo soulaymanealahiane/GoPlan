@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict';
+import {groqFixture} from './tests/groq-fixture.mjs';
+import {extractResearch,searchEvidence,researchFor,publicUrl} from './server/research.mjs';
+import {availableTargets,canonicalTargetKeys,mergeResearchTargets,opportunityRefinementPolicy,validateOpportunitySelection} from './server/advisor.mjs';
+
+const payload=data=>({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(data)}]}]});
+const receipt=(documents,{searches=3,opens=4}={})=>({choices:[{finish_reason:'stop',message:{content:'Ignore invented final-answer provenance https://fabricated.ma/careers',executed_tools:[...Array.from({length:searches},()=>({name:'browser.search',search_results:{results:documents}})),...Array.from({length:opens},(_,i)=>({name:'browser.open',browser_results:[documents[i%documents.length]]}))]}}]});
+const candidate=i=>({name:'Candidate '+i,organizationType:'unknown',officialUrl:`https://candidate${i}.ma/about`,sourceUrl:`https://candidate${i}.ma/about`,sourceKind:'company',moroccoEvidence:'Based in Casablanca, Morocco.',moroccoSupportSnippet:'Based in Casablanca, Morocco.',organizationTypeEvidence:'',activity:'Builds merchant software.',fit:'Product engineering and merchant data experience.',fields:['software','merchant-data'],supportSnippet:'Builds merchant software.',sourcePublishedDate:'2026-09-01',limitations:['Vacancies and student eligibility not verified.']});
+const candidates=Array.from({length:12},(_,i)=>candidate(i));
+const documents=candidates.map(c=>({url:c.sourceUrl,title:c.name,content:'Based in Casablanca, Morocco. Builds merchant software. Updated 2026-09-01.'}));
+const exchanges=availableTargets('exchanges',{program:'BSCSC'}),partner=exchanges[0];
+documents.push({url:partner.sourceUrl,title:partner.name,content:'Computing and engineering modules. Incoming exchange students need nomination. Updated 2026-09-01.'});
+const exchange={id:partner.id,sourceUrl:partner.sourceUrl,academicFit:'Computing and engineering modules complement software foundations.',eligibilityEvidence:'Incoming exchange students need nomination; personal eligibility is not verified.',languageEvidence:'Teaching language not established in the receipt.',termEvidence:'No term-specific course availability established.',supportSnippet:'Computing and engineering modules.',sourcePublishedDate:'2026-09-01',limitations:['Check term-specific modules and language with the international office.']};
+const evidence=searchEvidence(receipt(documents));
+assert.deepEqual(evidence.audit,{searches:3,opens:4,executedTools:7});
+assert.ok(!evidence.urls.includes('https://fabricated.ma/careers'));
+assert.throws(()=>searchEvidence({choices:[{message:{content:documents[0].url,executed_tools:[{name:'browser.search',arguments:JSON.stringify({url:documents[0].url})}]}}]}),/traceable/);
+assert.equal(publicUrl('https://169.254.169.254/latest/meta-data'),'');
+assert.equal(publicUrl('https://example.com/a?utm_source=ad&z=2&a=1#frag'),'https://example.com/a?a=1&z=2');
+
+const alias={...candidates[0],name:'Candidate 0 Morocco',officialUrl:'https://careers.candidate0.ma/invented'};
+const fabricated={...candidates[1],name:'Candidate 1 Research',supportSnippet:'There are definitely paid internships available.'};
+const unsupported={...candidates[2],sourceUrl:'https://not-retrieved.ma/source'};
+const mislabeledStartup={...candidates[3],name:'Candidate 3 Startup',organizationType:'startup',organizationTypeEvidence:''};
+const result=extractResearch(payload({summary:'Model summaries are not trusted evidence.',companies:[...candidates,alias,fabricated,unsupported,mislabeledStartup],exchanges:[exchange,{...exchange,id:'invented-aui-partner'},{...exchange,sourceUrl:candidates[0].sourceUrl}],facts:[],gaps:['No current internship vacancies confirmed.']}),'BSCSC',evidence,{exchangeTargets:exchanges});
+assert.equal(result.companies.length,12,'retain a broader evidenced pool while excluding aliases and unsupported claims');
+assert.equal(result.exchanges.length,1,'only known partner IDs on that institution primary domain can be enriched');
+assert.equal(result.exchanges[0].id,partner.id);
+assert.ok(result.exchanges[0].limitations.some(x=>x.includes('credit approval')));
+assert.equal(result.companies[0].sourcePublishedDate,'2026-09-01');
+assert.equal(result.companies[0].selectionProbabilityKnown,false);
+assert.match(result.companies[0].availability,/unverified/);
+assert.ok(!result.summary.includes('Model summaries'));
+assert.ok(result.gaps.some(x=>x.includes('excluded')));
+const undated=extractResearch(payload({companies:[{...candidates[0],sourcePublishedDate:'2025-09-01'}],facts:[]}),'BSCSC',evidence);
+assert.equal(undated.companies[0].sourceDateKnown,false,'a model-supplied publication date absent from its source receipt must remain unknown');
+const inventedOfficial=extractResearch(payload({companies:[{...candidates[0],officialUrl:'https://candidate0.ma/invented-careers'}],facts:[]}),'BSCSC',evidence);
+assert.equal(inventedOfficial.companies[0].officialUrl,candidates[0].sourceUrl,'do not export an invented official page');
+const sparse=extractResearch(payload({companies:[candidates[0]],facts:[]}),'BSCSC',searchEvidence(receipt(documents.slice(0,1),{searches:1,opens:0})));
+assert.ok(sparse.gaps.some(x=>x.includes('coverage')));assert.ok(sparse.gaps.some(x=>x.includes('page opens')));
+
+const reviewed={...result.companies[0],id:'reviewed-company',name:'Candidate Zero',sourceUrl:'https://careers.candidate0.ma/jobs',programs:['BSCSC','BBA']};
+const merged=mergeResearchTargets([reviewed],result,'internships');
+assert.equal(merged.length,12);assert.equal(merged[0].id,'reviewed-company');assert.deepEqual(merged[0].programs,['BSCSC','BBA']);
+assert.equal(merged[0].sourceUrl,candidates[0].sourceUrl);
+assert.ok(merged[0].sources.some(s=>s.url===candidates[0].sourceUrl));
+const hostileEnrichment={...result.exchanges[0],scheme:'Invented scheme',programs:['MBA'],constraints:[],graduateAccessVerified:true,availabilityConfirmed:true};
+const enriched=mergeResearchTargets([partner],{exchanges:[hostileEnrichment]},'exchanges')[0];
+assert.equal(enriched.id,partner.id);assert.equal(enriched.scheme,partner.scheme);assert.deepEqual(enriched.programs,partner.programs);assert.deepEqual(enriched.constraints,partner.constraints);assert.equal(enriched.availabilityConfirmed,partner.availabilityConfirmed);assert.equal(enriched.graduateAccessVerified,partner.graduateAccessVerified);
+assert.equal(enriched.researchCheckedAt,result.checkedAt);assert.equal(enriched.checkedAt,partner.checkedAt,'fresh academic research does not renew a stale AUI partner-call date');
+assert.match(enriched.academicFit,/Computing/);
+assert.throws(()=>validateOpportunitySelection([{id:reviewed.id},{id:alias.id||'alias'}],[reviewed,{...result.companies[0],id:'alias'}],'internships'),/distinct/);
+const current={internships:merged.slice(0,5),exchanges:exchanges.slice(0,5)};
+const policy=opportunityRefinementPolicy('Find more startup companies, keep my exchange institutions.',current);
+assert.deepEqual(policy.changeTypes,['internships']);assert.deepEqual(policy.preserveTypes,['exchanges']);assert.equal(policy.preferNovel,true);
+assert.throws(()=>validateOpportunitySelection([...current.exchanges].reverse(),exchanges,'exchanges',{current:current.exchanges,policy}),/unaffected/);
+assert.doesNotThrow(()=>validateOpportunitySelection(current.exchanges,exchanges,'exchanges',{current:current.exchanges,policy}));
+assert.deepEqual(opportunityRefinementPolicy('Show different exchange universities.',current).preserveTypes,['internships']);
+assert.deepEqual(opportunityRefinementPolicy('Give different companies and exchanges.',current).preserveTypes,[]);
+assert.deepEqual(opportunityRefinementPolicy("Don't keep the same companies; find alternatives.",current).preserveTypes,['exchanges']);
+assert.deepEqual(opportunityRefinementPolicy('Keep only startup companies.',current).preserveTypes,['exchanges']);
+assert.deepEqual(opportunityRefinementPolicy('Keep my exchanges while finding different companies.',current).preserveTypes,['exchanges']);
+assert.deepEqual(opportunityRefinementPolicy('Leave out exchange institutions without English courses.',current).preserveTypes,['internships']);
+assert.ok(canonicalTargetKeys({name:'Université Test',institutionId:'Same University'},'exchanges').includes('institution:sameuniversity'));
+
+let calls=0;
+const researched=await researchFor({profile:{program:'BSCSC',name:'PRIVATE STUDENT',gpa:3.9},questionnaire:{ambitions:'Build merchant software; contact student@example.org.',activities:'Product engineering',constraints:'PRIVATE HEALTH'},refinement:'Find different companies, keep exchanges.',currentTargets:current},'targets',{GROQ_API_KEY:'fixture',GROQ_WEB_RESEARCH:'on'},async(_,init)=>{
+ calls++;const body=JSON.parse(init.body),wire=JSON.stringify(body);assert.ok(!wire.includes('PRIVATE STUDENT'));assert.ok(!wire.includes('PRIVATE HEALTH'));assert.ok(!wire.includes('student@example.org'));
+ if(body.tools){assert.equal(body.reasoning_effort,'medium');assert.equal(body.max_completion_tokens,16000);assert.match(body.messages[0].content,/three complementary browser.search/);assert.match(body.messages[0].content,/6–10 opens/);assert.ok(wire.includes(partner.id));assert.ok(wire.includes(current.internships[0].name));return groqFixture(receipt(documents));}
+ const s=body.response_format.json_schema.schema;assert.equal(s.properties.companies.maxItems,16);assert.equal(s.properties.exchanges.maxItems,Math.min(10,exchanges.length));assert.ok(s.properties.companies.items.required.includes('moroccoSupportSnippet'));assert.ok(s.properties.companies.items.required.includes('organizationTypeEvidence'));assert.ok(s.properties.exchanges.items.properties.id.enum.includes(partner.id));assert.deepEqual(s.properties.companies.items.properties.sourceUrl.enum,evidence.urls);
+ return groqFixture(payload({companies:candidates,exchanges:[exchange],facts:[],gaps:[]}));
+},{exchangeTargets:exchanges});
+assert.equal(calls,2);assert.equal(researched.companies.length,12);assert.equal(researched.exchanges.length,1);
+console.log('Passed broader sourced pools, exact evidence fragments, unknown publication dates, canonical entity deduplication, approved-partner enrichment, stable reviewed IDs, unaffected target preservation and private multi-query research requests.');

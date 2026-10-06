@@ -10,7 +10,7 @@ export async function aiStatus(){try{const r=await fetch(endpoint()+'/api/status
 export async function requestAdvice(stage,journey,extra={}){
  const {program,track,secondTrack,minor,choices,regularCourses,summerCourses,summers}=journey.profile;
  const body=JSON.stringify({stage,flowVersion:journey.flowVersion||5,background:journey.background,programChosen:journey.programChosen===true,changeRequest:journey.changeRequest||'',questionnaire:journey.questionnaire,goal:journey.goal,answers:journey.answers,...agentContext(journey,stage),preferredDegree:journey.preferredDegree,level:journey.level,acceleratedEligible:journey.profile.gpa!==''&&Number(journey.profile.gpa)>=3,profile:stage==='setup'||(['direction','question'].includes(stage)&&!journey.programChosen)?{}:{program,track,secondTrack,minor,choices,regularCourses,summerCourses,summers},...extra});
- const signal=AbortSignal.timeout(340000),requestAccess=access;
+ const signal=AbortSignal.timeout(480000),requestAccess=access;
  for(let attempt=0;attempt<8;attempt++){
  const response=await fetch(endpoint()+'/api/advice',{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':requestAccess,'X-GoPlan-Session':sessionId()},signal,body});
  let data;try{data=await response.json();}catch{throw Error('The AI service is unavailable. Your saved plan is unchanged.');}

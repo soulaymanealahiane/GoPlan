@@ -7,6 +7,8 @@ import {needsPersonalConfirmation} from '../dist/course-options.js';
 import {businessRule} from '../dist/program-rules.js';
 import {minorSummary} from '../dist/minor-summary.js';
 import {selectedMinor} from '../dist/minors.js';
+import {canonicalTargetKey,canonicalTargetKeys,publicUrl} from './research.mjs';
+export {canonicalTargetKey,canonicalTargetKeys};
 
 const text={type:'string'};
 const list=(items,maxItems)=>({type:'array',items,...(maxItems?{maxItems}: {})});
@@ -33,6 +35,48 @@ export function directionContext(request){
  return {request,programs:DATA.programs.filter(p=>p.level===request.level).map(p=>({id:p.id,name:p.name,credits:p.degreeCredits,coreCurriculum:p.requirements.filter(r=>!r.choice).map(r=>r.title),source:p.source,tracks:p.tracks.map(t=>({id:t.id,name:t.name,courses:t.requirements.map(r=>r.title)})),minors:eligibleMinors({program:p.id,priorCodes:[],choices:{}}).map(m=>({id:m.id,name:m.name,approvalRequired:m.reviewRequired})),supportsSecondTrack:['BBA','BSCSC'].includes(p.id)})),task:'Recommend one degree, primary focus, complementary minor and/or second focus. Return empty IDs for unsupported or unnecessary options. If clarifying, leave all academic IDs empty.'};
 }
 export function availableTargets(type,profile){const graduate=programFor(profile).level==='graduate',field=type==='internships'?({MACDM:'BACS',MAISD:'BAIS'}[profile.program]||profile.program):profile.program;return OPPORTUNITIES[type].filter(t=>!(t.excludedPrograms||[]).includes(profile.program)&&t.programs?.includes(field)&&(type!=='exchanges'||!graduate||t.graduateAccessVerified===true));}
+// Match research to reviewed entities using names AND canonical domains, so a
+// different URL, spelling or generated ID cannot become a second company.
+export function mergeResearchTargets(records,research,type){
+ const out=[],index=new Map();
+ const combinedSources=(a,b)=>[...new Map([...(a||[]),...(b||[])].map(s=>[s.url?publicUrl(s.url):JSON.stringify(s),s])).values()];
+ for(const record of records){
+  const keys=['id:'+record.id,...canonicalTargetKeys(record,type)];
+  if(keys.some(k=>index.has(k)))continue;
+  const i=out.push({...record})-1;keys.forEach(k=>index.set(k,i));
+ }
+ for(const extra of type==='exchanges'?research.exchanges||[]:research.companies||[]){
+  const keys=['id:'+extra.id,...canonicalTargetKeys(extra,type)],matched=keys.find(k=>index.has(k));
+  if(type==='exchanges'){
+   // A live page may enrich a verified route but cannot create one, change its
+   // subject/level restrictions, assert nomination or replace AUI constraints.
+   const i=out.findIndex(t=>t.id===extra.id);if(i<0)continue;const base=out[i];
+   out[i]={...base,researchFit:extra.academicFit,academicFit:extra.academicFit,eligibilityEvidence:extra.eligibilityEvidence,languageEvidence:extra.languageEvidence,termEvidence:extra.termEvidence,researchCheckedAt:extra.checkedAt,sourcePublishedDate:extra.sourcePublishedDate,sourceDateKnown:extra.sourceDateKnown,researchLimitations:extra.limitations,researchSources:extra.sources,sourceUrl:extra.sourceUrl,sources:combinedSources(base.sources,extra.sources)};
+  }else if(matched){
+   const i=index.get(matched),base=out[i];out[i]={...base,...extra,id:base.id,programs:base.programs,excludedPrograms:base.excludedPrograms,sources:combinedSources(base.sources,extra.sources)};
+   keys.forEach(k=>index.set(k,i));
+  }else{const i=out.push({...extra})-1;keys.forEach(k=>index.set(k,i));}
+ }
+ return out;
+}
+export function opportunityRefinementPolicy(refinement,current={}){
+ const text=String(refinement||'').toLowerCase(),patterns={internships:/\b(?:internships?|compan(?:y|ies)|startups?|scaleups?|firms?|employers?)\b/,exchanges:/\b(?:exchanges?|universit(?:y|ies)|institutions?|destinations?|study abroad)\b/},mentioned=Object.keys(patterns).filter(type=>patterns[type].test(text)),explicitPreserve=new Set();
+ for(const clause of text.split(/[.;,\n]|\b(?:and|but|while|whereas|then)\b/)){
+  const negateKeeping=/\b(?:do not|don't|dont|never|stop)\s+(?:keep|preserve|retain|leave)\b/.test(clause),filterOrImprove=/\b(?:only|improve|improving)\b/.test(clause);
+  const preserve=/\b(?:keep|preserve|retain|unchanged|do not change|don't change)\b/.test(clause)||/\bleave\b.*\b(?:alone|unchanged|same|as is)\b/.test(clause);
+  if(preserve&&!negateKeeping&&!filterOrImprove)for(const type of Object.keys(patterns))if(patterns[type].test(clause))explicitPreserve.add(type);
+ }
+ const changeTypes=text.trim()?mentioned.filter(type=>!explicitPreserve.has(type)):Object.keys(patterns);
+ if(text.trim()&&!mentioned.length)changeTypes.push(...Object.keys(patterns));
+ const preserveTypes=Object.keys(patterns).filter(type=>(explicitPreserve.has(type)||mentioned.length===1&&!mentioned.includes(type))&&current[type]?.length);
+ return {changeTypes,preserveTypes,preferNovel:/\b(?:new|different|alternative|alternatives|replace|other|more|refresh|broaden)\b/.test(text),policy:'Preserve the IDs and order of unaffected targets. For alternatives, compare canonical organizations and study routes; different aliases or rewritten reasons do not count as new recommendations.'};
+}
+export function validateOpportunitySelection(items,records,type,{current=[],policy={preserveTypes:[]}}={}){
+ const seen=new Set();
+ for(const item of items){const record=records.find(t=>t.id===item.id);if(!record)throw Error('Unknown or incompatible opportunity.');const keys=['id:'+record.id,...canonicalTargetKeys(record,type)];if(keys.some(k=>seen.has(k)))throw Error('Use distinct organizations or institutions, not aliases of the same target.');keys.forEach(k=>seen.add(k));}
+ if(policy.preserveTypes?.includes(type)&&(items.length!==current.length||items.some((t,i)=>t.id!==current[i]?.id)))throw Error('Preserve the unaffected '+type+' recommendations and their order.');
+ return items;
+}
 export function detailsContext(request){
  const p=normalizeProfile(request.profile),cs=coursesFor(p),catalog=new Map();
  const reservedCodes=cs.filter(c=>c.code&&!c.supportingPrerequisite);
@@ -88,6 +132,7 @@ export function validateDetails(result,request,checkTargets=true){
  for(const type of checkTargets?['internships','exchanges']:[]){
   const list=result[type],allowed=availableTargets(type,selectedProfile),expected=Math.min(5,allowed.length);
   if(!Array.isArray(list)||list.length!==expected||new Set(list.map(x=>x.id)).size!==expected||list.filter(x=>x.tier==='reach').length!==Math.max(0,expected-2)||list.filter(x=>x.tier==='target').length!==(expected>=2?1:0)||list.filter(x=>x.tier==='safety').length!==(expected>=1?1:0))throw Error('Recommendations need distinct supported targets with the requested tier counts.');
+  validateOpportunitySelection(list,allowed,type);
   out[type]=list.map(item=>{const record=allowed.find(r=>r.id===item.id);if(!record||typeof item.reason!=='string'||typeof item.tierReason!=='string')throw Error('Unknown or incompatible recommendation.');return {...record,reason:item.reason,tier:item.tier,tierReason:item.tierReason};});
   if(type==='exchanges'&&new Set(out[type].map(t=>t.institutionId||t.name)).size!==expected)throw Error('Use distinct institutions.');
   out[type].sort((a,b)=>['reach','target','safety'].indexOf(a.tier)-['reach','target','safety'].indexOf(b.tier));

@@ -1,16 +1,18 @@
 {
   "name": "goplan-aui",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
     "build": "node scripts/build.mjs",
-    "test": "node verify.mjs && node verify-guided.mjs && node verify-academic-v4.mjs && node verify-ai.mjs && node verify-agent-v5.mjs && node verify-intelligence.mjs && node verify-workspace-flow.mjs && node verify-minor-loads.mjs && node verify-feedback.mjs && node verify-analytics.mjs && node verify-admin.mjs && node verify-accounts.mjs && node verify-account-client.mjs && node verify-auth.mjs && node verify-groq.mjs",
+    "test": "node verify.mjs && node verify-guided.mjs && node verify-academic-v4.mjs && node verify-ai.mjs && node verify-agent-v5.mjs && node verify-intelligence.mjs && node verify-workspace-flow.mjs && node verify-minor-loads.mjs && node verify-feedback.mjs && node verify-analytics.mjs && node verify-admin.mjs && node verify-accounts.mjs && node verify-account-client.mjs && node verify-auth.mjs && node verify-groq.mjs && node verify-course-availability.mjs && node verify-opportunity-research.mjs && node verify-mvp-integration.mjs",
     "build:opportunities": "node scripts/build-opportunities.mjs",
     "db:generate": "drizzle-kit generate",
     "dashboard": "node scripts/admin-console.mjs",
-    "analytics": "node scripts/analytics.mjs"
+    "analytics": "node scripts/analytics.mjs",
+    "test:mvp": "node scripts/verify-mvp-live.mjs --stress",
+    "test:mvp:live": "node scripts/verify-mvp-live.mjs --live"
   },
   "engines": {
     "node": ">=22.0.0"
