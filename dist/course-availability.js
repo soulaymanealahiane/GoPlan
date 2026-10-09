@@ -11,6 +11,7 @@ export function normalizeScheduling(raw={}){
  if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Invalid course-offering reports.');
  if(raw.unavailable!=null&&(!Array.isArray(raw.unavailable)||raw.unavailable.length>1200))throw Error('Invalid unavailable-course report.');
  if(raw.offerings!=null&&(!Array.isArray(raw.offerings)||raw.offerings.length>100))throw Error('Invalid semester offering reports.');
+ if(raw.currentRegistrations!=null&&(!Array.isArray(raw.currentRegistrations)||raw.currentRegistrations.length>100))throw Error('Invalid current registrations.');
  const offerings=[...new Map((raw.offerings||[]).map(item=>{
   if(!item||typeof item!=='object'||item.complete!=null&&typeof item.complete!=='boolean')throw Error('Invalid semester offering report.');
   const termId=validTerm(item.termId),offeredCourseCodes=codes(item.offeredCourseCodes||[]),unavailableCourseCodes=codes(item.unavailableCourseCodes||[]);
@@ -22,14 +23,15 @@ export function normalizeScheduling(raw={}){
   const termId=validTerm(item.termId),id=courseCode(item.courseCode);if(!DATA.courses[id])throw Error('Unknown unavailable course.');
   return [id+'@'+termId,{courseCode:id,termId}];
  })).values()].filter(item=>!offerings.some(t=>t.termId===item.termId&&t.offeredCourseCodes.includes(item.courseCode)));
- return {unavailable,offerings};
+ const registrationCodes=new Set(),currentRegistrations=(raw.currentRegistrations||[]).map(item=>{if(!item||typeof item!=='object')throw Error('Invalid current registration.');const id=courseCode(item.courseCode),termId=validTerm(item.termId);if(!DATA.courses[id]||registrationCodes.has(id))throw Error('Use a known course once in current registrations.');registrationCodes.add(id);return {courseCode:id,termId};});
+ return {unavailable,offerings,...(currentRegistrations.length?{currentRegistrations}:{})};
 }
 
 export function mergeScheduling(current={},change={}){
  const old=normalizeScheduling(current),updates=normalizeScheduling({offerings:change.offerings||[],unavailable:change.unavailable||[]});
  // Replacing a term report is also how a student corrects or clears a stale report.
  const refreshed=new Set(updates.offerings.map(t=>t.termId));
- return normalizeScheduling({offerings:[...old.offerings.filter(t=>!refreshed.has(t.termId)),...updates.offerings],unavailable:[...old.unavailable.filter(t=>!refreshed.has(t.termId)),...updates.unavailable]});
+ return normalizeScheduling({offerings:[...old.offerings.filter(t=>!refreshed.has(t.termId)),...updates.offerings],unavailable:[...old.unavailable.filter(t=>!refreshed.has(t.termId)),...updates.unavailable],currentRegistrations:change.currentRegistrations??old.currentRegistrations??[]});
 }
 
 export function courseAvailability(course,termId,scheduling={}){

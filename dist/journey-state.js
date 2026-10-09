@@ -1,7 +1,8 @@
 import {feedbackFor,rememberFeedback} from './agent-context.js';
 import {normalizeProfile} from './planner.js';
 import {questionnaireGoal} from './questionnaire.js';
-export function adviceFingerprint(stage,j){const base={agentVersion:7,stage,questionnaire:j.questionnaire,goal:j.goal,background:j.background,answers:j.answers,refinement:feedbackFor(j,stage),level:j.level,preferredDegree:j.preferredDegree};if(!['setup','direction'].includes(stage))base.profile={program:j.profile.program,track:j.profile.track,secondTrack:j.profile.secondTrack,minor:j.profile.minor,choices:j.profile.choices,regularCourses:j.profile.regularCourses,summerCourses:j.profile.summerCourses,summers:j.profile.summers,acceleratedEligible:j.profile.gpa!==''&&+j.profile.gpa>=3};return JSON.stringify(base);}
+import {publicStudentContext} from './student-context.js';
+export function adviceFingerprint(stage,j){const base={agentVersion:8,stage,questionnaire:j.questionnaire,goal:j.goal,background:j.background,answers:j.answers,refinement:feedbackFor(j,stage),level:j.level,preferredDegree:j.preferredDegree,...(j.studentContext?{studentContext:publicStudentContext(j.studentContext)}:{})};if(!['setup','direction'].includes(stage))base.profile={program:j.profile.program,track:j.profile.track,secondTrack:j.profile.secondTrack,minor:j.profile.minor,choices:j.profile.choices,regularCourses:j.profile.regularCourses,summerCourses:j.profile.summerCourses,summers:j.profile.summers,acceleratedEligible:j.profile.gpa!==''&&+j.profile.gpa>=3};return JSON.stringify(base);}
 export function acceptAdvice(j,stage,result){
  if(result.kind==='answer')return;
  rememberFeedback(j,stage,result);

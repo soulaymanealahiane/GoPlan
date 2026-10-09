@@ -1,4 +1,5 @@
 import {agentContext} from './agent-context.js';
+import {publicStudentContext} from './student-context.js';
 const endpoint=()=>globalThis.GoPlanAndroid?'https://goplan-aui-demo-k7m9.salahiane9.chatgpt.site':'';
 const accessStorage='goplan-verified-demo-access';
 let access='',session='',accountAccess=false;
@@ -9,7 +10,7 @@ export function hasAccessCode(){return !!access||accountAccess;}
 export async function aiStatus(){try{const r=await fetch(endpoint()+'/api/status');const status=r.ok?await r.json():{available:false,requiresAccess:true};accountAccess=status.requiresAccess===false;return status;}catch{return {available:false,requiresAccess:true};}}
 export async function requestAdvice(stage,journey,extra={}){
  const {program,track,secondTrack,minor,choices,regularCourses,summerCourses,summers}=journey.profile;
- const body=JSON.stringify({stage,flowVersion:journey.flowVersion||5,background:journey.background,programChosen:journey.programChosen===true,changeRequest:journey.changeRequest||'',questionnaire:journey.questionnaire,goal:journey.goal,answers:journey.answers,...agentContext(journey,stage),preferredDegree:journey.preferredDegree,level:journey.level,acceleratedEligible:journey.profile.gpa!==''&&Number(journey.profile.gpa)>=3,profile:stage==='setup'||(['direction','question'].includes(stage)&&!journey.programChosen)?{}:{program,track,secondTrack,minor,choices,regularCourses,summerCourses,summers},...extra});
+ const body=JSON.stringify({stage,flowVersion:journey.flowVersion||5,background:journey.background,programChosen:journey.programChosen===true,changeRequest:journey.changeRequest||'',questionnaire:journey.questionnaire,goal:journey.goal,answers:journey.answers,...agentContext(journey,stage),preferredDegree:journey.preferredDegree,level:journey.level,acceleratedEligible:journey.profile.gpa!==''&&Number(journey.profile.gpa)>=3,profile:stage==='setup'||(['direction','question'].includes(stage)&&!journey.programChosen)?{}:{program,track,secondTrack,minor,choices,regularCourses,summerCourses,summers},...extra,...(journey.studentContext?{studentContext:publicStudentContext(journey.studentContext)}:{})});
  const signal=AbortSignal.timeout(480000),requestAccess=access;
  for(let attempt=0;attempt<8;attempt++){
  const response=await fetch(endpoint()+'/api/advice',{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':requestAccess,'X-GoPlan-Session':sessionId()},signal,body});

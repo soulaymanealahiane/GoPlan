@@ -2,6 +2,8 @@ import {createAccountWorkspace} from './accounts.js';
 import {openMistakeReport,openMyReports,ethicsPolicy} from './feedback-view.js';
 import {homeView} from './home-view.js';
 import {freshWorkspace,editJourney,buildProposal} from './workspace-flow.js';
+import {planningWorkspace} from './student-context.js';
+import {entryContext,routePicker,studentEntryView,readStudentEntry} from './student-entry-view.js';
 import {researchView,updateView} from './journey-view.js';
 import {missingAnswers} from './questionnaire.js';
 import {adviceFingerprint,acceptAdvice,synchronizeGoal} from './journey-state.js';
@@ -21,7 +23,7 @@ let KEY='goplan-aui-v3'+(separateWorkspace?':'+workspaceId:'');
 let state=emptyWorkspace(),view='home',storageFailed=false,loadFailed=false,toastTimer,sourcePages;
 const runtime={busy:false,aiError:'',aiStatus:null,validation:{}};let renderedScreen='';let lastStage='direction';
 const active=()=>state.phase==='draft'?state.draftPlan:state.plan;
-const accounts=createAccountWorkspace({read:()=>state,render,notify,modal,head:(...args)=>head(...args),close:()=>close(),busy:()=>runtime.busy||changeBusy||replanBusy||targetBusy||questionBusy,open:(next,key,begin=false)=>{state=next;KEY=key;loadFailed=false;storageFailed=false;view=begin?'plan':'home';renderedScreen='';runtime.aiError='';runtime.validation={};resetAdviserSession();}});
+const accounts=createAccountWorkspace({read:()=>state,render,notify,modal,head:(...args)=>head(...args),close:()=>close(),startNew:()=>startFresh(),busy:()=>runtime.busy||changeBusy||replanBusy||targetBusy||questionBusy,open:(next,key,begin=false)=>{state=next;KEY=key;loadFailed=false;storageFailed=false;view=begin?'plan':'home';renderedScreen='';resetWorkspaceAdvice();}});
 try{const saved=localStorage.getItem(KEY);if(saved)state=validateSavedWorkspace(JSON.parse(saved));else if(!separateWorkspace){const legacy=localStorage.getItem('goplan-aui-v2');if(legacy)state=migrateLegacy(JSON.parse(legacy));}}catch{loadFailed=true;storageFailed=true;}
 function notify(message){$('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),6500);}
 function persist(){if(accounts.signedIn){accounts.schedule(state);return;}if(!loadFailed)try{state.updatedAt=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(state));localStorage.setItem('goplan-last-workspace',KEY.startsWith('goplan-aui-v3:')?KEY.slice('goplan-aui-v3:'.length):'');storageFailed=false;}catch{storageFailed=true;}$('#save-status').textContent=storageFailed?'Saving unavailable · keep this page open':'Saved on this device';}
@@ -47,18 +49,41 @@ async function getAdvice(stage){
 }
 async function next(){
  const j=state.journey;if(runtime.busy)return;synchronizeGoal(j);
+ if(j.step===0&&j.studentContext){j.step=1;changed();$('#main').scrollIntoView({block:'start'});return;}
  const stage=['setup','direction','courses','targets','pace'][j.step];if(!stage)return;
  const cached=j.agentStamps?.[stage]===adviceFingerprint(stage,j);
  if(!cached){runtime.nextAfterAdvice=j.step===0?0:j.step+1;if(!await getAdvice(stage))return;if(stage==='setup'){changed();return;}}
  j.step=Math.min(5,j.step+1);runtime.nextAfterAdvice=null;runtime.aiError='';changed();$('#main').scrollIntoView({block:'start'});
 }
 function startDecisions(){if(state.plan){openChange();return;}view='plan';render();}
-async function startFresh(){
+function resetWorkspaceAdvice(){runtime.aiError='';runtime.validation={};runtime.nextAfterAdvice=null;lastStage='direction';replanPreview=null;replanBase='';targetPreview=null;targetBase='';resetAdviserSession();}
+let entrySeed=null,entryMode='new';
+function openEntry(route,mode='new'){
  if(runtime.busy||changeBusy||replanBusy||targetBusy||questionBusy){notify('Wait for your current recommendation to finish.');return;}
- if(!globalThis.GoPlanAndroid){if(await accounts.prepareNew()){view='plan';close();render();$('#main').scrollIntoView();}return;}
- persist();const id=crypto.randomUUID();KEY='goplan-aui-v3:'+id;state=freshWorkspace();loadFailed=false;runtime.aiError='';runtime.validation={};runtime.nextAfterAdvice=null;resetAdviserSession();
- try{localStorage.setItem('goplan-last-workspace',id);const url=new URL(location.href);url.searchParams.set('workspace',id);url.hash='';history.replaceState(null,'',url);}catch{}
- view='plan';close();changed();$('#main').scrollIntoView();
+ entryMode=mode;entrySeed=entryContext(state,route,mode);modal(studentEntryView(entrySeed,mode,head));
+}
+function startFresh(){if(runtime.busy||changeBusy||replanBusy||targetBusy||questionBusy){notify('Wait for your current recommendation to finish.');return;}modal(routePicker(head));}
+async function startWorkspace(seed){
+ if(runtime.busy||changeBusy||replanBusy||targetBusy||questionBusy){notify('Wait for your current recommendation to finish.');return false;}
+ const next=validateSavedWorkspace(seed);
+ if(accounts.signedIn){if(!await accounts.prepareNew(next))return false;}else{
+  persist();if(storageFailed){notify('Your current plan could not be saved. Keep this page open and enable browser storage before starting a separate plan.');return false;}
+  const id=crypto.randomUUID();KEY='goplan-aui-v3:'+id;state=next;loadFailed=false;storageFailed=false;resetWorkspaceAdvice();
+  try{const url=new URL(location.href);url.searchParams.set('workspace',id);url.hash='';history.replaceState(null,'',url);}catch{}
+ }
+ view='plan';close();changed();$('#main').scrollIntoView({block:'start'});return true;
+}
+function showMyPlans(){
+ if(runtime.busy||changeBusy||replanBusy||targetBusy||questionBusy){notify('Wait for your current recommendation to finish.');return;}
+ if(accounts.signedIn){accounts.showPlans();return;}
+ const entries=[];try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(!/^goplan-aui-v3(?::[a-zA-Z0-9-]{1,80})?$/.test(key))continue;try{const saved=validateSavedWorkspace(JSON.parse(localStorage.getItem(key)));if(!saved.plan&&!saved.draftPlan&&!saved.journey?.studentContext)continue;entries.push({key,state:saved});}catch{}}}catch{}
+ entries.sort((a,b)=>String(b.state.updatedAt).localeCompare(String(a.state.updatedAt)));
+ modal(head('My plans','Plans saved on this device.')+`<div class="account-plan-list">${entries.map(({key,state:s})=>`<button class="button secondary" data-action="open-local-plan" data-workspace-key="${esc(key)}">${esc((s.phase==='draft'?s.draftPlan:s.plan)?.program?.name||'Plan in progress')}${key===KEY?' · Current':''}<small>${esc(s.journey?.studentContext?.route==='continuing'?'From recorded progress':'Degree exploration')} · ${esc(new Date(s.updatedAt).toLocaleDateString())}</small></button>`).join('')||'<p>No other plans on this device yet.</p>'}</div><div class="modal-actions">${btn('entry-new','Start a new plan',true)}</div>`);
+}
+function openLocalPlan(key){
+ if(accounts.signedIn||runtime.busy||changeBusy||replanBusy||targetBusy||questionBusy||!/^goplan-aui-v3(?::[a-zA-Z0-9-]{1,80})?$/.test(key))return;
+ const next=validateSavedWorkspace(JSON.parse(localStorage.getItem(key)));persist();if(storageFailed){notify('Save your current plan before switching.');return;}
+ state=next;KEY=key;loadFailed=false;resetWorkspaceAdvice();view='home';close();try{const url=new URL(location.href);if(key.includes(':'))url.searchParams.set('workspace',key.split(':')[1]);else url.searchParams.delete('workspace');history.replaceState(null,'',url);}catch{}changed();
 }
 
 function showChecks(){modal(`${head('Review your roadmap','Resolve conflicts and confirm source conditions before registration.')}<div class="review-notes">${planIssues(active()).map(x=>`<div class="review-item ${esc(x.level)}"><strong>${esc(x.level==='conflict'?'Needs attention':x.level==='source'?'Source difference':'Confirm with your advisor')}</strong><p>${esc(x.text)}</p>${x.id?`<button class="text-button" data-course="${esc(x.id)}">Open course →</button>`:''}</div>`).join('')||'<p>No modeled conflicts found. Confirm actual offerings with AUI.</p>'}</div>`);}
@@ -77,6 +102,12 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button,a.b
  case 'resume-plan':view='plan';render();break;
  case 'open-saved':state.phase='saved';view='plan';changed();break;
  case 'fresh-start':startFresh();break;
+ case 'entry-new':startFresh();break;
+ case 'entry-admitted':openEntry('admitted');break;
+ case 'entry-continuing':openEntry('continuing');break;
+ case 'entry-rethink':openEntry(state.journey?.studentContext?.route||'admitted','rethink');break;
+ case 'my-plans':showMyPlans();break;
+ case 'open-local-plan':openLocalPlan(b.dataset.workspaceKey);break;
  case 'change-plan':openChange();break;
  case 'mistake-report':if(state.plan)openMistakeReport({plan:state.plan,workspace:KEY,modal,head,onReconsider:openChange});break;
  case 'my-reports':openMyReports({workspace:KEY,modal,head});break;
@@ -85,7 +116,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button,a.b
  case 'new-user':startFresh();break;
  case 'close':close();break;
  case 'profile':case 'new-decisions':startDecisions();break;
- case 'confirm-new':state.journey=newJourney(state.plan);state.journey.programChosen=true;state.phase='journey';state.draftPlan=null;view='plan';close();changed();break;
+ case 'confirm-new':openEntry(state.journey?.studentContext?.route||'admitted','rethink');break;
  case 'journey-next':await next();break;
  case 'retry-ai':{if(await getAdvice(lastStage)){if(runtime.nextAfterAdvice!=null){state.journey.step=runtime.nextAfterAdvice;runtime.nextAfterAdvice=null;changed();}}break;}
  case 'refine-direction':await getAdvice('direction');break;
@@ -99,7 +130,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button,a.b
  case 'apply-replan':applyReplan();break;
  case 'build-roadmap':state.draftPlan=buildProposal(state.journey,state.plan);state.phase='draft';changed('Roadmap built. Review it before saving.');$('#main').scrollIntoView();break;
  case 'back-to-journey':state.phase='journey';state.journey.step=5;changed();break;
- case 'cancel-journey':case 'cancel-draft':if(state.plan){state.phase='saved';state.draftPlan=null;state.journey=newJourney(state.plan);}else{state.phase='journey';state.journey.step=5;}changed();break;
+ case 'cancel-journey':case 'cancel-draft':if(state.plan){state.phase='saved';state.draftPlan=null;state.journey=newJourney(state.plan);}else view='home';changed();break;
  case 'finalize':{const checks=planIssues(active()),delay=active().revisionAssessment;modal(`${head('Save this roadmap?')}<p>Your degree, minor, targets and course plan will become your saved workspace. ${state.plan?'Your previous version is retained.':''}</p>${delay?.delayed?`<p class="warning">The revised finish is ${esc(delay.after)}, previously ${esc(delay.before)}. This adds ${delay.extraRegularTerms} regular semester(s).</p>`:''}${checks.length||delay?.delayed?`<div class="warning">${checks.length} items still need confirmation before registration. You can save your plan and follow up on them.</div><label class="checkbox-row"><input type="checkbox" id="review-ack">I reviewed the timing and items to confirm</label>`:''}<div class="modal-actions">${btn('close','Keep reviewing')}${btn('confirm-finalize','Save my roadmap',true)}</div>`);break;}
  case 'confirm-finalize':if($('#review-ack')&&!$('#review-ack').checked){notify('Acknowledge the open review items, or keep reviewing your roadmap.');break;}if(state.plan)state.history=[structuredClone(state.plan),...state.history].slice(0,3);const usageEvent=state.plan?'plan_updated':'plan_saved';state.plan=structuredClone(state.draftPlan);state.plan.finalizedAt=new Date().toISOString();state.draftPlan=null;state.phase='saved';close();changed('Your roadmap is saved. Future changes happen only when you choose them.');if(!storageFailed)trackUsage(usageEvent);break;
  case 'checks':showChecks();break;
@@ -109,11 +140,12 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button,a.b
  case 'export':await exportPlan();break;
  case 'about':modal(`${head('Your workspace')}<p>${accounts.signedIn?'Your roadmaps save to your personal account. Open Account to switch plans, update your name or manage your data.':'Your plan stays on this device. Sign in to create a profile and bring your roadmap across devices.'}</p><div class="card-actions">${btn('ethics-policy','AI and data ethics')}${btn('my-reports','My mistake reports')}</div><details class="quiet-details"><summary>About recommendations</summary><p>GoPlan uses AUI requirements and sourced research. Individual approvals, course offerings and opportunity availability still need confirmation.</p></details>`);break;
  }}catch(e){notify(e.message||'The change could not be completed.');console.error(e);}});
-document.addEventListener('submit',async e=>{const f=e.target;if(!['course-form','source-form','restore-form','report-form'].includes(f.id))return;e.preventDefault();const d=new FormData(f);try{
+document.addEventListener('submit',async e=>{const f=e.target;if(!['student-entry-form','course-form','source-form','restore-form','report-form'].includes(f.id))return;e.preventDefault();const d=new FormData(f);try{
+ if(f.id==='student-entry-form'){const context=readStudentEntry(f,entrySeed),previous=entryMode==='rethink'?(state.phase==='draft'?state.draftPlan:state.plan):null,seed=planningWorkspace({studentContext:context,profileName:accounts.profile?.firstName||state.journey.profile.name||''},previous);if(entryMode==='rethink'&&!previous&&state.journey.scheduling)seed.journey.scheduling=structuredClone(state.journey.scheduling);const submit=f.querySelector('button[type="submit"]');submit.disabled=true;try{await startWorkspace(seed);}finally{submit.disabled=false;}return;}
  if(f.id==='source-form'){await showSource(f.dataset.file,d.get('page'));return;}
  if(f.id==='report-form'){const p=active(),courseId=d.get('courseId');p.reports.push({id:Date.now().toString(36),courseId,termId:p.terms.find(t=>t.courses.includes(courseId)).id,type:d.get('type'),detail:String(d.get('detail')).slice(0,1000),status:'open',createdAt:new Date().toISOString()});persist();render();reportModal();return;}
  if(f.id==='course-form'){const p=active(),id=f.dataset.id,old=p.courses.find(c=>c.id===id),profile=normalizeProfile(p.profile);if(old.choice)profile.choices[id]=code(d.get('choice'));const replacement=old.choice?coursesFor(profile).find(c=>c.id===id):old;if(!replacement)throw Error('This choice changes the minor structure. Use Update life decisions to rebuild it.');const status=d.get('status'),grade=d.get('grade');if(status==='completed'&&(replacement.unresolved||['F','W','I'].includes(grade)))throw Error('Choose a confirmed course and a passing completion status before marking it completed.');if(old.code!==replacement.code&&['completed','in-progress'].includes(status))throw Error('The course changed. Save it as planned, then record its actual progress.');const term=p.terms.find(t=>t.courses.includes(id)),dest=d.get('destination');if(term.id==='prior'&&status!=='completed'&&dest==='prior')throw Error('Choose a future semester when a recorded course needs a retake.');if(dest!==term.id)p.terms=moveCourse(p.terms,id,dest);p.profile=profile;p.courses=p.courses.map(c=>c.id===id?replacement:c);p.tracking[id]={status,grade,note:String(d.get('note')).slice(0,1000),updatedAt:new Date().toISOString()};if(term.id==='prior'&&status!=='completed')p.profile.priorCodes=p.profile.priorCodes.filter(c=>c!==old.code);p.updatedAt=new Date().toISOString();close();changed('Course updated. Review the prerequisite checks after changing its semester or choice.');}
- }catch(e){notify(e.message||'The change could not be saved.');}});
+ }catch(e){if(f.id==='student-entry-form'){const target=$('#student-entry-error');if(target){target.hidden=false;target.textContent=e.message||'Review your starting point.';}return;}notify(e.message||'The change could not be saved.');}});
 void accounts.boot().then(()=>{render();if(loadFailed)notify('A saved workspace could not load. It has been left untouched. Sign in to open your cloud roadmap, or contact the GoPlan team for help.');else if(!accounts.signedIn)persist();});
 if(document.modelContext?.registerTool)try{document.modelContext.registerTool({name:'read_degree_plan',title:'Read GoPlan roadmap',description:'Read the current guided setup or saved academic roadmap without changing it.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:()=>({phase:state.phase,journey:state.journey,plan:active(),issues:active()?planIssues(active()):[]})});}catch{}
 

@@ -3,6 +3,7 @@ import {researchFor,publicUrl} from './research.mjs';
 import {mergeScheduling,analyzeCourseAvailability} from '../dist/course-availability.js';
 import {groqServiceError} from './groq-transport.mjs';
 import {sanitizeRequest,directionContext,detailsContext,directionSchema,validateDirection,validateDetails,recoverDetails,availableTargets,mergeResearchTargets,opportunityRefinementPolicy,validateOpportunitySelection,canonicalTargetKeys} from './advisor.mjs';
+import {publicStudentContext} from '../dist/student-context.js';
 import {minorSummary} from '../dist/minor-summary.js';
 import {DATA,normalizeProfile,programFor,coursesFor} from '../dist/planner.js';
 import {QUESTIONS,cleanQuestionnaire,questionnaireGoal} from '../dist/questionnaire.js';
@@ -55,6 +56,10 @@ export async function adviseJourney(input,env,fetcher=fetch){
  const stage=input?.stage;if(!['setup','direction','courses','targets','pace','replan','change','question'].includes(stage))throw Error('Unknown adviser step.');
  const q=cleanQuestionnaire(input.questionnaire),goal=questionnaireGoal(q)||String(input.goal||input.background||input.changeRequest||'Help me plan my studies at AUI.').slice(0,4000);
  const request=sanitizeRequest({...input,stage:stage==='direction'||stage==='setup'?'direction':'details',goal});
+ if(input.studentContext){
+  request.studentContext=publicStudentContext(input.studentContext);
+  if(request.studentContext.degreeIntent==='keep')request.preferredDegree=request.studentContext.currentDegree;
+ }
  request.questionnaire=q;request.background=typeof input.background==='string'?input.background.slice(0,1800):'';
  request.refinement=typeof input.refinement==='string'?input.refinement.slice(0,2500):'';
  const originalProfile=structuredClone(request.profile);
@@ -94,7 +99,15 @@ export async function adviseJourney(input,env,fetcher=fetch){
  }else if(stage==='direction'){
   Object.assign(context,directionContext(request));context.task+=' Explain how the degree, primary major/focus, second concentration if appropriate, minor and intended elective themes work together. Include the six-axis assessment and cite answered question IDs and evidence IDs. If clarification is necessary, ask at most two questions.';
   schema=structuredClone(directionSchema);schema.properties.assessment=basis;schema.required.push('assessment');
-  check=r=>({...validateDirection(r,request),assessment:validateBasis(r.assessment,q)});
+  if(request.studentContext?.degreeIntent==='keep'){
+   schema.properties.academic.properties.program={type:'string',enum:['',request.studentContext.currentDegree]};
+   context.task+=' The student explicitly chose to keep their current degree. Recommend only that degree; tailor its focus, minor and electives. A different degree requires the student to choose exploration first.';
+  }
+  if(request.studentContext)context.task+=' Use studentContext as self-reported academic progress, not verified transfer approval. Completed courses stay completed and current registrations remain in their semester. Do not infer a degree already earned or assume unmatched credits satisfy a new requirement.';
+  check=r=>{
+   if(r?.kind==='recommend'&&request.studentContext?.degreeIntent==='keep'&&r.academic?.program!==request.studentContext.currentDegree)throw Error('Keep the degree selected by the student. Degree exploration must be explicitly enabled before changing it.');
+   return {...validateDirection(r,request),assessment:validateBasis(r.assessment,q)};
+  };
  }else if(stage==='courses'){
   const c=detailsContext(request);delete c.companies;delete c.exchangeDestinations;Object.assign(context,c);
   context.task='Recommend a coherent set of distinct courses using only each requirement options. The current profile selections are user-kept choices and are locked. Previous AI suggestions removed from the profile may be replaced to honor the change request; see currentRecommendation for the prior choices. Prioritize academic feasibility and coverage of prerequisite chains. Fill EVERY unselected requirement with offered options when feasible, including breadth, arts, history and minor electives. A lack of subject preference is not a reason to leave an eligible slot open: make a useful, reversible recommendation and explain it. Leave requirements with no options or unmet constraints open, never invent approval. Explain each choice with the student questionnaire. Return one openItems explanation for every requirement you cannot fill. This step selects courses only; do not select companies or destinations.';
