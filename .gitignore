@@ -22,3 +22,8 @@ dist/.openai/
 coverage/
 .DS_Store
 Thumbs.db
+
+# Business planning documents are maintained outside this technical repository.
+docs/startup/
+docs/UNIVERSITY_VISION.md
+docs/PROJECT_HANDOFF.md
