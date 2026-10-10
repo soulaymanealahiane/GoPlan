@@ -1,3 +1,5 @@
+import {partnershipEndpoint} from './partnerships.mjs';
+import {rosterMode} from './university-access.mjs';
 import {authEndpoint,accountIdentity} from './auth.mjs';
 import {advise} from './advisor.mjs';
 import {feedbackEndpoint,approvedCorrections} from './feedback.mjs';
@@ -14,6 +16,7 @@ function reply(body,status=200,origin=''){return new Response(JSON.stringify(bod
 export async function handleApi(request,env,options={}){
  const path=new URL(request.url).pathname,origin=request.headers.get('Origin')||'';
  if(!path.startsWith('/api/'))return null;
+ if(path==='/api/partnerships')return partnershipEndpoint(request,env,options);
  if(path.startsWith('/api/auth/'))return authEndpoint(request,env,options);
  if(path==='/api/account'||path.startsWith('/api/account/'))return accountEndpoint(request,env);
  if(path.startsWith('/api/admin/'))return adminEndpoint(request,env);
@@ -21,7 +24,8 @@ export async function handleApi(request,env,options={}){
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type, X-GoPlan-Access, X-GoPlan-Session','Access-Control-Max-Age':'600','Vary':'Origin'}});
  let signedIn;try{signedIn=await accountIdentity(request,env);}catch{return reply({error:'Account connection unavailable. Please retry.'},503,origin);}
  if(signedIn&&!['GET','HEAD'].includes(request.method)&&origin!==new URL(request.url).origin)return reply({error:'Open this action from GoPlan.'},403,origin);
- if(path==='/api/status'&&request.method==='GET')return reply({available:!!(env.GROQ_API_KEY&&(signedIn||env.AI_ACCESS_CODE)),provider:'groq',model:env.GROQ_MODEL||'openai/gpt-oss-120b',requiresAccess:!signedIn,feedbackAvailable:!!env.DB},200,origin);
+ if(rosterMode(env)&&!signedIn&&path!=='/api/status')return reply({error:'Sign in with an approved university email.',code:'ACCESS_REQUIRED'},401,origin);
+ if(path==='/api/status'&&request.method==='GET')return reply({available:!!(env.GROQ_API_KEY&&(signedIn||(!rosterMode(env)&&env.AI_ACCESS_CODE))),provider:'groq',model:env.GROQ_MODEL||'openai/gpt-oss-120b',requiresAccess:!signedIn,feedbackAvailable:!!env.DB},200,origin);
  const isFeedback=path==='/api/feedback'||path.startsWith('/api/feedback/')||path.startsWith('/api/review/');
  const isEvent=path==='/api/usage';
  if(path!=='/api/advice'&&!isFeedback&&!isEvent)return reply({error:'Not found'},404,origin);

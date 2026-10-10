@@ -33,3 +33,6 @@ export const authSessions=sqliteTable('auth_sessions',{tokenHash:text('token_has
 export const authLimits=sqliteTable('auth_limits',{id:text('id').primaryKey(),count:integer('count').notNull(),expiresAt:integer('expires_at').notNull()},t=>[index('auth_limit_expiry_idx').on(t.expiresAt)]);
 
 export const authPasswordTickets=sqliteTable('auth_password_tickets',{tokenHash:text('token_hash').primaryKey(),userId:text('user_id').notNull(),email:text('email').notNull(),expiresAt:integer('expires_at').notNull()},t=>[index('auth_password_expiry_idx').on(t.expiresAt)]);
+
+export const universityAccess=sqliteTable('university_access',{universityId:text('university_id').notNull(),emailHash:text('email_hash').notNull(),updatedAt:integer('updated_at').notNull()},t=>[primaryKey({columns:[t.universityId,t.emailHash]})]);
+export const partnershipInquiries=sqliteTable('partnership_inquiries',{id:text('id').primaryKey(),name:text('name').notNull(),email:text('email').notNull(),university:text('university').notNull(),message:text('message').notNull(),createdAt:integer('created_at').notNull()},t=>[index('partnership_created_idx').on(t.createdAt)]);

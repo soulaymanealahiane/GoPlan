@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Preserve authored startup documents byte for byte.
+*.pdf binary
+*.pptx binary
+*.docx binary

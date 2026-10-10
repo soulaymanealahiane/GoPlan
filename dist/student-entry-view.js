@@ -11,7 +11,7 @@ export function entryContext(state,route,mode='new'){
  return {route:records.length?'continuing':route,degreeIntent:'explore',currentDegree:mode==='rethink'?plan?.profile?.program||existing?.currentDegree||'':'',currentTerm:current,studyStartYear:mode==='rethink'?existing?.studyStartYear||plan?.profile?.startYear||year:year,records};
 }
 
-export function routePicker(head){return head('Where are you in your studies?','Choose a starting point for a separate plan.')+`<div class="entry-route-list"><button class="entry-route-option" data-action="entry-admitted"><strong>Newly admitted</strong><span>I haven’t started university courses yet.</span></button><button class="entry-route-option" data-action="entry-continuing"><strong>Already studying</strong><span>Use my completed and current courses to plan what comes next.</span></button></div><p class="small-note">Your existing plans stay in My plans.</p>`;}
+export function routePicker(head){return head('Start your university plan','One journey, whether you are starting or reconsidering your studies.')+`<div class="entry-route-list"><button class="entry-route-option" data-action="entry-admitted"><strong>Build my plan</strong><span>Explore your goals, then add any completed study at the final review.</span></button></div><p class="small-note">Your existing plans stay in My plans.</p>`; }
 
 export function studentEntryView(context,mode,head){
  const continuing=context.route==='continuing',rethink=mode==='rethink',completed=context.records.filter(r=>r.status==='completed'),current=context.records.filter(r=>r.status==='in-progress');

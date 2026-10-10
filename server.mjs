@@ -15,7 +15,7 @@ http.createServer(async(req,res)=>{try{
   const reply=await handleApi(request,{...process.env,DB},{clientAddress:req.socket.remoteAddress});
   const responseHeaders=Object.fromEntries(reply.headers);const setCookies=reply.headers.getSetCookie();if(setCookies.length)responseHeaders['set-cookie']=setCookies;res.writeHead(reply.status,responseHeaders);return res.end(Buffer.from(await reply.arrayBuffer()));
  }
- const rel=decodeURIComponent(url.pathname),file=path.resolve(root,'.'+(rel==='/'?'/index.html':rel));
+ const rel=decodeURIComponent(url.pathname),file=path.resolve(root,'.'+(rel==='/'&&url.searchParams.has('workspace')?'/demo.html':rel==='/'?'/index.html':['/demo','/demo/','/demo/aui'].includes(rel)?'/demo.html':rel));
  if(!file.startsWith(root+path.sep)||/^\/(?:server|\.openai)\//.test(rel)){res.writeHead(403);return res.end();}
  const body=await readFile(file);res.writeHead(200,{'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'});res.end(body);
  }catch{res.writeHead(404);res.end('Not found');}}).listen(port,'127.0.0.1',()=>console.log(`GoPlan ready: http://127.0.0.1:${port}`));

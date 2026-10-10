@@ -56,7 +56,7 @@ await test('Both student routes persist while degree preference remains explicit
 
 await test('Landing and returning accounts expose student routes and a complete rethink',()=>{
  const landing=homeView(emptyWorkspace(),{firstName:'Synthetic'});
- assert.ok(landing.includes('data-action="entry-admitted"'));assert.ok(landing.includes('data-action="entry-continuing"'));
+ assert.ok(landing.includes('data-action="entry-admitted"'));assert.ok(!landing.includes('data-action="entry-continuing"'));assert.ok(landing.includes('At the final review'));
  const saved={...emptyWorkspace(),phase:'saved',plan:makePlan(newJourney())},returning=homeView(saved,{firstName:'Synthetic'});
  assert.ok(returning.includes('data-action="entry-rethink"'));assert.ok(returning.includes('data-action="entry-new"'));assert.ok(returning.includes('data-action="my-plans"'));
 });

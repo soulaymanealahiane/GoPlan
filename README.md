@@ -1,10 +1,26 @@
 # GoPlan
 
-**An AI-assisted academic roadmap planner with a deterministic scheduling engine.**
+**A clear start to university.**
+
+An AI-assisted academic roadmap planner with a deterministic scheduling engine.
 
 GoPlan helps students turn their interests into an editable degree plan: academic direction, minor and elective choices, internship and exchange targets, and semester-by-semester progress. It is an independent student project, not an official AUI registration or advising system.
 
-[Live website](https://planwithgoplan.com) · [Architecture](docs/ARCHITECTURE.md) · [Development](CONTRIBUTING.md) · [Security](SECURITY.md)
+[Public website](https://planwithgoplan.com) · [AUI demo](https://planwithgoplan.com/demo) · [University pilot direction](docs/UNIVERSITY_VISION.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](CONTRIBUTING.md) · [Security](SECURITY.md)
+
+## Latest completed work — 10 October 2026
+
+This snapshot includes the completed production work through the seven-bubble website update:
+
+- **University-facing website:** concise pilot positioning at `/`, with the academic planner at `/demo`. The slogan is **“A clear start to university.”**
+- **One visual identity:** forest green, ivory and pale-green accents; Manrope text and Fraunces headings across the website and demo. Headers use the GoPlan wordmark alone; the boxed G remains the favicon.
+- **Direct product exploration:** visitors open the AUI demo themselves. The video walkthrough and recorded product screens were removed. The possibilities graphic now includes **Personal goals, Degree, Concentration, Minor, Electives, Internship, and Exchange semester**.
+- **One student journey:** admitted and continuing students use the same guided planning flow. The final review accepts prior completed courses, current registrations and remaining Language Center study before building the roadmap.
+- **University pilot administration:** approved institutional email imports, university-scoped hashed rosters, roster-gated authentication and a private **Pilots & partnerships** dashboard. The public AUI prototype stays in demo mode; a contracted pilot needs its own reviewed academic data and deployment.
+- **Partnership inquiries:** the contact form saves inquiries in the private owner dashboard for up to 180 days. It does not automatically send email; the website also links directly to **partnerships@planwithgoplan.com**.
+- **Dedicated mailbox:** the partnership address is a separate Zoho mailbox. Cloudflare Email Routing was disabled and Zoho MX, SPF and DKIM were verified. It does not forward messages to the personal Gmail inbox. The current free plan does not support Outlook/IMAP; an appropriate paid mail plan is required for that connection.
+
+See [completed-work handoff](docs/PROJECT_HANDOFF.md), [university pilots](docs/UNIVERSITY_VISION.md), and [existing startup drafts](docs/startup/README.md). Mail hosting and production secrets are account configuration, not something a Git clone recreates.
 
 ## Engineering highlights
 
@@ -54,6 +70,8 @@ Tests cover degree/minor combinations, prerequisite ordering, independent course
 | `db/`, `drizzle/` | Schema and versioned migrations |
 | `scripts/` | Build, data preparation and operator tooling |
 | `verify-*.mjs`, `tests/` | Offline regression suites and fixtures |
+| `docs/PROJECT_HANDOFF.md` | Current decisions and next-chat starting point |
+| `docs/startup/` | Archived PRD and incubation/university pitch drafts |
 
 `dist/server/` is generated output. The name `dist` for authored UI files is a legacy convention, documented here to prevent accidental cleanup.
 
@@ -63,8 +81,8 @@ GoPlan models a reviewed snapshot of AUI requirements. It does not connect to li
 
 Names, sign-in email, exact GPA, grades and private progress notes are excluded from automatic AI payloads; free text is sent as entered. The AI may receive a yes/no accelerated-load eligibility indicator. See the website privacy notice for storage and controls.
 
-Full catalogue extracts, original documents, credentials, deployment-specific settings, user records and the retired Android installer are excluded from the public export. See [data provenance](docs/DATA_SOURCES.md). This repository does not grant rights to third-party source documents.
+Full catalogue extracts, original third-party university documents, credentials, deployment-specific settings, user records and the retired Android installer are excluded from the public export. See [data provenance](docs/DATA_SOURCES.md). This repository does not grant rights to third-party source documents.
 
 ## Release status
 
-The production site and this source snapshot can differ while a release is being validated. Email authentication requires a Supabase project, verified sending domain and production SMTP configuration; setting only a public project URL does not enable working sign-in. Follow [deployment](docs/DEPLOYMENT.md) for the required checks.
+This GitHub snapshot was synchronized from the completed production source on 10 October 2026. Future live releases can diverge until explicitly synchronized. Repository visibility and source licensing are unchanged; a future private/closed-source transition is a separate decision. Email authentication requires a Supabase project, verified sending domain and production SMTP configuration; setting only a public project URL does not enable working sign-in. Follow [deployment](docs/DEPLOYMENT.md) for the required checks.

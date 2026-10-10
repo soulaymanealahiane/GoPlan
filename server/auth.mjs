@@ -1,3 +1,4 @@
+import {emailAllowed,rosterMode} from './university-access.mjs';
 import {hash} from './feedback.mjs';
 const DAY=86400000,SESSION_MS=30*DAY;
 const cookies=request=>Object.fromEntries((request.headers.get('Cookie')||'').split(';').map(s=>s.trim().split('=')));
@@ -13,7 +14,7 @@ export function authConfigured(env){return !!(env.SUPABASE_URL&&env.SUPABASE_PUB
 export async function accountIdentity(request,env){
  if(cache.has(request))return cache.get(request);
  const promise=(async()=>{if(!env.DB)return null;const raw=cookies(request)[cookieName(request)];if(!/^[a-f0-9]{64}$/.test(raw||''))return null;
- return await env.DB.prepare('SELECT user_id AS id,email FROM auth_sessions WHERE token_hash=? AND expires_at>?').bind(await hash(raw),Date.now()).first();})();cache.set(request,promise);return promise;
+ const identity=await env.DB.prepare('SELECT user_id AS id,email FROM auth_sessions WHERE token_hash=? AND expires_at>?').bind(await hash(raw),Date.now()).first();return identity&&await emailAllowed(identity.email,env)?identity:null;})();cache.set(request,promise);return promise;
 }
 function sessionCookie(request,value,seconds=SESSION_MS/1000){return `${cookieName(request)}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${secure(request)?'; Secure':''}`;}
 async function readBody(request){if(!request.headers.get('Content-Type')?.startsWith('application/json'))fail('Use JSON.',415);const reader=request.body?.getReader();if(!reader)fail('Missing request.');let n=0,parts=[];while(true){const {value,done}=await reader.read();if(done)break;n+=value.length;if(n>2048){await reader.cancel();fail('Request too large.',413);}parts.push(value);}const all=new Uint8Array(n);let i=0;for(const p of parts){all.set(p,i);i+=p.length;}try{return JSON.parse(new TextDecoder().decode(all));}catch{fail('Invalid request.');}}
@@ -21,7 +22,7 @@ async function limit(db,key,max,windowMs){const bucket=Math.floor(Date.now()/win
 async function provider(env,path,data,fetcher,token=''){const base=new URL(env.SUPABASE_URL);if(base.protocol!=='https:'||!base.hostname.endsWith('.supabase.co'))fail('Sign-in configuration needs attention.',503);let r;try{r=await fetcher(base.origin+'/auth/v1/'+path,{method:token?'PUT':'POST',headers:{'Content-Type':'application/json',apikey:env.SUPABASE_PUBLISHABLE_KEY,...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(data),signal:AbortSignal.timeout(15000)});}catch{fail('Sign-in is temporarily unavailable. Please try again.',503);}let result;try{result=await r.json();}catch{fail('Sign-in is temporarily unavailable.',503);}if(!r.ok)fail(r.status===429?'Please wait a minute before requesting another code.':path==='verify'?'That code is invalid or expired. Request another code.':path.startsWith('token')?'Email or password is incorrect.':path==='user'?'Could not save this password. Try a different password or request a new code.':'We could not send a code. Please try again shortly.',r.status===429?429:400);return result;}
 export async function authEndpoint(request,env,options={}){
  const url=new URL(request.url);
- if(url.pathname==='/api/auth/status'&&request.method==='GET')return json({configured:authConfigured(env)});
+ if(url.pathname==='/api/auth/status'&&request.method==='GET')return json({configured:authConfigured(env),accessMode:rosterMode(env)?'roster':'demo'});
  if(request.method!=='POST')return json({error:'Use POST.'},405);
  if(request.headers.get('Origin')!==url.origin||request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'Open sign-in from GoPlan.'},403);
  try{
@@ -34,6 +35,7 @@ export async function authEndpoint(request,env,options={}){
   const now=Date.now(),ip=request.headers.get('CF-Connecting-IP')||options.clientAddress||'unknown';
   await env.DB.batch([env.DB.prepare('DELETE FROM auth_limits WHERE expires_at<?').bind(now),env.DB.prepare('DELETE FROM auth_sessions WHERE expires_at<?').bind(now),env.DB.prepare('DELETE FROM auth_password_tickets WHERE expires_at<?').bind(now)]);
   await limit(env.DB,'ip:'+ip,40,10*60000);
+  if(!await emailAllowed(email,env))fail('This email does not have access to this university’s GoPlan. Contact your university to confirm eligibility.',403);
   const fetcher=options.authFetcher||fetch;
   if(url.pathname.endsWith('/send')){await limit(env.DB,'send:'+email,1,60000);await limit(env.DB,'send-hour:'+email,12,3600000);await provider(env,'otp',{email,create_user:true},fetcher);return json({sent:true});}
   let result;

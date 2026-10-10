@@ -1,0 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Fraunces:ital,wght@0,400;0,500;1,400&display=swap');
+/* Shared identity without changing the planner's course and semester layouts. */
+:root{--green:#173e35;--ink:#173e35;--lime:#def4aa;--paper:#f8f9f3}
+.brand .brand-shared{display:block;width:35px;height:35px;border-radius:0}.brand .brand-period{display:none}.brand{gap:10px}.brand-mark{display:none!important}
+.demo-banner{border-bottom:1px solid #dce3d6;padding:10px 20px;text-align:center;font-size:11px;color:#64746a;background:#f8f9f3}.demo-banner a{font-weight:600;text-decoration:underline}
+.home-entry-grid.unified-entry{grid-template-columns:1.35fr .65fr}.unified-entry .home-entry-continuing{background:#f8faf4}.unified-entry .home-entry-continuing h2{font-size:22px}
+.study-review{border:1px solid #d9e3cc;background:#f8faf4;border-radius:10px;padding:22px;margin:24px 0}.study-review h3{font-size:20px;margin:7px 0 12px}.study-review>.small-note{margin-bottom:18px}.study-review input,.study-review select{width:100%}.study-review .field-grid{margin-top:15px}.review-summary{font-size:12px;padding:12px;background:#e9f0df;border-radius:6px}
+@media(max-width:740px){.home-entry-grid.unified-entry{display:block}.unified-entry .home-entry-continuing{margin-top:20px}}
+
+:root{--green:#173e35;--ink:#173e35;--muted:#64746a;--teal:#27614f;--lime:#dcebbd;--line:#dce3d6;--paper:#f8f9f3}body{font-family:Manrope,Segoe UI,sans-serif;background:var(--paper)}.brand{font-family:Manrope,Segoe UI,sans-serif;background:transparent;padding:0;font-weight:700;letter-spacing:-1.2px}.welcome h1,.welcome h2,.home-entry-main h2,.start-main h2,.journey-body h2,.plan-banner h2{font-family:Fraunces,Georgia,serif;font-weight:400;letter-spacing:-1px}.topbar{background:#f8f9f3}.button{border-radius:12px}.welcome h1{font-size:clamp(36px,4vw,50px);line-height:1.15}
+
+h1,h2{font-family:Fraunces,Georgia,serif;font-weight:400;letter-spacing:-.8px}.brand .brand-shared{width:35px;height:35px}
