@@ -7,7 +7,8 @@ import {journeyView,planView,minorChecklistView} from './dist/views.js';
 import {acceptAdvice,adviceFingerprint} from './dist/journey-state.js';
 import {editJourney,buildProposal} from './dist/workspace-flow.js';
 import {replanSnapshot,proposeReplan} from './dist/replanning.js';
-import {advise,detailsContext} from './server/advisor.mjs';
+import {advise as realAdvise,detailsContext} from './server/advisor.mjs';
+const advise=(input,env,fetcher)=>realAdvise(input,{...env,GOPLAN_TOKEN_COUNTER:async body=>Math.ceil(JSON.stringify(body).length/4)},fetcher);
 
 const env={OPENAI_API_KEY:'fixture-secret',OPENAI_WEB_RESEARCH:'off'};
 const response=value=>openaiFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});

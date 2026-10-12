@@ -10,7 +10,8 @@ import {mergeScheduling,courseAvailability} from './dist/course-availability.js'
 import {replanSnapshot,proposeReplan} from './dist/replanning.js';
 import {parseOfferingCodes,offeringChanges,offeringEditor,loadOfferingEditor,availabilityAssessmentView} from './dist/offering-view.js';
 import {createWorkbook} from './dist/export.js';
-import {advise,availableTargets,mergeResearchTargets} from './server/advisor.mjs';
+import {advise as realAdvise,availableTargets,mergeResearchTargets} from './server/advisor.mjs';
+const advise=(input,env,fetcher)=>realAdvise(input,{...env,GOPLAN_TOKEN_COUNTER:async body=>Math.ceil(JSON.stringify(body).length/4)},fetcher);
 
 const env={OPENAI_API_KEY:'fixture-key',OPENAI_WEB_RESEARCH:'off'};
 const response=value=>openaiFixture({status:'completed',model:'test-fixture',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});

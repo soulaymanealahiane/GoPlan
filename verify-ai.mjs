@@ -1,7 +1,8 @@
 import {openaiFixture} from './tests/openai-fixture.mjs';
 import assert from 'node:assert/strict';
 import {requestAdvice,setAccessCode,hasAccessCode} from './dist/ai-client.js';
-import {sanitizeRequest,validateDirection,validateDetails,availableTargets,advise} from './server/advisor.mjs';
+import {sanitizeRequest,validateDirection,validateDetails,availableTargets,advise as realAdvise} from './server/advisor.mjs';
+const advise=(input,env,fetcher)=>realAdvise(input,{...env,GOPLAN_TOKEN_COUNTER:async body=>Math.ceil(JSON.stringify(body).length/4)},fetcher);
 import {fetchOpenAI} from './server/openai-transport.mjs';
 import {handleApi} from './server/api.mjs';
 import {normalizeProfile,DATA} from './dist/planner.js';
@@ -27,7 +28,7 @@ assert.throws(()=>validateDetails({summary:'Do not overwrite the student edit',c
 for(const program of DATA.programs){const profile=normalizeProfile({program:program.id}),lists=Object.fromEntries(['internships','exchanges'].map(type=>{const ts=availableTargets(type,profile).slice(0,5);return [type,ts.map((t,i)=>tier(t,i,ts.length))];}));validateDetails({summary:'Evidence-bounded research targets.',choices:[],...lists},sanitizeRequest({...input,level:program.level,stage:'details',profile}));if(program.level==='undergraduate')for(const ts of Object.values(lists))assert.equal(ts.length,5);}
 let calls=0;
 const provider=async(url,init)=>{calls++;assert.equal(url,'https://api.openai.com/v1/responses');assert.equal(init.headers.Authorization,'Bearer fixture-secret');const payload=JSON.parse(init.body);assert.equal(payload.store,false);assert.equal(payload.text.format.strict,true);assert.ok(!init.body.includes('fixture-secret'));return openaiFixture({status:'completed',model:'fixture-provider',output:[{content:[{type:'output_text',text:JSON.stringify(direction)}]}]});};
-const env={OPENAI_WEB_RESEARCH:'off',OPENAI_API_KEY:'fixture-secret',AI_ACCESS_CODE:'fixture-access'};
+const env={GOPLAN_TOKEN_COUNTER:async()=>8000,OPENAI_WEB_RESEARCH:'off',OPENAI_API_KEY:'fixture-secret',AI_ACCESS_CODE:'fixture-access'};
 assert.equal(needsPersonalConfirmation({id:'bscsc-specialization-option',title:'Natural Language Processing and Text Mining'}),false);
 assert.equal(needsPersonalConfirmation({id:'bscsc-specialization-option',title:'Languages and Compilers'}),false);
 assert.equal(needsPersonalConfirmation({id:'minor-replacement-1',title:'Approved minor replacement'}),false);
@@ -58,15 +59,15 @@ assert.equal(calls,21);
 let release;const gate=new Promise(resolve=>release=resolve);let started=0;
 const slow=async(...args)=>{started++;await gate;return provider(...args);};
 const opts={clientAddress:'busy-fixture',fetcher:slow};
-const jobs=[0,1].map(i=>handleApi(req({...input,goal:input.goal+' Busy '+i}),env,opts));
-while(started<2)await new Promise(resolve=>setTimeout(resolve,1));
+const jobs=[0].map(i=>handleApi(req({...input,goal:input.goal+' Busy '+i}),env,opts));
+while(started<1)await new Promise(resolve=>setTimeout(resolve,1));
 const busy=await handleApi(req({...input,goal:input.goal+' Busy 2'}),env,opts);
 assert.equal(busy.status,429);assert.equal((await busy.json()).code,'AGENT_BUSY');
 assert.equal((await handleApi(req(input,{'X-GoPlan-Session':'independent-session-1234'}),env,{...opts,fetcher:provider})).status,200);
 release();assert.ok((await Promise.all(jobs)).every(r=>r.status===200));
 assert.equal((await handleApi(req({...input,goal:input.goal+' Busy 2'}),env,{...opts,fetcher:provider})).status,200);
 let transportCalls=0,delays=[];
-const transport=()=>fetchOpenAI('fixture',{},async()=>++transportCalls<3?openaiFixture({error:{code:'rate_limit_exceeded'}},{status:429}):openaiFixture({ok:true}),{pause:async ms=>delays.push(ms),random:()=>0});
+const transport=()=>fetchOpenAI('fixture',{},async()=>++transportCalls<3?openaiFixture({error:{code:'rate_limit_exceeded'}},{status:429}):openaiFixture({ok:true}),{pause:async ms=>delays.push(ms),random:()=>0,maxAttempts:3});
 assert.equal((await transport()).status,200);assert.equal(transportCalls,3);assert.deepEqual(delays,[2000,4000]);
 transportCalls=0;
 await fetchOpenAI('fixture',{},async()=>{transportCalls++;return openaiFixture({error:{code:'insufficient_quota'}},{status:429});},{pause:async()=>assert.fail('Never retry exhausted credit')});assert.equal(transportCalls,1);
@@ -85,9 +86,9 @@ const savedFetch=globalThis.fetch,savedTimer=globalThis.setTimeout;
 let clientCalls=0,clientBodies=[],clientSessions=[];
 try{
  globalThis.setTimeout=fn=>{fn();return 0;};
- globalThis.fetch=async(url,init)=>{clientCalls++;clientBodies.push(init.body);clientSessions.push(init.headers['X-GoPlan-Session']);return clientCalls<3?openaiFixture({code:'AGENT_BUSY',retryAfterSeconds:2},{status:429}):openaiFixture({summary:'Ready'});};
+ globalThis.fetch=async(url,init)=>{clientCalls++;clientBodies.push(init.body);clientSessions.push(init.headers['X-GoPlan-Session']);return clientCalls<2?openaiFixture({code:'AGENT_BUSY',retryAfterSeconds:2},{status:429}):openaiFixture({summary:'Ready'});};
  setAccessCode('fixture');const journey={profile:{program:'BSCSC',choices:{}},goal:'Build useful software'},before=JSON.stringify(journey);
- assert.equal((await requestAdvice('pace',journey)).summary,'Ready');assert.equal(clientCalls,3);assert.equal(new Set(clientBodies).size,1);assert.equal(new Set(clientSessions).size,1);assert.equal(JSON.stringify(journey),before);
+ assert.equal((await requestAdvice('pace',journey)).summary,'Ready');assert.equal(clientCalls,2);assert.equal(new Set(clientBodies).size,1);assert.equal(new Set(clientSessions).size,1);assert.equal(JSON.stringify(journey),before);
  clientCalls=0;globalThis.fetch=async()=>{clientCalls++;return openaiFixture({error:'Credit unavailable'},{status:503});};
  await assert.rejects(()=>requestAdvice('pace',journey),/Credit unavailable/);assert.equal(clientCalls,1);
 }finally{globalThis.fetch=savedFetch;globalThis.setTimeout=savedTimer;setAccessCode('');}

@@ -7,7 +7,7 @@ flowchart LR
     API --> Auth[Supabase email verification]
     API --> Store[(SQLite / D1)]
     API --> Agent[AI proposal service]
-    Agent --> Model[OpenAI GPT-6 Astra]
+    Agent --> Model[OpenAI GPT-6.1 Sol]
     Agent --> Rules[Academic validator]
     Student --> Scheduler[Deterministic planner]
     Rules --> Proposal[Validated proposal]
@@ -16,11 +16,11 @@ flowchart LR
 
 ## Recommendation boundary
 
-The model proposes decisions; it does not write directly to a student's saved roadmap. Academic choices are bounded by the reviewed dataset and checked after generation. The scheduler computes semester placement using prerequisites, credit caps and recorded progress. A changed roadmap is previewed before acceptance. Bounded retries repair rejected proposals; network failure does not silently produce fabricated advice.
+The model proposes decisions; it does not write directly to a student's saved roadmap. Academic choices are bounded by the reviewed dataset and checked after generation. The scheduler computes semester placement using prerequisites, credit caps and recorded progress. A changed roadmap is previewed before acceptance. At most one repair within the shared time and spending budget corrects rejected proposals; network failure does not silently produce fabricated advice.
 
 ## Research boundary
 
-Native Responses web search runs with xhigh reasoning, required tool use, a high search context and a bounded tool budget. Only completed web-search items establish consulted URLs. The server reads those public pages without provider credentials, validates redirects and exact short support fragments, then extracts facts under a strict JSON schema. Search prose alone is not a source receipt. Failed pages and unsupported claims are excluded. Exchange research enriches reviewed partner IDs without creating partnerships or confirming nomination. Raw search text and page bodies never enter the student response.
+GPT-6 Luna runs focused native Responses web search without extra reasoning, required tool use, a low search context and at most two tool calls. Academic direction uses reviewed evidence unless live market refresh is explicitly enabled. Search and extraction share a 24-second budget; the complete request is limited to 55 seconds. Exact token counting and conservative reservations guard $0.20 of planned spending, including repairs and the Fast-mode premium used for target ranking. There are no automatic paid transport retries. D1 leases prevent simultaneous requests for the same authenticated student across Worker instances. Only completed web-search items establish consulted URLs. The server reads those public pages without provider credentials, validates redirects and exact short support fragments, then extracts facts under a strict JSON schema. Search prose alone is not a source receipt. Failed pages and unsupported claims are excluded. Exchange research enriches reviewed partner IDs without creating partnerships or confirming nomination. Raw search text and page bodies never enter the student response.
 
 ## Workspace boundary
 

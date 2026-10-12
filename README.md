@@ -29,9 +29,9 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 
 ## Stack
 
-Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; OpenAI GPT-6 Astra for advice and live web research. Production email delivery requires a configured SMTP service.
+Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; OpenAI GPT-6.1 Sol for advice and GPT-6 Luna for focused live web research. Production email delivery requires a configured SMTP service.
 
-OpenAI is the inference provider. GPT-6 Astra runs every advice stage with high reasoning effort; live discovery uses xhigh reasoning and native web search. Search and strict evidence extraction run separately. Completed search receipts and directly retrieved primary pages support extracted findings. Academic validators remain authoritative, and no weaker-model or provider fallback is used. The UI shows concise recommendations and clickable sources; search transcripts and page bodies stay on the server.
+OpenAI is the inference provider. GPT-6.1 Sol handles academic advice and feedback, using medium reasoning for academic choices and low reasoning for short answers, routing and target selection. GPT-6 Luna performs focused search and strict evidence extraction. One request-wide 55-second deadline and a $0.20 conservative spending guard cover discovery, advice and repairs; browser requests stop at 58 seconds. Actual input tokens are counted before generation; target ranking uses Fast mode, whose premium is included in the guard. Completed search receipts and primary pages support extracted findings. Academic validators remain authoritative. The UI shows concise recommendations and clickable sources; search transcripts and page bodies stay on the server.
 
 ## Run locally
 

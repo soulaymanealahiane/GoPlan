@@ -4,7 +4,7 @@ import {localDatabase} from './server/local-db.mjs';
 import {recordUsage,analyticsSnapshot,channelFor} from './server/analytics.mjs';
 import {handleApi} from './server/api.mjs';
 import {newJourney} from './dist/guidance.js';
-const DB=localDatabase(':memory:'),env={DB,ANALYTICS_ENABLED:'true',AI_ACCESS_CODE:'fixture-demo',FEEDBACK_REVIEW_KEY:'fixture-private',OPENAI_API_KEY:'fixture',OPENAI_WEB_RESEARCH:'off'},live='https://goplan-aui-demo-k7m9.salahiane9.chatgpt.site';
+const DB=localDatabase(':memory:'),env={GOPLAN_TOKEN_COUNTER:async()=>8000,DB,ANALYTICS_ENABLED:'true',AI_ACCESS_CODE:'fixture-demo',FEEDBACK_REVIEW_KEY:'fixture-private',OPENAI_API_KEY:'fixture',OPENAI_WEB_RESEARCH:'off'},live='https://goplan-aui-demo-k7m9.salahiane9.chatgpt.site';
 const admin=(key='fixture-private',origin=live)=>handleApi(new Request(live+'/api/admin/analytics',{headers:{Authorization:'Bearer '+key,Origin:origin}}),env);
 assert.equal((await admin('fixture-demo')).status,401);assert.equal((await admin('fixture-private','https://other.example')).status,403);
 assert.equal(channelFor('https://app.goplan.local'),'android');assert.equal(channelFor('http://localhost:4317'),'local');
@@ -25,5 +25,5 @@ assert.ok(!JSON.stringify(data).includes('PRIVATE'));assert.ok(!JSON.stringify(d
 assert.equal(data.rows.find(r=>r.kind==='event').count,1);
 const broken={...env,DB:{prepare(){throw Error('Fixture storage unavailable');}}};
 assert.equal((await handleApi(post('/api/usage',{event:'plan_updated'}),broken)).status,200,'Measurement failure never blocks the planner');
-const healthyAdvice=await handleApi(post('/api/advice',{...query,question:'Explain my minor requirements.'},{'X-GoPlan-Session':'analytics-fixture-other'}),broken,{fetcher});assert.equal(healthyAdvice.status,200,'Adviser remains usable when counters fail');
-DB.close();console.log('Passed private analytics authorization, aggregates, local/disabled exclusion, retention, PII rejection, cache/provider accounting and non-blocking storage failure. No live AI calls.');
+const healthyAdvice=await handleApi(post('/api/advice',{...query,question:'Explain my minor requirements.'},{'X-GoPlan-Session':'analytics-fixture-other'}),broken,{fetcher});assert.equal(healthyAdvice.status,503,'Do not charge for advice when its durable concurrency guard is unavailable');
+DB.close();console.log('Passed private analytics authorization, aggregates, local/disabled exclusion, retention, PII rejection, cache/provider accounting, non-blocking measurement failure and guarded advice when lease storage fails. No live AI calls.');

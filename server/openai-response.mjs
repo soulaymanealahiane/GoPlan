@@ -1,7 +1,7 @@
 import {fetchOpenAI} from './openai-transport.mjs';
-export const DEFAULT_MODEL='gpt-6-astra';
-export const REASONING_EFFORTS=new Set(['low','medium','high','xhigh','max']);
-export function reasoningEffort(value,fallback='high'){
+export const DEFAULT_MODEL='gpt-6.1-sol';
+export const REASONING_EFFORTS=new Set(['none','low','medium','high','xhigh','max']);
+export function reasoningEffort(value,fallback='medium'){
  if(!value)return fallback;
  if(!REASONING_EFFORTS.has(value))throw Error('Unsupported OpenAI reasoning effort.');
  return value;

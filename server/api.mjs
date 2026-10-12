@@ -6,6 +6,7 @@ import {feedbackEndpoint,approvedCorrections} from './feedback.mjs';
 import {EVENTS,channelFor,recordSafely,isAnalyticsAdmin,analyticsSnapshot} from './analytics.mjs';
 import {adminEndpoint} from './admin.mjs';
 import {accountEndpoint} from './accounts.mjs';
+import {acquireAdviserLease} from './adviser-lease.mjs';
 
 const pending=new Map(),recent=new Map(),activeSessions=new Map();
 const digest=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -25,7 +26,7 @@ export async function handleApi(request,env,options={}){
  let signedIn;try{signedIn=await accountIdentity(request,env);}catch{return reply({error:'Account connection unavailable. Please retry.'},503,origin);}
  if(signedIn&&!['GET','HEAD'].includes(request.method)&&origin!==new URL(request.url).origin)return reply({error:'Open this action from GoPlan.'},403,origin);
  if(rosterMode(env)&&!signedIn&&path!=='/api/status')return reply({error:'Sign in with an approved university email.',code:'ACCESS_REQUIRED'},401,origin);
- if(path==='/api/status'&&request.method==='GET')return reply({available:!!(env.OPENAI_API_KEY&&(signedIn||(!rosterMode(env)&&env.AI_ACCESS_CODE))),provider:'openai',model:env.OPENAI_MODEL||'gpt-6-astra',requiresAccess:!signedIn,feedbackAvailable:!!env.DB},200,origin);
+ if(path==='/api/status'&&request.method==='GET')return reply({available:!!(env.OPENAI_API_KEY&&(signedIn||(!rosterMode(env)&&env.AI_ACCESS_CODE))),provider:'openai',model:env.OPENAI_MODEL||'gpt-6.1-sol',requiresAccess:!signedIn,feedbackAvailable:!!env.DB},200,origin);
  const isFeedback=path==='/api/feedback'||path.startsWith('/api/feedback/')||path.startsWith('/api/review/');
  const isEvent=path==='/api/usage';
  if(path!=='/api/advice'&&!isFeedback&&!isEvent)return reply({error:'Not found'},404,origin);
@@ -46,23 +47,28 @@ export async function handleApi(request,env,options={}){
  // and bound simultaneous paid work instead. All maps are per server instance.
  const session=request.headers.get('X-GoPlan-Session');
  const identity=signedIn?.id||(session&&/^[a-zA-Z0-9-]{16,80}$/.test(session)?session:request.headers.get('CF-Connecting-IP')||options.clientAddress||'demo');
- const scope=await digest(JSON.stringify([env.OPENAI_API_KEY,env.AI_ACCESS_CODE,env.OPENAI_MODEL,env.OPENAI_RESEARCH_MODEL,env.OPENAI_REASONING_EFFORT,env.OPENAI_RESEARCH_REASONING_EFFORT,env.OPENAI_WEB_RESEARCH,identity]));
+ const scope=await digest(JSON.stringify([env.OPENAI_API_KEY,env.AI_ACCESS_CODE,env.OPENAI_MODEL,env.OPENAI_RESEARCH_MODEL,env.OPENAI_REASONING_EFFORT,env.OPENAI_RESEARCH_REASONING_EFFORT,env.OPENAI_WEB_RESEARCH,env.OPENAI_DIRECTION_RESEARCH,identity]));
  const key=await digest(scope+JSON.stringify([data,corrections])),now=Date.now();
  for(const [id,item] of recent)if(item.expires<=now)recent.delete(id);
  if(recent.has(key)){await recordSafely(env,{stage:data.stage,channel:channelFor(origin),outcome:'cached'});return reply(recent.get(key).value,200,origin);}
  let job=pending.get(key);
  if(!job){
-  if((activeSessions.get(scope)||0)>=2||pending.size>=8)return reply({error:'The adviser is finishing other requests. Retrying automatically.',code:'AGENT_BUSY',retryAfterSeconds:2},429,origin);
+  if((activeSessions.get(scope)||0)>=1||pending.size>=8)return reply({error:'The adviser is finishing your previous request. Wait for it before requesting another recommendation.',code:'AGENT_BUSY',retryAfterSeconds:2},429,origin);
   activeSessions.set(scope,(activeSessions.get(scope)||0)+1);
   const metric={stage:data.stage,channel:channelFor(origin),outcome:'error',providerCalls:0,inputTokens:0,outputTokens:0};
   const measuredFetch=async(...args)=>{const provider=new URL(args[0]).origin==='https://api.openai.com';if(provider)metric.providerCalls++;const response=await (options.fetcher||fetch)(...args);if(provider)try{const p=await response.clone().json();metric.inputTokens+=p.usage?.input_tokens||0;metric.outputTokens+=p.usage?.output_tokens||0;}catch{}return response;};
-  job=Promise.resolve().then(()=>advise(data,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections},measuredFetch)).then(value=>{
+  let lease;
+  job=Promise.resolve().then(async()=>{
+   try{lease=await acquireAdviserLease(env.DB,scope);}catch{throw Object.assign(Error('The adviser could not safely start this request. Your answers are saved; please retry.'),{status:503});}
+   if(!lease)throw Object.assign(Error('The adviser is finishing your previous request. Wait a moment before retrying.'),{status:429,code:'AGENT_BUSY'});
+   return advise(data,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections},measuredFetch);
+  }).then(value=>{
    metric.outcome='success';
    while(recent.size>=200)recent.delete(recent.keys().next().value);
    // A temporary research failure must not pin the next retry to old evidence.
    if(value.research?.status!=='unavailable')recent.set(key,{value,expires:Date.now()+600000});return value;
-  }).finally(async()=>{pending.delete(key);const n=activeSessions.get(scope)-1;if(n)activeSessions.set(scope,n);else activeSessions.delete(scope);metric.durationMs=Date.now()-now;await recordSafely(env,metric);});
+  }).finally(async()=>{try{await lease?.release();}catch{console.warn('Adviser lease cleanup deferred to expiry.');}pending.delete(key);const n=activeSessions.get(scope)-1;if(n)activeSessions.set(scope,n);else activeSessions.delete(scope);metric.durationMs=Date.now()-now;await recordSafely(env,metric);});
   pending.set(key,job);
  }
- try{return reply(await job,200,origin);}catch(e){return reply({error:e.name==='TimeoutError'?'GoPlan took too long to respond. Your choices are unchanged; please try again.':e.message||'GoPlan could not finish that request.'},e.status||422,origin);}
+ try{return reply(await job,200,origin);}catch(e){return reply({error:e.name==='TimeoutError'?'GoPlan reached its one-minute limit. Your answers are saved; please try again.':e.message||'GoPlan could not finish that request.',...(e.code?{code:e.code}:{})},e.status||(e.name==='TimeoutError'?504:422),origin);}
 }

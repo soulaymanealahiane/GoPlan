@@ -2,6 +2,7 @@ import {agentContext} from './agent-context.js';
 import {publicStudentContext} from './student-context.js';
 const endpoint=()=>globalThis.GoPlanAndroid?'https://goplan-aui-demo-k7m9.salahiane9.chatgpt.site':'';
 const accessStorage='goplan-verified-demo-access';
+const pendingAdvice=new Map();
 let access='',session='',accountAccess=false;
 try{access=sessionStorage.getItem(accessStorage)||'';}catch{}
 function sessionId(){if(session)return session;try{session=sessionStorage.getItem('goplan-ai-session')||crypto.randomUUID();sessionStorage.setItem('goplan-ai-session',session);}catch{session=crypto.randomUUID();}return session;}
@@ -11,11 +12,13 @@ export async function aiStatus(){try{const r=await fetch(endpoint()+'/api/status
 export async function requestAdvice(stage,journey,extra={}){
  const {program,track,secondTrack,minor,choices,regularCourses,summerCourses,summers}=journey.profile;
  const body=JSON.stringify({stage,flowVersion:journey.flowVersion||5,background:journey.background,programChosen:journey.programChosen===true,changeRequest:journey.changeRequest||'',questionnaire:journey.questionnaire,goal:journey.goal,answers:journey.answers,...agentContext(journey,stage),preferredDegree:journey.preferredDegree,level:journey.level,acceleratedEligible:journey.profile.gpa!==''&&Number(journey.profile.gpa)>=3,profile:stage==='setup'||(['direction','question'].includes(stage)&&!journey.programChosen)?{}:{program,track,secondTrack,minor,choices,regularCourses,summerCourses,summers},...extra,...(journey.studentContext?{studentContext:publicStudentContext(journey.studentContext)}:{})});
- const signal=AbortSignal.timeout(480000),requestAccess=access;
- for(let attempt=0;attempt<8;attempt++){
- const response=await fetch(endpoint()+'/api/advice',{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':requestAccess,'X-GoPlan-Session':sessionId()},signal,body});
+ const key=JSON.stringify([access,body]);if(pendingAdvice.has(key))return pendingAdvice.get(key);
+ const job=(async()=>{
+ const signal=AbortSignal.timeout(58000),requestAccess=access;
+ for(let attempt=0;attempt<2;attempt++){
+ let response;try{response=await fetch(endpoint()+'/api/advice',{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':requestAccess,'X-GoPlan-Session':sessionId()},signal,body});}catch(e){throw Error(e.name==='TimeoutError'||signal.aborted?'The adviser reached its one-minute limit. Your answers are saved; please retry.':'The connection was interrupted. Your answers are saved; check your connection before retrying.');}
  let data;try{data=await response.json();}catch{throw Error('The AI service is unavailable. Your saved plan is unchanged.');}
- if(response.status===429&&data.code==='AGENT_BUSY'&&attempt<7){await new Promise(resolve=>setTimeout(resolve,Math.min(6000,Math.max(1000,Number(data.retryAfterSeconds)*1000||2000)*(1+attempt/2))));signal.throwIfAborted();continue;}
+ if(response.status===429&&data.code==='AGENT_BUSY'&&attempt<1){await new Promise(resolve=>setTimeout(resolve,Math.min(6000,Math.max(1000,Number(data.retryAfterSeconds)*1000||2000)*(1+attempt/2))));signal.throwIfAborted();continue;}
  if(response.status===401&&data.code==='ACCESS_REQUIRED'){
   if(access===requestAccess){setAccessCode('');try{sessionStorage.removeItem(accessStorage);}catch{}}
   if(accountAccess){accountAccess=false;const e=Error('Your session expired. Sign in again to continue; your answers are saved.');e.code='SIGN_IN_REQUIRED';throw e;}
@@ -25,6 +28,7 @@ export async function requestAdvice(stage,journey,extra={}){
  if(access===requestAccess&&access){try{sessionStorage.setItem(accessStorage,access);}catch{}}
  return data;
  }
+ })();pendingAdvice.set(key,job);try{return await job;}finally{pendingAdvice.delete(key);}
 }
 
 export function resetAdviserSession(){session='';try{sessionStorage.removeItem('goplan-ai-session');}catch{}}

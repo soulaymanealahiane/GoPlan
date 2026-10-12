@@ -15,10 +15,10 @@ const tracked=async(url,init)=>{
  }
  return r;
 };
-const env={...process.env,OPENAI_MODEL:process.env.OPENAI_MODEL||'gpt-6-astra',OPENAI_WEB_RESEARCH:'off'};
+const env={...process.env,OPENAI_MODEL:process.env.OPENAI_MODEL||'gpt-6.1-sol',OPENAI_WEB_RESEARCH:'off'};
 const answer=await advise({flowVersion:5,stage:'question',level:'undergraduate',questionnaire:{activities:'Building software.'},question:'Does selecting courses in a roadmap mean I have already earned their credits? Answer in one sentence.'},env,tracked);
 assert.equal(answer.source,'openai');assert.ok(answer.answer.length);assert.match(answer.answer,/earn|complet|pass|credit/i);
-const r=await fetchOpenAIResponse({method:'POST',signal:AbortSignal.timeout(120000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:env.OPENAI_MODEL,store:false,reasoning:{effort:'low'},max_output_tokens:2000,max_tool_calls:2,tools:[{type:'web_search',external_web_access:true,filters:{allowed_domains:['aui.ma']}}],tool_choice:'required',include:['web_search_call.action.sources'],input:'Find the official Al Akhawayn University international exchange office page. Give its name and source link in one sentence.'})},tracked);
+const r=await fetchOpenAIResponse({method:'POST',signal:AbortSignal.timeout(55000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:env.OPENAI_MODEL,store:false,reasoning:{effort:'low'},max_output_tokens:2000,max_tool_calls:2,tools:[{type:'web_search',external_web_access:true,filters:{allowed_domains:['aui.ma']}}],tool_choice:'required',include:['web_search_call.action.sources'],input:'Find the official Al Akhawayn University international exchange office page. Give its name and source link in one sentence.'})},tracked);
 const payload=await r.json();assert.equal(payload.status,'completed');
 const evidence=await retrieveEvidence(searchEvidence(payload),tracked);assert.ok(evidence.documents.length,'At least one consulted primary page must be directly readable.');assert.ok(evidence.urls.every(url=>new URL(url).hostname==='aui.ma'||new URL(url).hostname.endsWith('.aui.ma')));
 const report={synthetic:true,model:env.OPENAI_MODEL,advicePassed:true,webSearchPassed:true,directEvidencePassed:true,sourcePages:evidence.urls,usage};

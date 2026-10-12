@@ -1,6 +1,7 @@
 import {openaiFixture} from './tests/openai-fixture.mjs';
 import assert from 'node:assert/strict';
-import {advise} from './server/advisor.mjs';
+import {advise as realAdvise} from './server/advisor.mjs';
+const advise=(input,env,fetcher)=>realAdvise(input,{...env,GOPLAN_TOKEN_COUNTER:async body=>Math.ceil(JSON.stringify(body).length/4)},fetcher);
 import {DATA,normalizeProfile,coursesFor,generatePlan,termOrder} from './dist/planner.js';
 import {newJourney,makePlan,validateSavedWorkspace,emptyWorkspace} from './dist/guidance.js';
 import {QUESTIONS,emptyQuestionnaire,missingAnswers} from './dist/questionnaire.js';

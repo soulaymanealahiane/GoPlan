@@ -1,15 +1,16 @@
-// Retry bounded transient failures. Billing failures require intervention.
-export async function fetchOpenAI(url,init,fetcher=fetch,{pause=ms=>new Promise(resolve=>setTimeout(resolve,ms)),random=Math.random}={}){
- for(let attempt=0;attempt<3;attempt++){
+// Interactive requests never retry ambiguous paid transport failures.
+// Explicit diagnostic callers can opt into bounded retries; billing never retries.
+export async function fetchOpenAI(url,init,fetcher=fetch,{pause=ms=>new Promise(resolve=>setTimeout(resolve,ms)),random=Math.random,maxAttempts=1}={}){
+ for(let attempt=0;attempt<maxAttempts;attempt++){
   let response;
   try{response=await fetcher(url,init);}catch(error){
    init.signal?.throwIfAborted();
    const transient=['ECONNRESET','ETIMEDOUT','EPIPE','EAI_AGAIN','UND_ERR_CONNECT_TIMEOUT','UND_ERR_SOCKET'].includes(error.cause?.code);
-   if(!transient||attempt===2)throw error;
+   if(!transient||attempt===maxAttempts-1)throw error;
    await pause(1000*2**attempt+random()*500);init.signal?.throwIfAborted();continue;
   }
   const transient=response.status>=500&&response.status<=504;
-  if((response.status!==429&&!transient)||attempt===2)return response;
+  if((response.status!==429&&!transient)||attempt===maxAttempts-1)return response;
   if(!transient){
    let error;try{error=(await response.clone().json()).error;}catch{return response;}
    if([error?.code,error?.type].some(x=>['insufficient_quota','credit_balance_exhausted'].includes(x)))return response;

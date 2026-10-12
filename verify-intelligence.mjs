@@ -1,6 +1,7 @@
 import {openaiFixture} from './tests/openai-fixture.mjs';
 import assert from 'node:assert/strict';
-import {advise,availableTargets} from './server/advisor.mjs';
+import {advise as realAdvise,availableTargets} from './server/advisor.mjs';
+const advise=(input,env,fetcher)=>realAdvise(input,{...env,GOPLAN_TOKEN_COUNTER:async body=>Math.ceil(JSON.stringify(body).length/4)},fetcher);
 import {extractResearch,searchEvidence,publicUrl,researchFor} from './server/research.mjs';
 import {agentContext,feedbackFor} from './dist/agent-context.js';
 import {acceptAdvice,adviceFingerprint} from './dist/journey-state.js';
@@ -25,13 +26,13 @@ const supported=extractResearch(acceleratorPayload,'BSCSC',searchEvidence(receip
 assert.throws(()=>extractResearch(payload({companies:[],facts:[]}), 'BSCSC',evidence),/primary sources/);
 assert.equal(publicUrl('https://127.0.0.1/private'),'');assert.equal(publicUrl('javascript:alert(1)'),'');assert.equal(publicUrl('https://key:secret@example.com'),'');
 assert.throws(()=>extractResearch({output:[]},'BSCSC'),/search/);
-const failed=await researchFor({profile:j.profile,questionnaire:j.questionnaire,refinement:''},'targets',{...env,OPENAI_WEB_RESEARCH:'on'},async()=>openaiFixture({error:{}},{status:503}));assert.equal(failed.status,'unavailable');
-let privacyChecked=0;const researchResult=await researchFor({profile:{...j.profile,name:'PRIVATE NAME',gpa:3.8},questionnaire:{...j.questionnaire,constraints:'PRIVATE HEALTH NOTE',ambitions:'Email me at student@example.org about fintech.'},refinement:''},'targets',{...env,OPENAI_WEB_RESEARCH:'on'},async(url,init)=>{privacyChecked++;assert.ok(url.startsWith('https://api.openai.com/'));assert.ok(!init.body.includes('PRIVATE NAME'));assert.ok(!init.body.includes('PRIVATE HEALTH NOTE'));assert.ok(!init.body.includes('student@example.org'));const body=JSON.parse(init.body);if(privacyChecked===1){assert.deepEqual(body.tools,[{type:'web_search',search_context_size:'high',external_web_access:true}]);assert.equal(body.text,undefined);return openaiFixture(receipt(primary));}assert.equal(body.tools,undefined);assert.equal(body.text.format.strict,true);return openaiFixture(payload({summary:'Sourced',companies:[candidate],facts:[]}));});assert.equal(privacyChecked,2);assert.equal(researchResult.status,'live');
+const failed=await researchFor({profile:j.profile,questionnaire:j.questionnaire,refinement:''},'targets',{...env,OPENAI_WEB_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on'},async()=>openaiFixture({error:{}},{status:503}));assert.equal(failed.status,'unavailable');
+let privacyChecked=0;const researchResult=await researchFor({profile:{...j.profile,name:'PRIVATE NAME',gpa:3.8},questionnaire:{...j.questionnaire,constraints:'PRIVATE HEALTH NOTE',ambitions:'Email me at student@example.org about fintech.'},refinement:''},'targets',{...env,OPENAI_WEB_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on'},async(url,init)=>{privacyChecked++;assert.ok(url.startsWith('https://api.openai.com/'));assert.ok(!init.body.includes('PRIVATE NAME'));assert.ok(!init.body.includes('PRIVATE HEALTH NOTE'));assert.ok(!init.body.includes('student@example.org'));const body=JSON.parse(init.body);if(privacyChecked===1){assert.deepEqual(body.tools,[{type:'web_search',search_context_size:'low',external_web_access:true}]);assert.equal(body.text,undefined);return openaiFixture(receipt(primary));}assert.equal(body.tools,undefined);assert.equal(body.text.format.strict,true);return openaiFixture(payload({summary:'Sourced',companies:[candidate],facts:[]}));});assert.equal(privacyChecked,2);assert.equal(researchResult.status,'live');
 const earlier=Object.fromEntries(['internships','exchanges'].map(type=>[type,availableTargets(type,j.profile).slice(0,5)]));j.details={summary:'Existing choices',...earlier};
 const response=data=>openaiFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(data)}]}]});
 const item=(t,i)=>({id:t.id,tier:i<3?'reach':i===3?'target':'safety',reason:'Relates to the stated product ambition.',tierReason:'A search strategy only.',industryReason:'A qualified inference from the digital economy evidence.',answerIds:['ambitions'],evidenceIds:['ita-digital-morocco-2025']});
 let attempts=0;const result=await advise({...j,...agentContext(j,'targets'),stage:'targets'},env,async(_,init)=>{
- attempts++;const p=JSON.parse(init.body),c=JSON.parse(p.input);assert.equal(p.reasoning.effort,'high');assert.equal(c.currentRecommendation.internships.length,5);assert.equal(c.request.refinement,'Add startups, keep exchange institutions.');
+ attempts++;const p=JSON.parse(init.body),c=JSON.parse(p.input);assert.equal(p.reasoning.effort,'low');assert.equal(c.currentRecommendation.internships.length,5);assert.equal(c.request.refinement,'Add startups, keep exchange institutions.');
  const companies=attempts===1?earlier.internships:[...c.companies.filter(t=>['chari','freterium','yakeey'].includes(t.id)),...earlier.internships.slice(0,2)];
  if(attempts===2)assert.match(c.repair.reason,/No destinations changed/);
  return response({summary:'Startup options with unchanged exchanges.',internships:companies.map(item),exchanges:earlier.exchanges.map(item),update:{summary:'Added startup exposure.',changes:['Included startups'],limitations:[]}});
@@ -50,36 +51,36 @@ await advise({...j,...agentContext(j,'courses'),stage:'courses'},env,async(_,ini
 });
 console.log('Passed sourced discovery, rejected-source filtering, research privacy/failure handling, stage-specific feedback memory, actual target changes, no-op repair, backup roundtrip and editable AI vs locked manual courses.');
 
-// Research recovery is bounded and never retries billing/access failures.
+// Research makes one attempt per request; errors and weak evidence remain explicit.
 let semanticCalls=0;
-const recovered=await researchFor({profile:j.profile,questionnaire:j.questionnaire},'targets',{...env,OPENAI_WEB_RESEARCH:'on'},async()=>{
+const recovered=await researchFor({profile:j.profile,questionnaire:j.questionnaire},'targets',{...env,OPENAI_WEB_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on'},async()=>{
  semanticCalls++;
  if(semanticCalls===1)return openaiFixture({error:{code:'tool_use_failed',message:'PRIVATE PROVIDER DETAIL'}},{status:400});
  if(semanticCalls===2)return openaiFixture(receipt(primary));
  return openaiFixture(payload({companies:[candidate],facts:[]}));
 });
-assert.equal(recovered.status,'live');assert.equal(semanticCalls,3);
+assert.equal(recovered.status,'unavailable');assert.equal(semanticCalls,1);
 let budgetCalls=0;
-const budgetStopped=await researchFor({profile:j.profile,questionnaire:j.questionnaire},'direction',{...env,OPENAI_WEB_RESEARCH:'on'},async()=>{budgetCalls++;return openaiFixture({error:{code:'blocked_api_access',message:'PRIVATE PROVIDER DETAIL'}},{status:400});});
+const budgetStopped=await researchFor({profile:j.profile,questionnaire:j.questionnaire},'direction',{...env,OPENAI_WEB_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on'},async()=>{budgetCalls++;return openaiFixture({error:{code:'blocked_api_access',message:'PRIVATE PROVIDER DETAIL'}},{status:400});});
 assert.equal(budgetCalls,1);assert.equal(budgetStopped.reasonCode,'budget');assert.ok(!JSON.stringify(budgetStopped).includes('PRIVATE PROVIDER DETAIL'));
 const marketUrl='https://www.oecd.org/en/topics/policy-issues/future-of-work.html';
 const marketFact={claim:'OECD discusses how AI changes skills and work.',sourceUrl:marketUrl,limitation:'International evidence; not a Moroccan hiring forecast.'};
 assert.equal(extractResearch(payload({companies:[],facts:[marketFact]}),'BSCSC',searchEvidence(receipt(marketUrl))).facts.length,1);
 let focusedCalls=0;
-const focused=await researchFor({profile:j.profile,questionnaire:j.questionnaire},'direction',{...env,OPENAI_WEB_RESEARCH:'on'},async(_,init)=>{
+const focused=await researchFor({profile:j.profile,questionnaire:j.questionnaire},'direction',{...env,OPENAI_WEB_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on'},async(_,init)=>{
  focusedCalls++;
  if(focusedCalls===1)return openaiFixture(receipt(primary));
  if(focusedCalls===2)return openaiFixture(payload({companies:[candidate],facts:[]}));
  if(focusedCalls===3){assert.ok(JSON.parse(init.body).instructions.includes('labour-market evidence'));return openaiFixture(receipt(marketUrl));}
  return openaiFixture(payload({companies:[],facts:[marketFact]}));
 });
-assert.equal(focused.status,'live');assert.equal(focusedCalls,4);assert.equal(focused.facts.length,1);
+assert.equal(focused.status,'unavailable');assert.equal(focusedCalls,2);assert.equal(focused.facts.length,0);
 const {researchView}=await import('./dist/journey-view.js');
 assert.ok(researchView(budgetStopped,'direction').includes('data-agent-stage="direction"'));
 assert.ok(!researchView(budgetStopped).includes('data-agent-stage'));
 // A research fallback is not cached; a subsequent successful search is cached.
 const {handleApi}=await import('./server/api.mjs');
-const apiEnv={...env,OPENAI_WEB_RESEARCH:'on',AI_ACCESS_CODE:'research-fixture'};
+const apiEnv={...env,GOPLAN_TOKEN_COUNTER:async()=>8000,OPENAI_WEB_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on',AI_ACCESS_CODE:'research-fixture'};
 const directionValue={kind:'recommend',summary:'A provisional software direction.',themes:['Software'],questions:[],academic:{program:'BSCSC',track:'SE',secondTrack:'',minor:'',rationale:'Fits the stated programming work.',focusRationale:'Software foundations.',secondFocusRationale:'Keep workload manageable.',minorRationale:'Leave open.'},tradeoffs:[],assessment:Object.keys((await import('./dist/evidence.js')).AXES).map(axis=>({axis,explanation:'A qualified inference from the supplied interests and evidence.',answerIds:['activities'],evidenceIds:[]})),update:{summary:'Recommended a direction.',changes:[],limitations:[]}};
 const apiRequest=()=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json','X-GoPlan-Access':'research-fixture','X-GoPlan-Session':'research-cache-regression-20261005'},body:JSON.stringify({...newJourney(),stage:'direction',flowVersion:5,questionnaire:j.questionnaire})});
 let apiCalls=0;
@@ -92,4 +93,4 @@ const apiFetch=async(_,init)=>{
 const fallback=await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal(fallback.status,200);assert.equal((await fallback.json()).research.status,'unavailable');assert.equal(apiCalls,2);
 const refreshed=await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal(refreshed.status,200);assert.equal((await refreshed.json()).research.status,'live');assert.equal(apiCalls,5);
 await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal(apiCalls,5);
-console.log('Passed research recovery, stage-specific market evidence, private diagnostics, visible retry and successful-only research caching.');
+console.log('Passed no automatic research replay, stage-specific market evidence, private diagnostics, visible retry and successful-only research caching.');
