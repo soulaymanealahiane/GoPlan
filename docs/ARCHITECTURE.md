@@ -7,7 +7,7 @@ flowchart LR
     API --> Auth[Supabase email verification]
     API --> Store[(SQLite / D1)]
     API --> Agent[AI proposal service]
-    Agent --> Model[Groq GPT-OSS 120B]
+    Agent --> Model[OpenAI GPT-6 Astra]
     Agent --> Rules[Academic validator]
     Student --> Scheduler[Deterministic planner]
     Rules --> Proposal[Validated proposal]
@@ -17,6 +17,10 @@ flowchart LR
 ## Recommendation boundary
 
 The model proposes decisions; it does not write directly to a student's saved roadmap. Academic choices are bounded by the reviewed dataset and checked after generation. The scheduler computes semester placement using prerequisites, credit caps and recorded progress. A changed roadmap is previewed before acceptance. Bounded retries repair rejected proposals; network failure does not silently produce fabricated advice.
+
+## Research boundary
+
+Native Responses web search runs with xhigh reasoning, required tool use, a high search context and a bounded tool budget. Only completed web-search items establish consulted URLs. The server reads those public pages without provider credentials, validates redirects and exact short support fragments, then extracts facts under a strict JSON schema. Search prose alone is not a source receipt. Failed pages and unsupported claims are excluded. Exchange research enriches reviewed partner IDs without creating partnerships or confirming nomination. Raw search text and page bodies never enter the student response.
 
 ## Workspace boundary
 

@@ -1,8 +1,8 @@
 // User offering input -> saved roadmap -> adviser -> exported shared document.
-// No provider/network calls: the Groq fixture exercises its real wire adapter.
+// No provider/network calls: native Responses fixtures exercise structured recommendations.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {groqFixture} from './tests/groq-fixture.mjs';
+import {openaiFixture} from './tests/openai-fixture.mjs';
 import {normalizeProfile} from './dist/planner.js';
 import {newJourney,makePlan,emptyWorkspace,validateSavedWorkspace,planIssues} from './dist/guidance.js';
 import {previousFor} from './dist/agent-context.js';
@@ -12,8 +12,8 @@ import {parseOfferingCodes,offeringChanges,offeringEditor,loadOfferingEditor,ava
 import {createWorkbook} from './dist/export.js';
 import {advise,availableTargets,mergeResearchTargets} from './server/advisor.mjs';
 
-const env={GROQ_API_KEY:'fixture-key',GROQ_WEB_RESEARCH:'off'};
-const response=value=>groqFixture({status:'completed',model:'test-fixture',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});
+const env={OPENAI_API_KEY:'fixture-key',OPENAI_WEB_RESEARCH:'off'};
+const response=value=>openaiFixture({status:'completed',model:'test-fixture',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});
 const j=newJourney();j.programChosen=true;j.preferredDegree='BSCSC';
 j.profile=normalizeProfile({program:'BSCSC',track:'SE',priorCodes:['FRN3210'],choices:{'bscsc-free-1':'ACC2301','bscsc-free-2':'MTH2304','bscsc-history':'HIS1301','bscsc-humanities':'LIT2301','bscsc-arts':'ART1301','bscsc-social':'PSY1301','bscsc-basic-science':'BIO1401','bscsc-arabic':'ARA1201','bscsc-french':'FRN3210','bscsc-civic':'CIP2100'}});
 j.questionnaire={ambitions:'Build secure payments software for Moroccan merchants.',activities:'Program reliable software and compare practical options.',strengths:'Mathematics, programming and problem solving.'};
@@ -78,9 +78,9 @@ await test('Export includes student offering reports, scope and unconfirmed-regi
 await test('Replan uses submitted offerings, refuses model-invented reports and preserves preview state',async()=>{
  const original=JSON.stringify(plan),submitted=[report];let calls=0;
  const result=await advise({...j,flowVersion:5,stage:'replan',plan:replanSnapshot(plan),currentTerm:first,changeRequest:'CSC1401 is unavailable. Keep the required course, postpone it and fill the semester with eligible offered study.',offerings:submitted},env,async(_,init)=>{
-  calls++;const wire=JSON.parse(init.body),context=JSON.parse(wire.messages.at(-1).content);
+  calls++;const wire=JSON.parse(init.body),context=JSON.parse(wire.input);
   assert.deepEqual(context.courseOfferings.offerings,submitted);assert.ok(context.availabilityAnalysis.some(a=>a.affected.some(c=>c.courseCode==='CSC1401'&&c.kind==='required')));
-  assert.equal(wire.response_format.json_schema.schema.properties.change.properties.offerings,undefined,'The model cannot manufacture current offering reports.');
+  assert.equal(wire.text.format.schema.properties.change.properties.offerings,undefined,'The model cannot manufacture current offering reports.');
   return response({kind:'propose',summary:'Postpone compulsory programming; keep its dependent sequence valid.',questions:[],change:{track:plan.profile.track,secondTrack:plan.profile.secondTrack,minor:plan.profile.minor,pace:plan.profile.pace,regularCourses:plan.profile.regularCourses,summerCourses:plan.profile.summerCourses,summers:plan.profile.summers,choices:[],unavailable:[],offerings:[{termId:first,offeredCourseCodes:['CSC1401'],unavailableCourseCodes:[],complete:true}]},update:{summary:'Adjusted the remaining schedule.',changes:['Postponed compulsory programming.'],limitations:['Future offerings remain unconfirmed.']}});
  });
  assert.equal(calls,1);assert.deepEqual(result.change.offerings,submitted,'Student reports must override fabricated model fields.');
@@ -106,7 +106,7 @@ await test('Exchange-only refinement retains prior researched companies by ID, o
  const previous=previousFor(editing,'targets');assert.equal(previous.internships.at(-1).sourceUrl,'https://synthetic-logistics.ma/about');
  const original=JSON.stringify(editing);let calls=0;
  const result=await advise({...editing,stage:'targets',flowVersion:5,currentRecommendation:previous,refinement:'Replace my exchange institutions with new alternatives. Keep my current company targets unchanged.'},env,async(_,init)=>{
-  calls++;const context=JSON.parse(JSON.parse(init.body).messages.at(-1).content);
+  calls++;const context=JSON.parse(JSON.parse(init.body).input);
   assert.deepEqual(context.opportunityPolicy.preserveTypes,['internships']);
   assert.ok(context.companies.some(t=>t.id==='research-synthetic-logistics-ma'),'Prior dynamic targets must remain in the supported schema.');
   const newExchanges=context.exchangeDestinations.filter(t=>!exchanges.some(e=>e.id===t.id)).slice(0,5);assert.equal(newExchanges.length,5);

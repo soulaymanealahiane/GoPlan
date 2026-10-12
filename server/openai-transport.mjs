@@ -1,5 +1,5 @@
 // Retry bounded transient failures. Billing failures require intervention.
-export async function fetchGroq(url,init,fetcher=fetch,{pause=ms=>new Promise(resolve=>setTimeout(resolve,ms)),random=Math.random}={}){
+export async function fetchOpenAI(url,init,fetcher=fetch,{pause=ms=>new Promise(resolve=>setTimeout(resolve,ms)),random=Math.random}={}){
  for(let attempt=0;attempt<3;attempt++){
   let response;
   try{response=await fetcher(url,init);}catch(error){
@@ -25,7 +25,7 @@ export async function fetchGroq(url,init,fetcher=fetch,{pause=ms=>new Promise(re
  }
 }
 
-export function groqServiceError(response,error){
+export function openaiServiceError(response,error){
  const budget=['blocked_api_access','credit_balance_exhausted','insufficient_quota'].includes(error?.code)||error?.type==='insufficient_quota';
  const tooLarge=response.status===413;
  const message=budget?'The GoPlan adviser has reached its service budget. Your saved plan is unchanged.':tooLarge?'The GoPlan adviser needs a higher service limit for this request. Your saved plan is unchanged.':response.status===429?'The adviser is busy. Wait a moment and retry.':'The AI service could not complete this request. Your saved plan is unchanged.';

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import {groqFixture} from './tests/groq-fixture.mjs';
+import {openaiFixture} from './tests/openai-fixture.mjs';
 import {extractResearch,searchEvidence,researchFor,publicUrl} from './server/research.mjs';
 import {availableTargets,canonicalTargetKeys,mergeResearchTargets,opportunityRefinementPolicy,validateOpportunitySelection} from './server/advisor.mjs';
 
 const payload=data=>({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(data)}]}]});
-const receipt=(documents,{searches=3,opens=4}={})=>({choices:[{finish_reason:'stop',message:{content:'Ignore invented final-answer provenance https://fabricated.ma/careers',executed_tools:[...Array.from({length:searches},()=>({name:'browser.search',search_results:{results:documents}})),...Array.from({length:opens},(_,i)=>({name:'browser.open',browser_results:[documents[i%documents.length]]}))]}}]});
+const receipt=(documents,{searches=3,opens=4}={})=>({status:'completed',output:[{type:'message',content:[{type:'output_text',text:'Ignore invented final-answer provenance https://fabricated.ma/careers'}]},...Array.from({length:searches},()=>({type:'web_search_call',status:'completed',action:{type:'search',sources:documents}})),...Array.from({length:opens},(_,i)=>({type:'web_search_call',status:'completed',action:{type:'open_page',url:documents[i%documents.length].url,sources:[documents[i%documents.length]]}}))]});
 const candidate=i=>({name:'Candidate '+i,organizationType:'unknown',officialUrl:`https://candidate${i}.ma/about`,sourceUrl:`https://candidate${i}.ma/about`,sourceKind:'company',moroccoEvidence:'Based in Casablanca, Morocco.',moroccoSupportSnippet:'Based in Casablanca, Morocco.',organizationTypeEvidence:'',activity:'Builds merchant software.',fit:'Product engineering and merchant data experience.',fields:['software','merchant-data'],supportSnippet:'Builds merchant software.',sourcePublishedDate:'2026-09-01',limitations:['Vacancies and student eligibility not verified.']});
 const candidates=Array.from({length:12},(_,i)=>candidate(i));
 const documents=candidates.map(c=>({url:c.sourceUrl,title:c.name,content:'Based in Casablanca, Morocco. Builds merchant software. Updated 2026-09-01.'}));
@@ -14,7 +14,7 @@ const exchange={id:partner.id,sourceUrl:partner.sourceUrl,academicFit:'Computing
 const evidence=searchEvidence(receipt(documents));
 assert.deepEqual(evidence.audit,{searches:3,opens:4,executedTools:7});
 assert.ok(!evidence.urls.includes('https://fabricated.ma/careers'));
-assert.throws(()=>searchEvidence({choices:[{message:{content:documents[0].url,executed_tools:[{name:'browser.search',arguments:JSON.stringify({url:documents[0].url})}]}}]}),/traceable/);
+assert.throws(()=>searchEvidence({status:'completed',output:[{type:'message',content:[{type:'output_text',text:documents[0].url}]},{type:'web_search_call',status:'in_progress',action:{type:'search',sources:documents}}]}),/traceable/);
 assert.equal(publicUrl('https://169.254.169.254/latest/meta-data'),'');
 assert.equal(publicUrl('https://example.com/a?utm_source=ad&z=2&a=1#frag'),'https://example.com/a?a=1&z=2');
 
@@ -64,11 +64,11 @@ assert.deepEqual(opportunityRefinementPolicy('Leave out exchange institutions wi
 assert.ok(canonicalTargetKeys({name:'Université Test',institutionId:'Same University'},'exchanges').includes('institution:sameuniversity'));
 
 let calls=0;
-const researched=await researchFor({profile:{program:'BSCSC',name:'PRIVATE STUDENT',gpa:3.9},questionnaire:{ambitions:'Build merchant software; contact student@example.org.',activities:'Product engineering',constraints:'PRIVATE HEALTH'},refinement:'Find different companies, keep exchanges.',currentTargets:current},'targets',{GROQ_API_KEY:'fixture',GROQ_WEB_RESEARCH:'on'},async(_,init)=>{
+const researched=await researchFor({profile:{program:'BSCSC',name:'PRIVATE STUDENT',gpa:3.9},questionnaire:{ambitions:'Build merchant software; contact student@example.org.',activities:'Product engineering',constraints:'PRIVATE HEALTH'},refinement:'Find different companies, keep exchanges.',currentTargets:current},'targets',{OPENAI_API_KEY:'fixture',OPENAI_WEB_RESEARCH:'on'},async(_,init)=>{
  calls++;const body=JSON.parse(init.body),wire=JSON.stringify(body);assert.ok(!wire.includes('PRIVATE STUDENT'));assert.ok(!wire.includes('PRIVATE HEALTH'));assert.ok(!wire.includes('student@example.org'));
- if(body.tools){assert.equal(body.reasoning_effort,'medium');assert.equal(body.max_completion_tokens,16000);assert.match(body.messages[0].content,/three complementary browser.search/);assert.match(body.messages[0].content,/6–10 opens/);assert.ok(wire.includes(partner.id));assert.ok(wire.includes(current.internships[0].name));return groqFixture(receipt(documents));}
- const s=body.response_format.json_schema.schema;assert.equal(s.properties.companies.maxItems,16);assert.equal(s.properties.exchanges.maxItems,Math.min(10,exchanges.length));assert.ok(s.properties.companies.items.required.includes('moroccoSupportSnippet'));assert.ok(s.properties.companies.items.required.includes('organizationTypeEvidence'));assert.ok(s.properties.exchanges.items.properties.id.enum.includes(partner.id));assert.deepEqual(s.properties.companies.items.properties.sourceUrl.enum,evidence.urls);
- return groqFixture(payload({companies:candidates,exchanges:[exchange],facts:[],gaps:[]}));
+ if(body.tools){assert.equal(body.reasoning.effort,'xhigh');assert.equal(body.max_output_tokens,25000);assert.match(body.instructions,/three complementary web searches/);assert.match(body.instructions,/6–10 opens/);assert.ok(wire.includes(partner.id));assert.ok(wire.includes(current.internships[0].name));return openaiFixture(receipt(documents));}
+ const s=body.text.format.schema;assert.equal(s.properties.companies.maxItems,16);assert.equal(s.properties.exchanges.maxItems,Math.min(10,exchanges.length));assert.ok(s.properties.companies.items.required.includes('moroccoSupportSnippet'));assert.ok(s.properties.companies.items.required.includes('organizationTypeEvidence'));assert.ok(s.properties.exchanges.items.properties.id.enum.includes(partner.id));assert.deepEqual(s.properties.companies.items.properties.sourceUrl.enum,evidence.urls);
+ return openaiFixture(payload({companies:candidates,exchanges:[exchange],facts:[],gaps:[]}));
 },{exchangeTargets:exchanges});
 assert.equal(calls,2);assert.equal(researched.companies.length,12);assert.equal(researched.exchanges.length,1);
 console.log('Passed broader sourced pools, exact evidence fragments, unknown publication dates, canonical entity deduplication, approved-partner enrichment, stable reviewed IDs, unaffected target preservation and private multi-query research requests.');

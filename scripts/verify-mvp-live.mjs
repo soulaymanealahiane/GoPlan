@@ -18,18 +18,18 @@ const live=process.argv.includes('--live');
 const coursesOnly=process.argv.includes('--courses-only');
 const targetsOnly=process.argv.includes('--targets-only');
 assert.ok(!(coursesOnly&&targetsOnly),'Choose one evaluation subset.');
-if(live&&!process.env.GROQ_API_KEY)throw Error('A server Groq key is required for --live.');
+if(live&&!process.env.OPENAI_API_KEY)throw Error('A server OpenAI key is required for --live.');
 const report={synthetic:true,live,generatedAt:new Date().toISOString(),cases:[],providerUsage:[]};
 fs.mkdirSync('.sites-runtime',{recursive:true});
 const save=()=>fs.writeFileSync('.sites-runtime/mvp-live-report.json',JSON.stringify(report,null,2));
 let activeCase='fixture';
 const trackedFetch=async(url,init)=>{
- assert.equal(new URL(url).origin,'https://api.groq.com','Only the configured inference provider is permitted.');
+ if(new URL(url).origin!=='https://api.openai.com'){assert.ok(publicUrl(url),'Only public source pages may be fetched.');assert.equal(init.headers.Authorization,undefined);return fetch(url,init);}
  const start=performance.now();
  const response=await fetch(url,init);
  let payload;try{payload=await response.clone().json();}catch{}
  const body=JSON.parse(init.body);
- report.providerUsage.push({case:activeCase,phase:body.tools?'web-search':body.response_format?.json_schema?.name||'completion',httpStatus:response.status,latencyMs:Math.round(performance.now()-start),model:payload?.model||body.model,inputTokens:payload?.usage?.input_tokens??payload?.usage?.prompt_tokens??null,outputTokens:payload?.usage?.output_tokens??payload?.usage?.completion_tokens??null,executedTools:payload?.choices?.[0]?.message?.executed_tools?.length||0});
+ report.providerUsage.push({case:activeCase,phase:body.tools?'web-search':body.text?.format?.name||'completion',httpStatus:response.status,latencyMs:Math.round(performance.now()-start),model:payload?.model||body.model,inputTokens:payload?.usage?.input_tokens??payload?.usage?.prompt_tokens??null,outputTokens:payload?.usage?.output_tokens??payload?.usage?.completion_tokens??null,executedTools:payload?.output?.filter(x=>x.type==='web_search_call'&&x.status==='completed').length||0});
  save();return response;
 };
 
@@ -145,7 +145,7 @@ if(live&&!targetsOnly)for(const program of ['BSCSC','BBA']){
   const {j,plan,currentTerm}=fixture(program),code=program==='BSCSC'?'CSC2306':'ACC3201';
   const course=plan.courses.find(c=>c.code===code),term=plan.terms.find(t=>t.courses.includes(course.id));
   const before=JSON.stringify(plan);
-  const result=await advise({...j,flowVersion:5,stage:'replan',plan:replanSnapshot(plan),currentTerm,changeRequest:`${code} is not offered in ${term.id}. Keep this compulsory requirement and postpone it to the next academically feasible semester. Move other eligible courses forward when useful, preserve completed and current study, and keep my degree choices and workload limits.`,unavailable:[{courseCode:code,termId:term.id}]},{...process.env,GROQ_WEB_RESEARCH:'off'},trackedFetch);
+  const result=await advise({...j,flowVersion:5,stage:'replan',plan:replanSnapshot(plan),currentTerm,changeRequest:`${code} is not offered in ${term.id}. Keep this compulsory requirement and postpone it to the next academically feasible semester. Move other eligible courses forward when useful, preserve completed and current study, and keep my degree choices and workload limits.`,unavailable:[{courseCode:code,termId:term.id}]},{...process.env,OPENAI_WEB_RESEARCH:'off'},trackedFetch);
   assert.equal(result.kind,'propose','Expected a reviewed replan.');
   assert.ok(!result.change.choices.some(x=>x.requirementId===course.id),'A fixed required course was substituted.');
   const proposal=proposeReplan(plan,result.change,currentTerm);assert.equal(proposal.assessment.canApply,true);checkCandidate(plan,proposal.candidate);
@@ -159,7 +159,7 @@ if(live&&!targetsOnly)for(const program of ['BSCSC','BBA']){
   const alternative=allowedChoices(course,plan.profile).filter(o=>!o.topic&&!o.creditsProvisional&&!used.has(o.code)&&o.credits===course.credits).find(o=>{
    try{const p=proposeReplan(plan,{choices:[{requirementId,courseCode:o.code}],unavailable:[{courseCode:course.code,termId:term.id}]},currentTerm);return p.assessment.canApply;}catch{return false;}
   });assert.ok(alternative,'The synthetic elective needs a verified schedulable alternative.');
-  const result=await advise({...j,flowVersion:5,stage:'replan',plan:replanSnapshot(plan),currentTerm,changeRequest:`${course.code} is not offered in ${term.id}. The university offering list shows ${alternative.code} is offered that semester. Replace only this elective with that course if it satisfies the same requirement; keep my degree choices, progress and workload limits.`,offerings:[{termId:term.id,offeredCourseCodes:[alternative.code],unavailableCourseCodes:[course.code],complete:false}],unavailable:[{courseCode:course.code,termId:term.id}]},{...process.env,GROQ_WEB_RESEARCH:'off'},trackedFetch);
+  const result=await advise({...j,flowVersion:5,stage:'replan',plan:replanSnapshot(plan),currentTerm,changeRequest:`${course.code} is not offered in ${term.id}. The university offering list shows ${alternative.code} is offered that semester. Replace only this elective with that course if it satisfies the same requirement; keep my degree choices, progress and workload limits.`,offerings:[{termId:term.id,offeredCourseCodes:[alternative.code],unavailableCourseCodes:[course.code],complete:false}],unavailable:[{courseCode:course.code,termId:term.id}]},{...process.env,OPENAI_WEB_RESEARCH:'off'},trackedFetch);
   assert.equal(result.kind,'propose');const proposal=proposeReplan(plan,result.change,currentTerm);assert.equal(proposal.assessment.canApply,true);checkCandidate(plan,proposal.candidate);
   assert.equal(proposal.candidate.courses.find(c=>c.id===requirementId).code,alternative.code,'An explicitly offered valid alternative was ignored.');
   assert.ok(proposal.candidate.scheduling.offerings.some(o=>o.termId===term.id&&o.offeredCourseCodes.includes(alternative.code)),'The offered list was not retained.');
@@ -173,7 +173,7 @@ if(live&&!coursesOnly)for(const program of ['BSCSC','BBA']){
  const current=Object.fromEntries(['internships','exchanges'].map(type=>[type,availableTargets(type,j.profile).slice(0,5).map(t=>({id:t.id,name:t.name}))]));
  let initial;
  await runCase(program+'-startup-research-live',async()=>{
-  initial=await advise({...j,flowVersion:5,stage:'targets',currentRecommendation:current,refinement:'Find relevant active Moroccan startups or scaleups beyond the current company list. Prefer practical software or business roles that fit my interests. Keep every exchange institution exactly the same.'},{...process.env,GROQ_WEB_RESEARCH:'on'},trackedFetch);
+  initial=await advise({...j,flowVersion:5,stage:'targets',currentRecommendation:current,refinement:'Find relevant active Moroccan startups or scaleups beyond the current company list. Prefer practical software or business roles that fit my interests. Keep every exchange institution exactly the same.'},{...process.env,OPENAI_WEB_RESEARCH:'on'},trackedFetch);
   const metrics=targetMetrics(initial);
   assert.ok(initial.internships.filter(t=>['startup','scaleup'].includes(t.organizationType)).length>=2,'Requested startup exposure was not delivered.');
   assert.deepEqual(initial.exchanges.map(t=>t.id).sort(),current.exchanges.map(t=>t.id).sort(),'Company-only feedback changed exchanges.');
@@ -183,7 +183,7 @@ if(live&&!coursesOnly)for(const program of ['BSCSC','BBA']){
   return {...metrics,researchStatus:initial.research.status,researchSourceCount:initial.research.sources.length,added:initial.update.added.length,removed:initial.update.removed.length};
  });
  await runCase(program+'-exchange-research-live',async()=>{
-  const result=await advise({...j,flowVersion:5,stage:'targets',currentRecommendation:initial,refinement:'Explore different approved exchange institutions and compare actual academic fit, teaching language, eligibility and route costs. Include at least two different countries where evidence supports this. Keep all my current company targets exactly unchanged. If a constraint prevents a requested change, explain the specific evidence gap.'},{...process.env,GROQ_WEB_RESEARCH:'on'},trackedFetch);
+  const result=await advise({...j,flowVersion:5,stage:'targets',currentRecommendation:initial,refinement:'Explore different approved exchange institutions and compare actual academic fit, teaching language, eligibility and route costs. Include at least two different countries where evidence supports this. Keep all my current company targets exactly unchanged. If a constraint prevents a requested change, explain the specific evidence gap.'},{...process.env,OPENAI_WEB_RESEARCH:'on'},trackedFetch);
   const metrics=targetMetrics(result);
   assert.deepEqual(result.internships.map(t=>t.id).sort(),initial.internships.map(t=>t.id).sort(),'Exchange-only feedback changed companies.');
   const approved=new Set(availableTargets('exchanges',j.profile).map(t=>t.id));assert.ok(result.exchanges.every(t=>approved.has(t.id)),'An unapproved exchange institution was introduced.');

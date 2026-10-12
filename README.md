@@ -17,7 +17,7 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 
 ## Engineering highlights
 
-- **Constrained AI recommendations:** server-side Groq Chat Completions API calls produce structured proposals that are validated against reviewed program data before they can change a plan.
+- **Constrained AI recommendations:** server-side OpenAI Responses API calls produce structured proposals that are validated against reviewed program data before they can change a plan.
 - **Deterministic academic scheduling:** prerequisite and corequisite checks, credit limits, independent regular/summer loads, minor requirements and preserved completed courses.
 - **Progress-aware replanning:** unavailable courses and changed goals produce a preview; delayed graduation is surfaced before acceptance.
 - **Evidence-aware research:** bounded web research for opportunities, with source attribution and explicit uncertainty about current availability.
@@ -29,9 +29,9 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 
 ## Stack
 
-Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; Groq-hosted GPT-OSS 120B for advice and browser research. Production email delivery requires a configured SMTP service.
+Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; OpenAI GPT-6 Astra for advice and live web research. Production email delivery requires a configured SMTP service.
 
-Groq is the sole inference provider. Recommendations use strict JSON schemas; browser research runs separately and only retrieved primary-source URLs can support its extracted findings. Academic validators remain authoritative. There is no automatic OpenAI fallback.
+OpenAI is the inference provider. GPT-6 Astra runs every advice stage with high reasoning effort; live discovery uses xhigh reasoning and native web search. Search and strict evidence extraction run separately. Completed search receipts and directly retrieved primary pages support extracted findings. Academic validators remain authoritative, and no weaker-model or provider fallback is used. The UI shows concise recommendations and clickable sources; search transcripts and page bodies stay on the server.
 
 ## Run locally
 
@@ -77,4 +77,4 @@ Full catalogue extracts, original third-party university documents, credentials,
 
 ## Release status
 
-This GitHub snapshot was synchronized from the completed production source on 10 October 2026. Future live releases can diverge until explicitly synchronized. Email authentication requires a Supabase project, verified sending domain and production SMTP configuration; setting only a public project URL does not enable working sign-in. Follow [deployment](docs/DEPLOYMENT.md) for the required checks.
+This GitHub snapshot was synchronized from the completed production source on 12 October 2026. Future live releases can diverge until explicitly synchronized. Email authentication requires a Supabase project, verified sending domain and production SMTP configuration; setting only a public project URL does not enable working sign-in. Follow [deployment](docs/DEPLOYMENT.md) for the required checks.

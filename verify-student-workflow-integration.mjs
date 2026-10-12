@@ -13,7 +13,7 @@ import {acceptAdvice,adviceFingerprint} from './dist/journey-state.js';
 import {homeView} from './dist/home-view.js';
 import {DATA,limits} from './dist/planner.js';
 import {adviseJourney} from './server/journey-agent.mjs';
-import {groqFixture} from './tests/groq-fixture.mjs';
+import {openaiFixture} from './tests/openai-fixture.mjs';
 import {AXES} from './dist/evidence.js';
 
 let passed=0;
@@ -26,14 +26,14 @@ const keepContinuing=planningWorkspace({studentContext:continuing('keep')});
 const exploreContinuing=planningWorkspace({studentContext:continuing('explore')});
 
 await test('The provider receives only public study context and cannot change a kept degree',async()=>{
- const input={stage:'direction',flowVersion:5,studentContext:continuing('keep'),level:'undergraduate',preferredDegree:'BSCSC',questionnaire:{ambitions:'Build useful technology products',activities:'Program and analyze problems',strengths:'Mathematics and problem solving'},profile:{}},env={GROQ_WEB_RESEARCH:'off',GROQ_API_KEY:'fixture-secret'};
+ const input={stage:'direction',flowVersion:5,studentContext:continuing('keep'),level:'undergraduate',preferredDegree:'BSCSC',questionnaire:{ambitions:'Build useful technology products',activities:'Program and analyze problems',strengths:'Mathematics and problem solving'},profile:{}},env={OPENAI_WEB_RESEARCH:'off',OPENAI_API_KEY:'fixture-secret'};
  const proposal={kind:'recommend',summary:'Study software engineering.',themes:['Software'],questions:[],academic:{program:'BSCSC',track:'SE',secondTrack:'',minor:'',rationale:'Software foundations.',focusRationale:'Reliable systems.',secondFocusRationale:'Keep a manageable load.',minorRationale:'Compare optional complements.'},tradeoffs:[],assessment:Object.keys(AXES).map(axis=>({axis,explanation:'Related to the stated goals; evidence is limited.',answerIds:['ambitions'],evidenceIds:[]}))};
- const reply=value=>groqFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});
+ const reply=value=>openaiFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});
  const result=await adviseJourney(input,env,async(_,init)=>{
-  const body=JSON.parse(init.body),context=JSON.parse(body.messages.at(-1).content);
+  const body=JSON.parse(init.body),context=JSON.parse(body.input);
   assert.deepEqual(context.request.studentContext,publicStudentContext(input.studentContext));
   assert.ok(!init.body.includes('PRIVATE'));assert.ok(!init.body.includes('"grade"'));assert.ok(!init.body.includes('"note"'));
-  assert.deepEqual(body.response_format.json_schema.schema.properties.academic.properties.program.enum,['','BSCSC']);
+  assert.deepEqual(body.text.format.schema.properties.academic.properties.program.enum,['','BSCSC']);
   return reply(proposal);
  });
  assert.equal(result.academic.program,'BSCSC');

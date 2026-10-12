@@ -1,7 +1,7 @@
-import {fetchGroqCompletion} from './groq-completion.mjs';
+import {fetchOpenAIResponse,reasoningEffort} from './openai-response.mjs';
 import {researchFor,publicUrl} from './research.mjs';
 import {mergeScheduling,analyzeCourseAvailability} from '../dist/course-availability.js';
-import {groqServiceError} from './groq-transport.mjs';
+import {openaiServiceError} from './openai-transport.mjs';
 import {sanitizeRequest,directionContext,detailsContext,directionSchema,validateDirection,validateDetails,recoverDetails,availableTargets,mergeResearchTargets,opportunityRefinementPolicy,validateOpportunitySelection,canonicalTargetKeys} from './advisor.mjs';
 import {publicStudentContext} from '../dist/student-context.js';
 import {minorSummary} from '../dist/minor-summary.js';
@@ -191,14 +191,14 @@ export async function adviseJourney(input,env,fetcher=fetch){
  context.questionLabels=QUESTIONS.filter(question=>q[question.id]).map(({id,label})=>({id,label}));
  context.questionnairePolicy='Only allowedAnswerIds may be referenced. Blank optional answers are unknown, not negative preferences. Do not infer entrepreneurship, AI exposure preferences, priorities or constraints from blank fields. All six assessment axes still need an evidence-based explanation, but answerIds may be empty when no supplied answer supports that factor. An undecided answer is valid uncertainty; use the other supplied answers for a provisional, editable recommendation. Do not require optional answers to proceed.';
  context.task+=' First understand the requested change and past feedback. Use currentRecommendation to compare before and after; preserve unaffected decisions and respect negative preferences. Consider alternatives and check the complete combination, not each field in isolation. Return update.summary explaining your response to this request, update.changes listing only changes actually made, and update.limitations naming any request not met and why. If keeping a result unchanged, explain the specific reason in limitations. Do not say a change was made when only wording changed. Ground reasons in the supplied evidence, and qualify unsupported market assumptions instead of agreeing with them.';
- let outputBudget=['targets','replan'].includes(stage)?14000:10000;
+ let outputBudget=25000;
  for(let attempt=0;attempt<2;attempt++){
-  const response=await fetchGroqCompletion({method:'POST',signal:AbortSignal.timeout(120000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.GROQ_API_KEY},body:JSON.stringify({model:env.GROQ_MODEL||'openai/gpt-oss-120b',store:false,reasoning:{effort:env.GROQ_REASONING_EFFORT||(['direction','targets','replan'].includes(stage)?'medium':'low')},instructions:system,input:JSON.stringify(context),max_output_tokens:outputBudget,text:{format:{type:'json_schema',name:'goplan_'+stage,strict:true,schema}}})},fetcher);
-  if(!response.ok){let error;try{error=(await response.json()).error;}catch{}throw groqServiceError(response,error);}
-  const payload=await response.json();if(payload.status==='incomplete'&&payload.incomplete_details?.reason==='max_output_tokens'&&attempt===0){outputBudget=16000;continue;}const content=(payload.output||[]).flatMap(x=>x.content||[]);if(payload.status!=='completed'||content.some(c=>c.type==='refusal'))throw Error('The adviser did not finish this response. Your work is saved; please retry.');
+  const response=await fetchOpenAIResponse({method:'POST',signal:AbortSignal.timeout(180000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-6-astra',store:false,reasoning:{effort:reasoningEffort(env.OPENAI_REASONING_EFFORT)},instructions:system,input:JSON.stringify(context),max_output_tokens:outputBudget,text:{verbosity:'low',format:{type:'json_schema',name:'goplan_'+stage,strict:true,schema}}})},fetcher);
+  if(!response.ok){let error;try{error=(await response.json()).error;}catch{}throw openaiServiceError(response,error);}
+  const payload=await response.json();if(payload.status==='incomplete'&&payload.incomplete_details?.reason==='max_output_tokens'&&attempt===0){outputBudget=32000;continue;}const content=(payload.output||[]).flatMap(x=>x.content||[]);if(payload.status!=='completed'||content.some(c=>c.type==='refusal'))throw Error('The adviser did not finish this response. Your work is saved; please retry.');
   let parsed;try{parsed=JSON.parse(content.filter(c=>c.type==='output_text').map(c=>c.text).join(''));if(request.refinement&&parsed.intent==='answer'){
     if(typeof parsed.answer!=='string'||!parsed.answer.trim())throw Error('Provide the explanation requested.');
-    return {source:'groq',kind:'answer',answer:cleanUserProse({answer:parsed.answer}).answer,minorChecklist:questionFacts.minorChecklist||null};
+    return {source:'openai',kind:'answer',answer:cleanUserProse({answer:parsed.answer}).answer,minorChecklist:questionFacts.minorChecklist||null};
    }
    const checked=check(parsed,attempt);
    if(stage==='courses')checked.agentChoices=Object.fromEntries(Object.entries(checked.choices).filter(([id])=>!Object.hasOwn(request.profile.choices,id)));
@@ -211,7 +211,7 @@ export async function adviseJourney(input,env,fetcher=fetch){
     if(request.refinement&&(currentRecommendation.internships?.length||currentRecommendation.exchanges?.length)&&!update.added.length&&!update.removed.length){if(!update.limitations.length)throw Error('No destinations changed. Either satisfy the requested change or explain the concrete evidence limitation.');update.changes=[];}
    }
    if(stage==='courses'&&request.refinement){const changed=Object.keys(checked.choices).some(id=>checked.choices[id]!==currentRecommendation.choices[id]);if(!changed&&!update.limitations.length)throw Error('No courses changed. Explain the constraint or replace eligible AI suggestions.');}
-   return {source:'groq',model:payload.model||env.GROQ_MODEL||'openai/gpt-oss-120b',generatedAt:new Date().toISOString(),evidenceReviewed:EVIDENCE_REVIEWED,...cleanUserProse(checked),update:cleanUserProse(update),research:{...research,companies:undefined}};}
+   return {source:'openai',model:payload.model||env.OPENAI_MODEL||'gpt-6-astra',generatedAt:new Date().toISOString(),evidenceReviewed:EVIDENCE_REVIEWED,...cleanUserProse(checked),update:cleanUserProse(update),research:{...research,companies:undefined}};}
   catch(e){if(attempt===1)throw Error('The adviser could not verify this proposal: '+e.message+' Your saved plan is unchanged.');context.repair={reason:e.message,previousProposal:parsed||null};context.task+=' Correct the previous proposal using repair. Do not repeat the rejected selection. Leave an unverifiable course open rather than guessing.';}
  }
 }

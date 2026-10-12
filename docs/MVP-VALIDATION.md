@@ -29,4 +29,4 @@ Run `pnpm test` and `pnpm build`. Focused regressions cover complete/partial off
 
 Run `pnpm test:mvp` for the reproducible 168-case BSCSC/BBA cancellation and complete-list omission matrix, plus the final-capstone regression. It uses synthetic catalogue scenarios and makes no model calls.
 
-`pnpm test:mvp:live` is an explicit paid Groq evaluation using synthetic inputs. It requires a server-side `GROQ_API_KEY` and records token counts, latency and public source diversity in ignored `.sites-runtime/mvp-live-report.json`. Add `--courses-only` or `--targets-only` when invoking the script directly to limit the run. No credential, student identity or private notes belong in that report.
+`pnpm test:mvp:live` is an explicit paid OpenAI evaluation using synthetic inputs. It requires a server-side `OPENAI_API_KEY` and records token counts, latency and public source diversity in ignored `.sites-runtime/mvp-live-report.json`. Add `--courses-only` or `--targets-only` when invoking the script directly to limit the run. No credential, student identity or private notes belong in that report.

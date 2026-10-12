@@ -11,7 +11,7 @@ import {buildProposal} from './dist/workspace-flow.js';
 import {newJourney,validateSavedWorkspace} from './dist/guidance.js';
 import {journeyView} from './dist/journey-view.js';
 import {hash} from './server/feedback.mjs';
-const DB=localDatabase(':memory:'),base='https://planwithgoplan.com',env={DB,GOPLAN_ACCESS_MODE:'roster',GOPLAN_UNIVERSITY_ID:'synthetic-aui',GOPLAN_EMAIL_DOMAINS:'students.example.edu',ADMIN_EMAILS:'owner@example.com',SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_PUBLISHABLE_KEY:'fixture-key',AI_ACCESS_CODE:'fixture-demo',GROQ_API_KEY:'fixture-key'};
+const DB=localDatabase(':memory:'),base='https://planwithgoplan.com',env={DB,GOPLAN_ACCESS_MODE:'roster',GOPLAN_UNIVERSITY_ID:'synthetic-aui',GOPLAN_EMAIL_DOMAINS:'students.example.edu',ADMIN_EMAILS:'owner@example.com',SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_PUBLISHABLE_KEY:'fixture-key',AI_ACCESS_CODE:'fixture-demo',OPENAI_API_KEY:'fixture-key'};
 const post=(path,body,extra={})=>new Request(base+path,{method:'POST',headers:{Origin:base,'Content-Type':'application/json',...extra},body:JSON.stringify(body)});
 let calls=0;const options={authFetcher:async()=>{calls++;return Response.json({});}};
 assert.equal((await authEndpoint(post('/api/auth/send',{email:'outsider@students.example.edu'}),env,options)).status,403);assert.equal(calls,0,'Ineligible emails must not reach the auth provider.');
@@ -47,5 +47,5 @@ const before=JSON.stringify(j);assert.throws(()=>updateStudyReview(j,'completed'
 assert.throws(()=>updateStudyReview(j,'currentTerm','Spring-2027'),/Keep the semester/);
 const restored=validateSavedWorkspace({version:3,phase:'saved',journey:newJourney(p),plan:p,draftPlan:null,history:[],updatedAt:new Date().toISOString()});assert.deepEqual(restored.plan.studentContext.records,p.studentContext.records);
 const html=journeyView({journey:j},{hasAccess:true});assert.ok(html.includes('data-study="completed"'));assert.ok(html.includes('Language Center semesters still needed'));
-const landing=readFileSync('dist/index.html','utf8');assert.match(landing,/href="\/demo"/);assert.ok(!landing.includes('Trusted by'),'No invented traction.');
+const landing=readFileSync('dist/index.html','utf8');assert.match(landing,/<h1>A clear start<br><em>to university/);assert.match(landing,/href="\/demo"/);assert.ok(!landing.includes('Trusted by'),'No invented traction.');
 DB.close();console.log('University pilots: roster isolation, hashing, fail-closed access, revoked sessions, auth-stage checks, owner permissions, protected inquiry storage, abuse limits, final-step progress preservation and invalid-record rejection passed. No live provider calls.');
