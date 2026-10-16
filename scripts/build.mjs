@@ -9,10 +9,12 @@ const assets=Object.fromEntries(publicFiles.map(f=>['/'+f.name,{mime:mime[f.name
 for(const f of ['index.html','admin.js','admin.css','pilots.js'])assets['/admin/'+f]={mime:mime[f.split('.').at(-1)],base64:fs.readFileSync(path.join(root,'admin',f)).toString('base64')};
 const entry=`import {handleApi} from './server/api.mjs';
 import {adminPageGate,privateHeaders} from './server/admin-auth.mjs';
+import {demoPageGate} from './server/demo-access.mjs';
 const assets=${JSON.stringify(assets)};
 export default {async fetch(request,env){
  const api=await handleApi(request,env);if(api)return api;
  const url=new URL(request.url),path=url.pathname;
+ const demoGate=await demoPageGate(request,env);if(demoGate)return demoGate;
  if(path==='/'&&url.searchParams.has('workspace')){const target=new URL('/demo',url);target.search=url.search;return Response.redirect(target.href,302);}
  const admin=path==='/admin'||path==='/admin/'||path==='/admin/index.html';
  if(admin){const gate=await adminPageGate(request,env);if(gate)return gate;}

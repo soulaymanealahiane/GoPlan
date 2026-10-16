@@ -5,6 +5,9 @@ import {sanitizeRequest,validateDirection,validateDetails,availableTargets,advis
 const advise=(input,env,fetcher)=>realAdvise(input,{...env,GOPLAN_TOKEN_COUNTER:async body=>Math.ceil(JSON.stringify(body).length/4)},fetcher);
 import {fetchOpenAI} from './server/openai-transport.mjs';
 import {handleApi} from './server/api.mjs';
+import {localDatabase} from './server/local-db.mjs';
+import {testSession} from './tests/session-fixture.mjs';
+const authDB=localDatabase(':memory:'),authSession=await testSession(authDB,'ai-fixture'),otherSession=await testSession(authDB,'other-ai-fixture');
 import {normalizeProfile,DATA} from './dist/planner.js';
 import {emptyWorkspace,validateSavedWorkspace} from './dist/guidance.js';
 import {journeyView} from './dist/views.js';
@@ -28,7 +31,7 @@ assert.throws(()=>validateDetails({summary:'Do not overwrite the student edit',c
 for(const program of DATA.programs){const profile=normalizeProfile({program:program.id}),lists=Object.fromEntries(['internships','exchanges'].map(type=>{const ts=availableTargets(type,profile).slice(0,5);return [type,ts.map((t,i)=>tier(t,i,ts.length))];}));validateDetails({summary:'Evidence-bounded research targets.',choices:[],...lists},sanitizeRequest({...input,level:program.level,stage:'details',profile}));if(program.level==='undergraduate')for(const ts of Object.values(lists))assert.equal(ts.length,5);}
 let calls=0;
 const provider=async(url,init)=>{calls++;assert.equal(url,'https://api.openai.com/v1/responses');assert.equal(init.headers.Authorization,'Bearer fixture-secret');const payload=JSON.parse(init.body);assert.equal(payload.store,false);assert.equal(payload.text.format.strict,true);assert.ok(!init.body.includes('fixture-secret'));return openaiFixture({status:'completed',model:'fixture-provider',output:[{content:[{type:'output_text',text:JSON.stringify(direction)}]}]});};
-const env={GOPLAN_TOKEN_COUNTER:async()=>8000,OPENAI_WEB_RESEARCH:'off',OPENAI_API_KEY:'fixture-secret',AI_ACCESS_CODE:'fixture-access'};
+const env={DB:authDB,GOPLAN_TOKEN_COUNTER:async()=>8000,OPENAI_WEB_RESEARCH:'off',OPENAI_API_KEY:'fixture-secret',AI_ACCESS_CODE:'fixture-access'};
 assert.equal(needsPersonalConfirmation({id:'bscsc-specialization-option',title:'Natural Language Processing and Text Mining'}),false);
 assert.equal(needsPersonalConfirmation({id:'bscsc-specialization-option',title:'Languages and Compilers'}),false);
 assert.equal(needsPersonalConfirmation({id:'minor-replacement-1',title:'Approved minor replacement'}),false);
@@ -43,9 +46,9 @@ await advise({...input,stage:'details',profile:{program:'BSCSC',track:'AI',secon
 });
 await assert.rejects(()=>advise(input,env,async()=>openaiFixture({error:{type:'insufficient_quota',code:'credit_balance_exhausted'}},{status:429})),e=>e.status===503&&e.message.includes('service budget'));
 await assert.rejects(()=>advise(input,env,async()=>openaiFixture({error:{type:'rate_limit_exceeded'}},{status:429})),e=>e.status===502&&e.message.includes('busy'));
-const req=(body=input,headers={})=>new Request('http://127.0.0.1:4317/api/advice',{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':'fixture-access',...headers},body:typeof body==='string'?body:JSON.stringify(body)});
+const req=(body=input,headers={})=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json',...authSession,...headers},body:typeof body==='string'?body:JSON.stringify(body)});
 assert.equal((await handleApi(req(),{})).status,503);
-assert.equal((await handleApi(req(input,{'X-GoPlan-Access':'wrong'}),env)).status,401);
+assert.equal((await handleApi(req(input,{Cookie:'','X-GoPlan-Access':'fixture-access'}),env)).status,401);
 assert.equal((await handleApi(req(input,{Origin:'https://unrelated.example'}),env)).status,403);
 assert.equal((await handleApi(req('x'.repeat(40001)),env)).status,413);
 assert.equal((await handleApi(req('{bad'),env)).status,400);
@@ -63,7 +66,7 @@ const jobs=[0].map(i=>handleApi(req({...input,goal:input.goal+' Busy '+i}),env,o
 while(started<1)await new Promise(resolve=>setTimeout(resolve,1));
 const busy=await handleApi(req({...input,goal:input.goal+' Busy 2'}),env,opts);
 assert.equal(busy.status,429);assert.equal((await busy.json()).code,'AGENT_BUSY');
-assert.equal((await handleApi(req(input,{'X-GoPlan-Session':'independent-session-1234'}),env,{...opts,fetcher:provider})).status,200);
+assert.equal((await handleApi(req(input,{...otherSession,'X-GoPlan-Session':'independent-session-1234'}),env,{...opts,fetcher:provider})).status,200);
 release();assert.ok((await Promise.all(jobs)).every(r=>r.status===200));
 assert.equal((await handleApi(req({...input,goal:input.goal+' Busy 2'}),env,{...opts,fetcher:provider})).status,200);
 let transportCalls=0,delays=[];
@@ -72,8 +75,8 @@ assert.equal((await transport()).status,200);assert.equal(transportCalls,3);asse
 transportCalls=0;
 await fetchOpenAI('fixture',{},async()=>{transportCalls++;return openaiFixture({error:{code:'insufficient_quota'}},{status:429});},{pause:async()=>assert.fail('Never retry exhausted credit')});assert.equal(transportCalls,1);
 const failOpts={clientAddress:'failed-fixture',fetcher:async()=>{throw Error('fixture failure');}};
-for(let i=0;i<3;i++)assert.equal((await handleApi(req(),env,failOpts)).status,422);
-assert.equal((await handleApi(req(),env,{...failOpts,fetcher:provider})).status,200);
+for(let i=0;i<3;i++)assert.equal((await handleApi(req({...input,goal:input.goal+' Uncached failed request'}),env,failOpts)).status,422);
+assert.equal((await handleApi(req({...input,goal:input.goal+' Uncached failed request'}),env,{...failOpts,fetcher:provider})).status,200);
 let attempts=0;await advise(input,env,async()=>{attempts++;return openaiFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(attempts===1?{...direction,academic:{...direction.academic,program:'FAKE'}}:direction)}]}]});});assert.equal(attempts,2);
 const state=emptyWorkspace();state.journey.advice=direction;state.journey.goal=input.goal;state.journey.details={...details,summary:'Specific test recommendations'};
 for(let step=0;step<6;step++){state.journey.step=step;assert.ok(journeyView(state).includes('journey'));}
@@ -102,11 +105,11 @@ try{
  setAccessCode('wrong');globalThis.fetch=async()=>openaiFixture({code:'ACCESS_REQUIRED'},{status:401});
  await assert.rejects(()=>requestAdvice('direction',journey),e=>e.code==='ACCESS_REQUIRED');assert.equal(hasAccessCode(),false);assert.equal(JSON.stringify(journey),before);
  const workspace=emptyWorkspace();workspace.journey.step=1;
- assert.ok(journeyView(workspace,{hasAccess:hasAccessCode(),aiStatus:{available:true},aiError:'Code rejected'}).includes('id="ai-access-code"'));
+ assert.ok(!journeyView(workspace,{hasAccess:hasAccessCode(),aiStatus:{available:true},aiError:'Sign in again'}).includes('id="ai-access-code"'));
  setAccessCode('valid-fixture');assert.equal(stored.has('goplan-verified-demo-access'),false);
  globalThis.fetch=async()=>openaiFixture({summary:'Accepted'});await requestAdvice('direction',journey);
  assert.equal(stored.get('goplan-verified-demo-access'),'valid-fixture');
  const reloaded=await import('./dist/ai-client.js?auth-reload-test');assert.equal(reloaded.hasAccessCode(),true);
  globalThis.fetch=async()=>openaiFixture({code:'ACCESS_REQUIRED'},{status:401});await assert.rejects(()=>reloaded.requestAdvice('direction',journey));assert.equal(reloaded.hasAccessCode(),false);assert.equal(stored.has('goplan-verified-demo-access'),false);
 }finally{setAccessCode('');globalThis.fetch=authFetch;if(authStorage===undefined)delete globalThis.sessionStorage;else globalThis.sessionStorage=authStorage;}
-console.log('Passed rejected-code recovery, visible entry at step two, preserved questionnaire, verified-only session storage and expired-code invalidation.');
+console.log('Passed legacy credential invalidation, no demo-code controls, preserved questionnaire and expired-session recovery.');

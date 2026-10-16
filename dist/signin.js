@@ -10,7 +10,7 @@ async function submit(event,action){event.preventDefault();const button=event.ta
 
 function done(){for(const id of ['login-password','new-password','confirm-password','code'])$(id).value='';location.replace(new URLSearchParams(location.search).get('next')==='admin'?'/admin':'/demo');}
 
-function begin(nextMode){mode=nextMode;$('email').value=email||$('login-email').value;$('code').value='';show('email',mode==='signup'?'Your next chapter.':'Set your password.',mode==='signup'?'Use the email approved by your university for a pilot. Verify it, then create your own GoPlan password.':'Verify your email to choose a password. Your plans stay with you.');$('email').focus();}
+function begin(nextMode){mode=nextMode;$('email').value=email||$('login-email').value;$('code').value='';show('email',mode==='signup'?'Your next chapter.':'Set your password.',mode==='signup'?'Use any email. Verify it once, then choose your GoPlan password.':'Verify your email to choose a password. Your plans stay with you.');$('email').focus();}
 
 $('login-form').onsubmit=e=>submit(e,async()=>{await call('login',{email:$('login-email').value.trim(),password:$('login-password').value});done();});
 
@@ -25,3 +25,6 @@ $('code-form').onsubmit=e=>submit(e,async()=>{await call('verify',{email,code:$(
 $('password-form').onsubmit=e=>submit(e,async()=>{if($('new-password').value!==$('confirm-password').value)throw Error('Your passwords do not match.');await call('password',{email,password:$('new-password').value});done();});
 
 $('different-email').onclick=()=>begin(mode);$('restart-verification').onclick=()=>begin(mode);
+
+
+if(new URLSearchParams(location.search).get('mode')==='signup')begin('signup');

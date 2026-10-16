@@ -3,7 +3,7 @@ import {feedbackRequest,hasAccessCode,setAccessCode} from './ai-client.js';
 const categories=[['policy','An AUI policy or prerequisite'],['program','A program sheet or minor requirement'],['recommendation','A recommendation or its explanation'],['other','Something else']];
 const stages=[['direction','Degree, focus or minor'],['courses','Courses and electives'],['targets','Companies or exchange destinations'],['pace','Study pace or semesters']];
 const states={pending:'Awaiting team review',confirmed:'Correction verified by the GoPlan team',dismissed:'Reviewed — not confirmed', 'needs-information':'More information needed',unconfirmed:'Submission not yet confirmed',withdrawn:'Withdrawn'};
-const accessField=()=>!hasAccessCode()?'<label class="field">Demo access code<input id="ai-access-code" type="password" autocomplete="off"></label>':'';
+const accessField=()=>'';
 const credentials=()=>{const field=document.querySelector('#ai-access-code');if(field?.value)setAccessCode(field.value);};
 const key=workspace=>'goplan-feedback:'+workspace;
 function receipts(workspace){try{return JSON.parse(localStorage.getItem(key(workspace))||'[]');}catch{return [];}}

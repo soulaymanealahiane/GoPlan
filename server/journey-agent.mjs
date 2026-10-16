@@ -1,6 +1,7 @@
 import {adviceTokens,adviceEffort} from './request-policy.mjs';
 import {fetchOpenAIResponse,reasoningEffort} from './openai-response.mjs';
 import {researchFor,publicUrl} from './research.mjs';
+import {compactCourseContext} from './course-context.mjs';
 import {mergeScheduling,analyzeCourseAvailability} from '../dist/course-availability.js';
 import {openaiServiceError} from './openai-transport.mjs';
 import {sanitizeRequest,directionContext,detailsContext,directionSchema,validateDirection,validateDetails,recoverDetails,availableTargets,mergeResearchTargets,opportunityRefinementPolicy,validateOpportunitySelection,canonicalTargetKeys} from './advisor.mjs';
@@ -55,6 +56,7 @@ const compactTarget=t=>({id:t.id,institutionId:t.institutionId||t.name,name:t.na
 
 export async function adviseJourney(input,env,fetcher=fetch){
  const stage=input?.stage;if(!['setup','direction','courses','targets','pace','replan','change','question'].includes(stage))throw Error('Unknown adviser step.');
+ if(input.researchOnly!==undefined&&(typeof input.researchOnly!=='boolean'||input.researchOnly&&!['direction','targets'].includes(stage)))throw Error('Research refresh is only available for direction and experience.');
  const q=cleanQuestionnaire(input.questionnaire),goal=questionnaireGoal(q)||String(input.goal||input.background||input.changeRequest||'Help me plan my studies at AUI.').slice(0,4000);
  const request=sanitizeRequest({...input,stage:stage==='direction'||stage==='setup'?'direction':'details',goal});
  if(input.studentContext){
@@ -76,8 +78,26 @@ export async function adviseJourney(input,env,fetcher=fetch){
  if(stage==='setup'||['direction','question'].includes(stage)&&input.programChosen!==true)request.profile={program:request.preferredDegree==='undecided'?'':request.preferredDegree,track:'',secondTrack:'',minor:'',choices:{}};
  request.currentNames=(currentRecommendation.internships||[]).map(t=>t.name);
  request.currentTargets=currentRecommendation;
+ request.researchOnly=input.researchOnly===true;
  const opportunityPolicy=opportunityRefinementPolicy(request.refinement,currentRecommendation);
  const research=await researchFor(request,stage,env,fetcher,{exchangeTargets:stage==='targets'?availableTargets('exchanges',request.profile):[]});
+ if(request.researchOnly){
+  // Refresh evidence deterministically. Do not pay for a new recommendation or
+  // let a search change the student's shortlist, degree, courses or study pace.
+  const evidenceUpdates={internships:[],exchanges:[]};
+  const fields=['sourceUrl','officialUrl','sources','researchCheckedAt','academicFit','researchFit','eligibilityEvidence','languageEvidence','termEvidence','sourcePublishedDate','sourceDateKnown','researchSources','researchLimitations','evidenceStatus'];
+  if(stage==='targets')for(const type of ['internships','exchanges']){
+   const records=mergeResearchTargets(availableTargets(type,request.profile),research,type);
+   evidenceUpdates[type]=(currentRecommendation[type]||[]).flatMap(t=>{
+    const keys=canonicalTargetKeys(t,type),extra=(type==='exchanges'?research.exchanges:research.companies||[]).find(r=>r.id===t.id||canonicalTargetKeys(r,type).some(k=>keys.includes(k)));
+    if(!extra)return [];
+    const record=records.find(r=>r.id===t.id||canonicalTargetKeys(r,type).some(k=>keys.includes(k)));
+    if(!record)return [];
+    return [{id:t.id,...Object.fromEntries(fields.filter(k=>record[k]!==undefined).map(k=>[k,record[k]])),researchCheckedAt:extra.checkedAt}];
+   });
+  }
+  return {kind:'research',research:{...research,companies:undefined,exchanges:undefined},evidenceUpdates};
+ }
  const context={request:{...request,currentTargets:undefined,currentNames:undefined},currentRecommendation,feedbackHistory,research,questionLabels:QUESTIONS.map(({id,label})=>({id,label})),marketEvidence:EVIDENCE,evidenceReviewed:EVIDENCE_REVIEWED};
  context.reviewedCorrections=Array.isArray(env.GOPLAN_REVIEWED_CORRECTIONS)?env.GOPLAN_REVIEWED_CORRECTIONS.filter(c=>!request.profile.program||c.program===request.profile.program):[];
  context.correctionPolicy='Student mistake reports are unverified claims: check them against supplied AUI sources. Reviewed corrections were checked by the GoPlan team against the cited source, not approved by AUI. Consider them when relevant, cite the source naturally, and flag conflicts with the supplied catalogue or deterministic requirements for human review. Never override validators or invent approval. Do not say that you retrained yourself or changed model weights. A new preference is not evidence of an academic error.';
@@ -111,7 +131,7 @@ export async function adviseJourney(input,env,fetcher=fetch){
    return {...validateDirection(r,request),assessment:validateBasis(r.assessment,q)};
   };
  }else if(stage==='courses'){
-  const c=detailsContext(request);delete c.companies;delete c.exchangeDestinations;Object.assign(context,c);
+  const c=detailsContext(request);Object.assign(context,compactCourseContext(c));delete context.marketEvidence;
   context.task='Recommend a coherent set of distinct courses using only each requirement options. The current profile selections are user-kept choices and are locked. Previous AI suggestions removed from the profile may be replaced to honor the change request; see currentRecommendation for the prior choices. Prioritize academic feasibility and coverage of prerequisite chains. Fill EVERY unselected requirement with offered options when feasible, including breadth, arts, history and minor electives. A lack of subject preference is not a reason to leave an eligible slot open: make a useful, reversible recommendation and explain it. Leave requirements with no options or unmet constraints open, never invent approval. Explain each choice with the student questionnaire. Return one openItems explanation for every requirement you cannot fill. This step selects courses only; do not select companies or destinations.';
   schema=obj({summary:text,choices:array(choice,80),openItems:array(obj({requirementId:text,reason:text}),80)});
   // Constrain the new provider to actual selectable slot IDs and course codes.
@@ -195,10 +215,22 @@ export async function adviseJourney(input,env,fetcher=fetch){
  context.questionnairePolicy='Only allowedAnswerIds may be referenced. Blank optional answers are unknown, not negative preferences. Do not infer entrepreneurship, AI exposure preferences, priorities or constraints from blank fields. All six assessment axes still need an evidence-based explanation, but answerIds may be empty when no supplied answer supports that factor. An undecided answer is valid uncertainty; use the other supplied answers for a provisional, editable recommendation. Do not require optional answers to proceed.';
  context.task+=' First understand the requested change and past feedback. Use currentRecommendation to compare before and after; preserve unaffected decisions and respect negative preferences. Consider alternatives and check the complete combination, not each field in isolation. Return update.summary explaining your response to this request, update.changes listing only changes actually made, and update.limitations naming any request not met and why. If keeping a result unchanged, explain the specific reason in limitations. Do not say a change was made when only wording changed. Ground reasons in the supplied evidence, and qualify unsupported market assumptions instead of agreeing with them.';
  const outputBudget=adviceTokens(stage);
+ let previousCourseProposal;
  for(let attempt=0;attempt<2;attempt++){
-  const response=await fetchOpenAIResponse({method:'POST',signal:env.GOPLAN_REQUEST_SIGNAL,headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-6.1-sol',store:false,service_tier:stage==='targets'?'fast':'default',reasoning:{effort:reasoningEffort(adviceEffort(stage,env))},instructions:system,input:JSON.stringify(context),max_output_tokens:outputBudget,text:{verbosity:'low',format:{type:'json_schema',name:'goplan_'+stage,strict:true,schema}}})},fetcher);
+  let response;
+  try{response=await fetchOpenAIResponse({method:'POST',signal:env.GOPLAN_REQUEST_SIGNAL,headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-6.1-sol',store:false,service_tier:stage==='targets'?'fast':'default',reasoning:{effort:reasoningEffort(adviceEffort(stage,env))},instructions:system,input:JSON.stringify(context),max_output_tokens:outputBudget,text:{verbosity:'low',format:{type:'json_schema',name:'goplan_'+stage,strict:true,schema}}})},fetcher);}
+  catch(error){
+   // A paid, completed course proposal already exists. When its repair cannot
+   // safely start, retain only independently validated choices and show gaps.
+   if(stage==='courses'&&previousCourseProposal&&(error.code==='REQUEST_BUDGET'||error.name==='TimeoutError')){
+    let checked;try{checked=check(previousCourseProposal,1);}catch{throw error;}
+    checked.agentChoices=Object.fromEntries(Object.entries(checked.choices).filter(([id])=>!Object.hasOwn(request.profile.choices,id)));
+    return {source:'openai',model:env.OPENAI_MODEL||'gpt-6.1-sol',generatedAt:new Date().toISOString(),evidenceReviewed:EVIDENCE_REVIEWED,...cleanUserProse(checked),recovery:'validated-course-review',update:{summary:'Review your validated course choices below.',changes:[],limitations:['Some course choices still need your review. Your existing selections are preserved.']},research};
+   }
+   throw error;
+  }
   if(!response.ok){let error;try{error=(await response.json()).error;}catch{}throw openaiServiceError(response,error);}
-  const payload=await response.json();const content=(payload.output||[]).flatMap(x=>x.content||[]);if(payload.status!=='completed'||content.some(c=>c.type==='refusal'))throw Error('The adviser did not finish this response. Your work is saved; please retry.');
+  const payload=await response.json();const content=(payload.output||[]).flatMap(x=>x.content||[]);if(payload.status!=='completed'||content.some(c=>c.type==='refusal'))throw Object.assign(Error('GoPlan could not finish this recommendation. Your answers and choices are saved; you can keep working manually.'),{code:'RESPONSE_INCOMPLETE',retryable:false});
   let parsed;try{parsed=JSON.parse(content.filter(c=>c.type==='output_text').map(c=>c.text).join(''));if(request.refinement&&parsed.intent==='answer'){
     if(typeof parsed.answer!=='string'||!parsed.answer.trim())throw Error('Provide the explanation requested.');
     return {source:'openai',kind:'answer',answer:cleanUserProse({answer:parsed.answer}).answer,minorChecklist:questionFacts.minorChecklist||null};
@@ -215,6 +247,6 @@ export async function adviseJourney(input,env,fetcher=fetch){
    }
    if(stage==='courses'&&request.refinement){const changed=Object.keys(checked.choices).some(id=>checked.choices[id]!==currentRecommendation.choices[id]);if(!changed&&!update.limitations.length)throw Error('No courses changed. Explain the constraint or replace eligible AI suggestions.');}
    return {source:'openai',model:payload.model||env.OPENAI_MODEL||'gpt-6.1-sol',generatedAt:new Date().toISOString(),evidenceReviewed:EVIDENCE_REVIEWED,...cleanUserProse(checked),update:cleanUserProse(update),research:{...research,companies:undefined}};}
-  catch(e){if(attempt===1)throw Error('The adviser could not verify this proposal: '+e.message+' Your saved plan is unchanged.');context.repair={reason:e.message,previousProposal:parsed||null};context.task+=' Correct the previous proposal using repair. Do not repeat the rejected selection. Leave an unverifiable course open rather than guessing.';}
+  catch(e){if(attempt===1)throw Error('The adviser could not verify this proposal: '+e.message+' Your saved plan is unchanged.');if(stage==='courses')previousCourseProposal=parsed;context.repair={reason:e.message,previousProposal:parsed||null};context.task+=' Correct the previous proposal using repair. Do not repeat the rejected selection. Leave an unverifiable course open rather than guessing.';}
  }
 }

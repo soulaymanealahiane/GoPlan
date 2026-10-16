@@ -1,6 +1,6 @@
 // One budget and deadline cover discovery, extraction, advice and repairs.
-export const REQUEST_TIMEOUT_MS=55000;
-export const REQUEST_BUDGET_USD=0.20;
+export const REQUEST_TIMEOUT_MS=180000;
+export const REQUEST_BUDGET_USD=0.25;
 const prices={'gpt-6.1-sol':[2,10],'gpt-6-luna':[0.1,0.5]};
 export function boundedRequest(env,fetcher=fetch,{timeoutMs=REQUEST_TIMEOUT_MS}={}){
  const controller=new AbortController(),started=Date.now();let spent=0;
@@ -24,9 +24,9 @@ export function boundedRequest(env,fetcher=fetch,{timeoutMs=REQUEST_TIMEOUT_MS}=
   }
   if(!Number.isInteger(inputTokens)||inputTokens<0)throw Object.assign(Error('The adviser could not verify the request cost. Your choices are saved.'),{status:503});
   const tools=body.tools?Math.min(body.max_tool_calls||4,4):0;
-  if(inputTokens>65000||body.max_output_tokens>6000||body.max_tool_calls>4)throw Object.assign(Error('This request exceeds the adviser limits. Narrow the requested change; your choices are saved.'),{status:422});
+  if(inputTokens>65000||body.max_output_tokens>6000||body.max_tool_calls>4)throw Object.assign(Error('GoPlan could not finish this recommendation. Your answers and choices are saved; you can keep working manually.'),{status:422,code:'REQUEST_TOO_LARGE',retryable:false});
   const reserve=(inputTokens*rates[0]+body.max_output_tokens*rates[1]+tools*40000*rates[0])/1e6+tools*0.01;
-  if(spent+reserve>budget)throw Object.assign(Error('The adviser stopped at its per-request spending limit. Your choices are saved; narrow the requested change.'),{status:422,code:'REQUEST_BUDGET'});
+  if(spent+reserve>budget)throw Object.assign(Error('GoPlan could not finish this recommendation. Your answers and choices are saved; you can keep working manually.'),{status:422,code:'REQUEST_BUDGET',retryable:false});
   spent+=reserve;
   const response=await fetcher(url,{...init,signal});
   // Do not release the reserve after a transport failure: the provider may bill it.

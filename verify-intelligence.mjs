@@ -76,13 +76,15 @@ const focused=await researchFor({profile:j.profile,questionnaire:j.questionnaire
 });
 assert.equal(focused.status,'unavailable');assert.equal(focusedCalls,2);assert.equal(focused.facts.length,0);
 const {researchView}=await import('./dist/journey-view.js');
-assert.ok(researchView(budgetStopped,'direction').includes('data-agent-stage="direction"'));
-assert.ok(!researchView(budgetStopped).includes('data-agent-stage'));
+assert.ok(researchView(budgetStopped,'direction').includes('data-research-stage="direction"'));
+assert.ok(!researchView(budgetStopped).includes('data-research-stage'));
 // A research fallback is not cached; a subsequent successful search is cached.
 const {handleApi}=await import('./server/api.mjs');
-const apiEnv={...env,GOPLAN_TOKEN_COUNTER:async()=>8000,OPENAI_WEB_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on',AI_ACCESS_CODE:'research-fixture'};
+const {localDatabase}=await import('./server/local-db.mjs'),{testSession}=await import('./tests/session-fixture.mjs');
+const apiDB=localDatabase(':memory:'),researchSession=await testSession(apiDB,'research-fixture');
+const apiEnv={...env,DB:apiDB,GOPLAN_TOKEN_COUNTER:async()=>8000,OPENAI_WEB_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on',AI_ACCESS_CODE:'research-fixture'};
 const directionValue={kind:'recommend',summary:'A provisional software direction.',themes:['Software'],questions:[],academic:{program:'BSCSC',track:'SE',secondTrack:'',minor:'',rationale:'Fits the stated programming work.',focusRationale:'Software foundations.',secondFocusRationale:'Keep workload manageable.',minorRationale:'Leave open.'},tradeoffs:[],assessment:Object.keys((await import('./dist/evidence.js')).AXES).map(axis=>({axis,explanation:'A qualified inference from the supplied interests and evidence.',answerIds:['activities'],evidenceIds:[]})),update:{summary:'Recommended a direction.',changes:[],limitations:[]}};
-const apiRequest=()=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json','X-GoPlan-Access':'research-fixture','X-GoPlan-Session':'research-cache-regression-20261005'},body:JSON.stringify({...newJourney(),stage:'direction',flowVersion:5,questionnaire:j.questionnaire})});
+const apiRequest=()=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json',...researchSession,'X-GoPlan-Session':'research-cache-regression-20261005'},body:JSON.stringify({...newJourney(),stage:'direction',flowVersion:5,questionnaire:j.questionnaire})});
 let apiCalls=0;
 const apiFetch=async(_,init)=>{
  apiCalls++;const body=JSON.parse(init.body);
