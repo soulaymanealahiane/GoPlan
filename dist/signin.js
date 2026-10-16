@@ -10,7 +10,7 @@ async function submit(event,action){event.preventDefault();const button=event.ta
 
 function done(){for(const id of ['login-password','new-password','confirm-password','code'])$(id).value='';location.replace(new URLSearchParams(location.search).get('next')==='admin'?'/admin':'/demo');}
 
-function begin(nextMode){mode=nextMode;$('email').value=email||$('login-email').value;$('code').value='';show('email',mode==='signup'?'Your next chapter.':'Set your password.',mode==='signup'?'Use any email. Verify it once, then choose your GoPlan password.':'Verify your email to choose a password. Your plans stay with you.');$('email').focus();}
+function begin(nextMode){mode=nextMode;$('email').value=email||$('login-email').value;$('code').value='';show('email',mode==='signup'?'Create your GoPlan account.':'Set your password.',mode==='signup'?'Use any email. Verify it once, then choose your GoPlan password.':'Verify your email to choose a password. Your plans stay with you.');$('email').focus();}
 
 $('login-form').onsubmit=e=>submit(e,async()=>{await call('login',{email:$('login-email').value.trim(),password:$('login-password').value});done();});
 
