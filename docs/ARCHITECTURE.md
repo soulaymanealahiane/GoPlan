@@ -24,7 +24,11 @@ GPT-6 Luna runs focused native Responses web search without extra reasoning, req
 
 ## Workspace boundary
 
-A workspace contains the six-step journey, saved and draft plans, progress and a small revision history. The server derives the owner from its authenticated session. Updates include an expected revision; a stale revision returns a conflict rather than overwriting newer work. Browser recovery copies are keyed by the verified account and workspace. They are not the authoritative cross-device store.
+Newcomers enter through three quick-choice question cards, then a dashboard of direction, courses, opportunities and semesters. Ready panels are local navigation and never trigger paid AI requests. One action can build the remaining plan; an edit router executes the relevant adviser stages across panels and produces a reviewable draft.
+
+Returning students open their saved dashboard directly. They can edit degree, focus and minor without repeating onboarding, record course completion or current study, move a course, or swap a source-listed elective manually. Degree changes preserve their study record, check exact applicability and flag unmatched credit or a later finish. New account onboarding does not accept prior university study.
+
+A workspace contains the planning decisions, saved and draft plans, progress and a small revision history. The server derives the owner from its authenticated session. Updates include an expected revision; a stale revision returns a conflict rather than overwriting newer work. Browser recovery copies are keyed by the verified account and workspace. They are not the authoritative cross-device store.
 
 ## Authentication boundary
 

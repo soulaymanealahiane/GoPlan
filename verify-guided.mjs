@@ -18,7 +18,7 @@ for(const p of DATA.programs.filter(p=>p.level==='undergraduate'))for(const m of
 }
 assert.equal(eligibleMinors({program:'MSSE'}).length,0);
 assert.ok(!eligibleMinors({program:'BSCSC'}).some(m=>['computer-science','data-analytics'].includes(m.id)));
-assert.equal(selectedMinor({program:'BSCSC',minor:'business-administration'}).requirements.length,7);
+assert.equal(selectedMinor({program:'BSCSC',minor:'business-administration'}).requirements.length,5);
 const bba=coursesFor({program:'BBA',minor:'human-resources-development'});assert.ok(bba.some(c=>c.minorId&&c.code==='HRD3302'));assert.ok(!bba.some(c=>c.minorId&&c.code==='HRD2301'));
 const org=coursesFor({program:'BBA',minor:'organizational-studies',priorCodes:['MGT3305']});assert.ok(!org.some(c=>c.minorId&&c.code==='PSY3304'));
 const j=newJourney();j.level='open';j.interests=['technology'];assert.ok(suggestPrograms(j).some(x=>x.program.level==='graduate'));j.level='undergraduate';assert.ok(suggestPrograms(j).every(x=>x.program.level==='undergraduate'));

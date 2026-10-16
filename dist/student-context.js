@@ -88,11 +88,13 @@ export function buildStudentPlan(j,previous){
  for(const record of records){const id=matches.get(record.courseCode);if(id)plan.tracking[id]={status:record.status,grade:record.grade,note:record.note};}
  plan.terms=generatePlan(profile,inputs.scheduling);
  plan.academicRecord=records.map(r=>{const requirementId=matches.get(r.courseCode)||'',countsTowardDegree=!!requirementId&&r.status==='completed';return {...r,requirementId,countsTowardDegree,review:!requirementId,reason:requirementId?r.status==='completed'?'Exact source-listed course matches this requirement in the draft.':r.status==='in-progress'?'Current registration is retained; it is not completed credit.':'Retake remains required; failed study is not completed credit.':'Recorded study is retained. Degree applicability needs university review; no replacement or transferred credit is assumed.'};});
- const issues=validatePlan(plan.terms,courses,profile,scheduling),conflicts=issues.filter(i=>i.level==='conflict'),unmatched=plan.academicRecord.filter(r=>r.review);
+ const issues=validatePlan(plan.terms,courses,profile,scheduling),conflicts=issues.filter(i=>i.level==='conflict'),blocking=conflicts.filter(i=>!/^\d+ requirements need manual placement\./.test(i.text)),unmatched=plan.academicRecord.filter(r=>r.review);
  for(const record of unmatched)issues.push({level:'review',id:'',text:`${record.courseCode}: recorded ${record.status} study is retained outside the new degree requirements. Confirm its applicability with your academic adviser.`});
  const pending=plan.terms.find(t=>t.id==='pending')?.courses||[],after=plan.terms.filter(t=>!['prior','pending'].includes(t.id)&&t.courses.length).at(-1),before=previous?.terms?.filter(t=>!['prior','pending'].includes(t.id)&&t.courses.length).at(-1);
  const extraRegularTerms=before&&after?Math.max(0,(after.year-before.year)*2+Number(after.season==='Fall')-Number(before.season==='Fall')):0;
- plan.revisionAssessment={canApply:conflicts.length===0,status:conflicts.length||pending.length?'needs-review':'within-target',issues,pending:pending.length,unmatchedRecords:unmatched.length,completedPreserved:records.filter(r=>r.status==='completed').length,inProgressPreserved:current.length,before:before?label(before):'New plan',after:after?label(after):'Unconfirmed',delayed:!!(before&&after&&termOrder(after)>termOrder(before)),extraRegularTerms};
- if(conflicts.length)throw Error('Your recorded study is retained, but this degree proposal has course or current-registration conflicts: '+conflicts.slice(0,3).map(i=>i.text).join(' '));
+ plan.revisionAssessment={canApply:blocking.length===0,status:conflicts.length||pending.length?'needs-review':'within-target',issues,pending:pending.length,unmatchedRecords:unmatched.length,completedPreserved:records.filter(r=>r.status==='completed').length,inProgressPreserved:current.length,before:before?label(before):'New plan',after:after?label(after):'Unconfirmed',delayed:!!(before&&after&&termOrder(after)>termOrder(before)),extraRegularTerms};
+ // Unconfirmed placement stays visibly unresolved in the draft. It should not
+ // prevent a newcomer from seeing the rest of their roadmap.
+ if(blocking.length)throw Error('This degree proposal needs a course-sequence review: '+blocking.slice(0,3).map(i=>i.text).join(' '));
  return plan;
 }

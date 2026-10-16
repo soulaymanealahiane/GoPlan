@@ -300,75 +300,11 @@
               "distinctWithinGroup": true,
               "noDoubleCounting": true,
               "useSelectedCourseCredits": true
-            },
-            {
-              "id": "minor-business-cs-options-3",
-              "type": "requirementChoice",
-              "requirementChoice": true,
-              "title": "Business option 3",
-              "credits": 3,
-              "courseCount": 1,
-              "allowedCourses": [
-                "ACC2302",
-                "GBU3311",
-                "GBU4308",
-                "MGT3302",
-                "MGT4303",
-                "MIS3302",
-                "MKT3301",
-                "MKT4304",
-                "MKT4305",
-                "SCM4301"
-              ],
-              "category": "Minor",
-              "groupId": "business-cs-options",
-              "source": {
-                "file": "aui academic catalogue.pdf",
-                "page": 133,
-                "filename": "aui academic catalogue.pdf",
-                "pdfPage": 133,
-                "edition": "2025-2026"
-              },
-              "distinctWithinGroup": true,
-              "noDoubleCounting": true,
-              "useSelectedCourseCredits": true
-            },
-            {
-              "id": "minor-business-cs-options-4",
-              "type": "requirementChoice",
-              "requirementChoice": true,
-              "title": "Business option 4",
-              "credits": 3,
-              "courseCount": 1,
-              "allowedCourses": [
-                "ACC2302",
-                "GBU3311",
-                "GBU4308",
-                "MGT3302",
-                "MGT4303",
-                "MIS3302",
-                "MKT3301",
-                "MKT4304",
-                "MKT4305",
-                "SCM4301"
-              ],
-              "category": "Minor",
-              "groupId": "business-cs-options",
-              "source": {
-                "file": "aui academic catalogue.pdf",
-                "page": 133,
-                "filename": "aui academic catalogue.pdf",
-                "pdfPage": 133,
-                "edition": "2025-2026"
-              },
-              "distinctWithinGroup": true,
-              "noDoubleCounting": true,
-              "useSelectedCourseCredits": true
             }
           ],
           "conflicts": [
             {
-              "text": "The heading says 15 SCH, but 9 required SCH plus four options (12 SCH) equals 21 SCH. Confirm the elective count with SBA before treating this minor as finalized.",
+              "text": "Five-course, 15-credit planning draft: three required courses plus two options. The 2025–2026 table contradicts its 15-credit heading; the 2024–2025 catalog explicitly specifies two options. Confirm the applicable requirement with SBA.",
               "sources": [
                 {
                   "file": "aui academic catalogue.pdf",
@@ -376,12 +312,25 @@
                   "filename": "aui academic catalogue.pdf",
                   "pdfPage": 133,
                   "edition": "2025-2026"
+                },
+                {
+                  "url": "https://aui.ma/hubfs/ACADEMIC%20CATALOG%202024-2025.pdf?hsLang=en",
+                  "page": 150,
+                  "edition": "2024–2025"
                 }
               ],
               "blocksAutomaticValidation": true
             }
           ],
-          "reviewRequired": true
+          "reviewRequired": true,
+          "approvalRequired": true,
+          "sourceResolution": {
+            "status": "requires-school-confirmation",
+            "note": "Five-course, 15-credit planning draft: three required courses plus two options. The 2025–2026 table contradicts its 15-credit heading; the 2024–2025 catalog explicitly specifies two options. Confirm the applicable requirement with SBA.",
+            "url": "https://aui.ma/hubfs/ACADEMIC%20CATALOG%202024-2025.pdf?hsLang=en",
+            "page": 150,
+            "reviewedAt": "2026-10-16"
+          }
         },
         {
           "id": "ssah",

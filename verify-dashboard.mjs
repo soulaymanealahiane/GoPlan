@@ -1,0 +1,57 @@
+import assert from 'node:assert/strict';
+import {newcomerWorkspace,manualDegreePlan,manualCoursePlan,refreshMinorDraft,manualCourseOptions} from './dist/dashboard-flow.js';
+import {dashboardView,dashboardReady} from './dist/dashboard-view.js';
+import {createDashboardController} from './dist/dashboard-controller.js';
+import {minorSummary} from './dist/minor-summary.js';
+import {newJourney,suggestChoices,makePlan,validateSavedWorkspace} from './dist/guidance.js';
+import {normalizeProfile,coursesFor} from './dist/planner.js';
+import {acceptAdvice} from './dist/journey-state.js';
+import {availableTargets} from './server/advisor.mjs';
+const seed=newcomerWorkspace({year:2026,name:'Synthetic'});assert.equal(seed.journey.studentContext.route,'admitted');assert.deepEqual(seed.journey.studentContext.records,[]);assert.equal(seed.journey.level,'undergraduate');assert.throws(()=>newcomerWorkspace({degree:'MBA'}));
+let state=seed;const runtime={},calls=[];
+const direction={kind:'recommend',summary:'Explore technology and business.',themes:[],questions:[],tradeoffs:[],academic:{program:'BSCSC',track:'SE',secondTrack:'',minor:'business-administration',rationale:'Connect your interest in technology with business.',focusRationale:'Build reliable products.',minorRationale:'Learn how a business works.'}};
+const getAdvice=async stage=>{
+ calls.push(stage);const j=state.journey;
+ if(stage==='direction')acceptAdvice(j,stage,direction);
+ if(stage==='courses')acceptAdvice(j,stage,{summary:'Your selected courses.',choices:suggestChoices(j).profile.choices,choiceReasons:{}});
+ if(stage==='targets')acceptAdvice(j,stage,Object.fromEntries(['internships','exchanges'].map(type=>[type,availableTargets(type,j.profile).slice(0,5).map(t=>({...t,reason:'Connect with your technology and business interests.'}))])));
+ if(stage==='pace')acceptAdvice(j,stage,{pace:'balanced',regularCourses:5,summerCourses:2,summers:true,summary:'A manageable pace.'});
+ return true;
+};
+const hooks={runtime,read:()=>state,account:()=>({firstName:'Synthetic'}),render(){},changed(){},persist(){},notify(){},modal(){},head:()=>'',close(){},getAdvice,startWorkspace:async s=>{state=s;},showPlan(){},exportPlan:async()=>{}};
+const controller=createDashboardController(hooks);
+await controller.click({dataset:{action:'dashboard-build'}});assert.deepEqual(calls,['direction','courses','targets','pace']);assert.equal(state.phase,'draft');assert.ok(state.draftPlan);
+let html=dashboardView(state,runtime,{firstName:'Synthetic'});
+for(const unwanted of ['STEP 1 OF 6','journey-steps','data-study=','Update course offerings','Verified findings are retained','Research again'])assert.ok(!html.includes(unwanted),unwanted+' leaked into the main dashboard.');
+assert.ok(html.includes('dashboard-command-form'));assert.ok(html.includes('Your space'));assert.equal(minorSummary(state.draftPlan.profile).requiredCourses,5);assert.equal(minorSummary(state.draftPlan.profile).listedCredits,15);
+const earlierCalls=calls.length;await controller.click({dataset:{action:'dashboard-panel',panel:'courses'}});await controller.click({dataset:{action:'dashboard-panel',panel:'opportunities'}});assert.equal(calls.length,earlierCalls,'Opening a ready panel must not trigger paid advice.');
+runtime.dashboardPanel='opportunities';state.journey.details.targetResearch={status:'partial',notice:'Verified findings are retained. Research again.'};html=dashboardView(state,runtime);assert.ok(!html.includes('Verified findings'));assert.ok(!html.includes('Research again'));assert.ok(html.includes('Openings and eligibility still need checking.'));
+runtime.dashboardPanel='semesters';html=dashboardView(state,runtime);assert.equal((html.match(/class="semester-focus"/g)||[]).length,1,'Only the selected semester is expanded.');assert.ok(!html.includes('Progress note'));
+await controller.click({dataset:{action:'dashboard-save'}});assert.equal(state.phase,'saved');assert.equal(state.draftPlan,null);
+const saved=JSON.stringify(state.plan),course=state.plan.courses.find(c=>c.code==='CSC1401'),term=state.plan.terms.find(t=>t.courses.includes(course.id));
+const completed=manualCoursePlan(state.plan,{id:course.id,status:'completed',termId:term.id}).candidate;assert.equal(completed.tracking[course.id].status,'completed');assert.equal(JSON.stringify(state.plan),saved,'Manual preview mutated the saved plan.');
+
+const completedState={...state,plan:completed,journey:newJourney(completed)};
+html=dashboardView(completedState,{dashboardPanel:'overview'});assert.ok(html.includes('4 / '));assert.ok(html.includes('Change your degree'));assert.ok(!html.includes('Your plan is taking shape'));
+html=dashboardView(completedState,{dashboardPanel:'semesters'});assert.ok(html.includes('✓ Completed'));
+const resetProgress=manualCoursePlan(completed,{id:course.id,status:'planned',termId:term.id}).candidate;assert.equal(resetProgress.tracking[course.id].status,'planned');assert.ok(!resetProgress.academicRecord.some(r=>r.courseCode===course.code));
+validateSavedWorkspace(JSON.parse(JSON.stringify({...state,plan:resetProgress,journey:newJourney(resetProgress)})));
+const later=state.plan.terms.find(t=>t.id!==term.id&&!['prior','pending'].includes(t.id));
+const moved=manualCoursePlan(state.plan,{id:course.id,termId:later.id,status:'planned'}).candidate;assert.ok(moved.terms.find(t=>t.id===later.id).courses.includes(course.id));assert.ok(!moved.terms.find(t=>t.id===term.id).courses.includes(course.id));
+const taking=manualCoursePlan(state.plan,{id:course.id,status:'in-progress',termId:term.id}).candidate;
+const nextCourse=state.plan.courses.find(c=>later.courses.includes(c.id)&&c.code);assert.throws(()=>manualCoursePlan(taking,{id:nextCourse.id,status:'in-progress',termId:later.id}),/earlier semester/);
+const inProgressMoved=manualCoursePlan(taking,{id:course.id,status:'in-progress',termId:later.id}).candidate;validateSavedWorkspace(JSON.parse(JSON.stringify({...state,plan:inProgressMoved,journey:newJourney(inProgressMoved)})));
+const swap=state.plan.courses.flatMap(c=>manualCourseOptions(c,state.plan.profile).filter(o=>o.code!==c.code&&!state.plan.courses.some(x=>x.code===o.code)).map(o=>({c,o}))).find(({c})=>!!c.code);assert.ok(swap,'Fixture needs a legitimate elective alternative.');const swapped=manualCoursePlan(state.plan,{id:swap.c.id,courseCode:swap.o.code}).candidate;assert.equal(swapped.courses.find(c=>c.id===swap.c.id).code,swap.o.code);validateSavedWorkspace(JSON.parse(JSON.stringify({...state,plan:swapped,journey:newJourney(swapped)})));
+
+const changed=manualDegreePlan(completed,{...completed.profile,program:'BBA',track:'FIN',minor:'computer-science',choices:{}});assert.equal(changed.profile.program,'BBA');assert.ok(changed.academicRecord.some(r=>r.courseCode==='CSC1401'&&r.status==='completed'));assert.ok(changed.academicRecord.every(r=>!r.countsTowardDegree||r.requirementId));assert.equal(changed.targets.internships.length,0,'An old degree shortlist cannot silently carry over as a new-degree recommendation.');
+const restored=validateSavedWorkspace(JSON.parse(JSON.stringify({...state,plan:changed,journey:newJourney(changed)})));assert.equal(restored.plan.profile.program,'BBA');
+assert.throws(()=>manualCoursePlan(state.plan,{id:course.id,courseCode:'FIN3301'}),/required degree course/);
+const old=structuredClone(state.plan),minorRows=old.courses.filter(c=>c.minorId==='business-administration');old.courses.push({...minorRows[0],id:'legacy-extra-a'},{...minorRows[0],id:'legacy-extra-b'});
+const legacy={...state,plan:old,journey:newJourney(old)};const migrated=refreshMinorDraft(legacy);assert.equal(migrated.phase,'draft');assert.equal(migrated.draftPlan.courses.filter(c=>c.minorId==='business-administration').length,5);assert.equal(migrated.plan.courses.filter(c=>c.minorId==='business-administration').length,7,'The original saved snapshot must stay available until the draft is saved.');
+const originalFetch=globalThis.fetch;let routes=0,routeStep=5;
+globalThis.fetch=async()=>{routes++;return Response.json({kind:'journey',startStep:routeStep,summary:'Use a manageable pace.',questions:[]});};
+const previousFormData=globalThis.FormData;globalThis.FormData=class{constructor(form){this.form=form;}get(key){return this.form.values[key];}};
+try{const count=calls.length;await controller.submit({id:'dashboard-command-form',values:{request:'Keep my summers free and adjust my pace.'}});assert.equal(routes,1);assert.ok(calls.slice(count).includes('pace'));assert.equal(state.phase,'draft');assert.ok(state.draftPlan);assert.equal(JSON.stringify(state.plan),saved,'An agent change must create a preview instead of overwriting the saved roadmap.');state.plan=completed;state.draftPlan=null;state.phase='saved';state.journey=newJourney(completed);const savedTerms=JSON.stringify(completed.terms);routeStep=4;await controller.submit({id:'dashboard-command-form',values:{request:'Suggest more startup companies, keeping my courses.'}});assert.equal(JSON.stringify(state.draftPlan.terms),savedTerms,'Destination edits must preserve manual semester changes.');assert.equal(state.draftPlan.tracking[course.id].status,'completed');
+routeStep=5;state.plan=completed;state.draftPlan=null;state.phase='saved';state.journey=newJourney(completed);await controller.submit({id:'dashboard-command-form',values:{request:'Keep summers free.'}});assert.equal(state.draftPlan.tracking[course.id].status,'completed','An adviser edit after progress must retain completed study.');
+}finally{globalThis.fetch=originalFetch;globalThis.FormData=previousFormData;}
+console.log('Passed newcomer entry, one-click roadmap construction, dashboard navigation without API calls, quiet research handling, five-course business minor, mechanical progress, degree-change credit retention, saved-plan previews and actionable adviser routing. No live provider calls.');

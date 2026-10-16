@@ -9,7 +9,9 @@ GoPlan helps students turn their interests into an editable degree plan: academi
 ## Application features
 
 - Separate website (`/`) and AUI planner (`/demo`) routes with shared styles and SVG branding.
-- A six-step planning flow for new and continuing students, including prior completed courses, current registrations and remaining Language Center study.
+- Newcomer onboarding with three quick-choice question cards, optional elaboration and a dashboard of degree, courses, opportunities and semesters.
+- Saved-plan controls for manual degree changes, course completion, semester moves and eligible elective swaps. Returning users resume their dashboard without repeating onboarding.
+- A cross-panel adviser command executes requested changes as a reviewable plan preview; completed study and scheduling constraints remain protected.
 - University-scoped email roster imports, hashed roster entries, access checks during authentication and eligibility rechecks on authenticated requests.
 - Private roster and inquiry administration. Contact submissions are stored for up to 180 days with validation, origin checks and rate limits.
 
@@ -77,4 +79,4 @@ Full catalogue extracts, original third-party university documents, credentials,
 
 ## Release status
 
-This GitHub snapshot was synchronized from the completed production source on 12 October 2026. Future live releases can diverge until explicitly synchronized. Email authentication requires a Supabase project, verified sending domain and production SMTP configuration; setting only a public project URL does not enable working sign-in. Follow [deployment](docs/DEPLOYMENT.md) for the required checks.
+This GitHub snapshot was synchronized from the completed production source on 16 October 2026. Future live releases can diverge until explicitly synchronized. Email authentication requires a Supabase project, verified sending domain and production SMTP configuration; setting only a public project URL does not enable working sign-in. Follow [deployment](docs/DEPLOYMENT.md) for the required checks.
