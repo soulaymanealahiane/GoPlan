@@ -8,7 +8,7 @@ import {newJourney,suggestChoices} from './dist/guidance.js';
 import {acceptAdvice} from './dist/journey-state.js';
 import {availableTargets} from './server/advisor.mjs';
 const DB=localDatabase(':memory:'),uid='service-flow',originalFetch=globalThis.fetch,originalForm=globalThis.FormData;
-let state=newcomerWorkspace({year:2026}),runtime={},paid=0,routeStep=5,directionTrack='SE';
+let state=newcomerWorkspace({year:2026}),runtime={},paid=0,routeStep=5,directionTrack='SE',loseCourses=false;
 state.journey.questionnaire={ambitions:'Build useful technology.',workStyle:'Software products.',strengths:'Mathematics.'};
 const call=async(stage,action,extra={})=>{
  const receipt=await reserveServiceCall(DB,uid,action,stage,JSON.stringify(extra));if(receipt.cached)return receipt.cached;paid++;
@@ -20,7 +20,7 @@ const call=async(stage,action,extra={})=>{
  if(stage==='pace')result={pace:'balanced',regularCourses:5,summerCourses:2,summers:true,summary:'Your pace.',reason:'Balanced.',actions:[]};
  await receipt.finish(result,200);return result;
 };
-const getAdvice=async(stage,{serviceAction}={})=>{acceptAdvice(state.journey,stage,await call(stage,serviceAction,{stage,refinement:state.journey.refinements?.[stage]}));return true;};
+const getAdvice=async(stage,{serviceAction}={})=>{const result=await call(stage,serviceAction,{stage,refinement:state.journey.refinements?.[stage]});if(loseCourses&&stage==='courses'){loseCourses=false;throw TypeError('Synthetic lost courses response');}acceptAdvice(state.journey,stage,result);return true;};
 const h={runtime,read:()=>state,account:()=>({firstName:'Demo'}),render(){},changed(){},persist(){},notify(){},modal(){},head:()=>'',close(){},getAdvice,startWorkspace:async next=>{state=next;},showPlan(){},exportPlan:async()=>{},saveAccount:async()=>{const row=await serviceEntitlement(DB,uid);await DB.prepare('UPDATE service_entitlements SET saved=1 WHERE id=? AND step=5').bind(row.id).run();return true;}};
 const controller=createDashboardController(h);
 globalThis.FormData=class{constructor(form){this.form=form;}get(key){return this.form.values[key];}};
@@ -40,8 +40,8 @@ try{
  assert.equal(runtime.service.step,5);assert.equal(state.phase,'draft');assert.ok(!dashboardView(state,runtime).includes('id="dashboard-request"'),'Global prompts unlock only after saving.');
  await controller.click({dataset:{action:'dashboard-save'}});assert.equal(runtime.service.saved,true);assert.equal(runtime.service.globalRemaining,5);
  for(let n=0;n<5;n++){
-  if(n===0){routeStep=2;directionTrack='AI';}else routeStep=5;
-  const before=paid;await controller.submit({id:'dashboard-command-form',values:{request:'Make global change '+n}});assert.equal(runtime.service.globalRemaining,4-n);assert.ok(paid-before<=5,'A global change cannot exceed five backend requests.');
+  if(n===0){routeStep=2;directionTrack='AI';loseCourses=true;}else routeStep=5;
+  const before=paid;await controller.submit({id:'dashboard-command-form',values:{request:'Make global change '+n}});assert.equal(runtime.service.globalRemaining,4-n);if(n===0){assert.match(runtime.aiError,/lost courses/);await controller.click({dataset:{action:'dashboard-retry'}});assert.equal(runtime.aiError,'');assert.equal(runtime.service.globalRemaining,4,'Retry must reuse the same global change.');}assert.ok(paid-before<=5,'A global change cannot exceed five backend requests.');
   assert.equal(state.phase,'draft');await controller.click({dataset:{action:'dashboard-save'}});
  }
  const before=paid;await controller.submit({id:'dashboard-command-form',values:{request:'A sixth global change is forbidden.'}});assert.equal(paid,before);

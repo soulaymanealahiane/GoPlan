@@ -14,7 +14,7 @@ for(let step=0;step<5;step++){
  const initial=await begin('initial',step),agent=SERVICE_STAGES[step].agent;
  const receipt=await reserveServiceCall(db,uid,initial.action,agent,'first');await receipt.finish({summary:'Synthetic output.'},200);total++;
  assert.deepEqual((await reserveServiceCall(db,uid,initial.action,agent,'first')).cached,{summary:'Synthetic output.'});
- await assert.rejects(()=>reserveServiceCall(db,uid,initial.action,agent,'different'),/API budget/);
+ await assert.rejects(()=>reserveServiceCall(db,uid,initial.action,agent,'different'),e=>e.code==='SERVICE_ACTION_USED'&&e.retryable===false);
  await assert.rejects(()=>reserveServiceCall(db,other,initial.action,agent,'stolen'),/Start this request/);
  const attempts=await Promise.allSettled([begin('stage',step),begin('stage',step),begin('stage',step)]);
  assert.equal(attempts.filter(r=>r.status==='fulfilled').length,2,'Atomic quota must refuse a third simultaneous prompt.');
@@ -32,7 +32,7 @@ for(const action of global.filter(r=>r.status==='fulfilled'))for(let i=0;i<5;i++
 }
 assert.equal(total,40);assert.equal(total*AI_REQUEST_BUDGET,SERVICE_API_BUDGET);
 assert.equal(allowanceView(await serviceEntitlement(db,uid)).globalRemaining,0);
-await assert.rejects(()=>reserveServiceCall(db,uid,global[0].value.action,'change','sixth-call'),/API budget/);
+await assert.rejects(()=>reserveServiceCall(db,uid,global[0].value.action,'change','sixth-call'),e=>e.code==='SERVICE_ACTION_USED'&&e.retryable===false);
 assert.equal((await begin('initial',0)).allowance.saved,true,'Replaying an old initial action does not restore any allowance.');
 assert.equal(allowanceView(await serviceEntitlement(db,other)).globalRemaining,5,'Allowances must be isolated by verified account.');
 

@@ -53,7 +53,7 @@ async function getAdvice(stage,{researchOnly=false,serviceAction}={}){
  if(!accounts.signedIn){location.assign('/signin.html');return false;}
  lastStage=stage;runtime.busy=true;runtime.researchOnly=researchOnly;runtime.aiError='';const before=adviceFingerprint(stage,j);render();
  try{const action=serviceAction||await dashboard.authorizeAdvice(stage);const result=await requestAdvice(stage,j,{...(researchOnly?{researchOnly:true}:{}),serviceAction:action});if(j!==state.journey||before!==adviceFingerprint(stage,j))throw Error('Your choices changed. Request fresh advice for the latest answers.');if(researchOnly){applyResearchRefresh(j,stage,result);persist();return false;}if(result.kind==='answer'){showAnswer(result,j.profile);return false;}acceptAdvice(j,stage,result);persist();return result.kind!=='clarify';}
- catch(e){runtime.aiError=e.name==='TimeoutError'?'The adviser took too long. Your draft is saved; please retry.':e.message;if(researchOnly)runtime.researchFailureStage=stage;else runtime.aiFailure={stage,fingerprint:before,retryable:e.retryable!==false,message:runtime.aiError};return false;}
+ catch(e){runtime.aiError=e.name==='TimeoutError'?'The adviser took too long. Your draft is saved; please retry.':e.message;if(researchOnly)runtime.researchFailureStage=stage;else runtime.aiFailure={stage,fingerprint:before,code:e.code,retryable:e.retryable!==false,message:runtime.aiError};return false;}
  finally{runtime.busy=false;runtime.researchOnly=false;render();}
 }
 async function next(){

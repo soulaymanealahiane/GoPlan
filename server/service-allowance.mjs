@@ -1,6 +1,6 @@
 import {SERVICE_STAGES,STAGE_CHANGES,GLOBAL_CHANGES,GLOBAL_REQUESTS,SERVICE_API_BUDGET} from '../dist/service-policy.js';
 const ready=new WeakMap();
-const fail=(message,status=403,code='SERVICE_LIMIT')=>{throw Object.assign(Error(message),{status,code});};
+const fail=(message,status=403,code='SERVICE_LIMIT')=>{throw Object.assign(Error(message),{status,code,retryable:status===429||status>=500});};
 export const serviceOwner=async uid=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('goplan-service-v1:'+uid))),b=>b.toString(16).padStart(2,'0')).join('');
 async function schema(db){
  if(!db)fail('Your service allowance could not be checked. Please retry.',503,'SERVICE_UNAVAILABLE');
@@ -59,7 +59,7 @@ export async function reserveServiceCall(db,uid,actionId,stage,requestHash){
   db.prepare('UPDATE service_actions SET calls=calls+1 WHERE id=? AND owner=? AND calls<max_calls AND NOT EXISTS(SELECT 1 FROM service_calls WHERE id=?)').bind(action.id,row.id,id),
   db.prepare("INSERT INTO service_calls(id,action_id,owner,state,created_at) SELECT ?,?,?,'running',? WHERE changes()=1").bind(id,action.id,row.id,Date.now())
  ]);
- if(!results[0].meta?.changes)fail('This prompt has reached its API budget. Continue manually or use another remaining change.');
+ if(!results[0].meta?.changes)fail('This request is already used. Choose manually or send a new request if you have changes remaining.',403,'SERVICE_ACTION_USED');
  return {id,action,allowance:allowanceView(row),finish:async(body,status)=>{
   await db.prepare("UPDATE service_calls SET state='finished',response=?,status=? WHERE id=? AND owner=?").bind(JSON.stringify(body),status,id,row.id).run();
  }};
@@ -75,5 +75,5 @@ export async function serviceEndpoint(request,env,identity){
   if(url.pathname==='/api/service/action')return json(await beginServiceAction(env.DB,identity.id,data));
   if(url.pathname==='/api/service/advance')return json({allowance:await advanceService(env.DB,identity.id,data.step)});
   return json({error:'Not found.'},404);
- }catch(e){return json({error:e.status?e.message:'Your service allowance is unavailable. Please retry.',code:e.code||'SERVICE_UNAVAILABLE'},e.status||503);}
+ }catch(e){return json({error:e.status?e.message:'Your service allowance is unavailable. Please retry.',code:e.code||'SERVICE_UNAVAILABLE',...(e.retryable===false?{retryable:false}:{})},e.status||503);}
 }

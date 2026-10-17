@@ -72,7 +72,7 @@ export async function handleApi(request,env,options={}){
    if(blocked)throw Object.assign(Error(blocked.code==='ADVISER_TIMEOUT'?timeoutMessage:'GoPlan could not finish this recommendation. Your answers and choices are saved; you can keep working manually.'),{status:blocked.code==='ADVISER_TIMEOUT'?504:422,code:blocked.code,retryable:false});
    if(!lease)throw Object.assign(Error('The adviser is finishing your previous request. Wait a moment before retrying.'),{status:429,code:'AGENT_BUSY'});
    serviceCall=await reserveServiceCall(env.DB,identity,data.serviceAction,data.stage,key);
-   if(serviceCall.cached){if(serviceCall.status!==200)throw Object.assign(Error(serviceCall.cached.error),{status:serviceCall.status,code:serviceCall.cached.code});return serviceCall.cached;}
+   if(serviceCall.cached){if(serviceCall.status!==200)throw Object.assign(Error(serviceCall.cached.error),{status:serviceCall.status,code:serviceCall.cached.code,retryable:false});return serviceCall.cached;}
    const input={...data};delete input.serviceAction;
    return advise(input,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections},measuredFetch);
   }).then(async value=>{
@@ -83,7 +83,8 @@ export async function handleApi(request,env,options={}){
    if(!data.researchOnly&&!['unavailable','partial'].includes(value.research?.status))recent.set(key,{value,expires:Date.now()+600000});return value;
   }).catch(async error=>{
    if(error.name==='TimeoutError')error=Object.assign(Error(timeoutMessage),{name:'TimeoutError',status:504,code:'ADVISER_TIMEOUT',retryable:false});
-   if(serviceCall?.finish)await serviceCall.finish({error:error.message||'This request could not finish.',code:error.code,...(error.retryable===false?{retryable:false}:{})},error.status||(error.name==='TimeoutError'?504:422));
+   // A finished paid attempt can be replayed, but cannot be sent to the provider again.
+   if(serviceCall?.finish){error.retryable=false;await serviceCall.finish({error:error.message||'This request could not finish.',code:error.code,retryable:false},error.status||(error.name==='TimeoutError'?504:422));}
    if(['REQUEST_BUDGET','REQUEST_TOO_LARGE','RESPONSE_INCOMPLETE','ADVISER_TIMEOUT'].includes(error.code)){
     while(failures.size>=200)failures.delete(failures.keys().next().value);
     failures.set(key,{value:{error:error.name==='TimeoutError'?timeoutMessage:error.message,code:error.code,retryable:false},status:error.status||(error.name==='TimeoutError'?504:422),expires:Date.now()+600000});

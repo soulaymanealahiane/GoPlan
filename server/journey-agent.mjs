@@ -122,12 +122,17 @@ export async function adviseJourney(input,env,fetcher=fetch){
  }else if(stage==='direction'){
   Object.assign(context,directionContext(request));context.task+=' Explain how the degree, primary major/focus, second concentration if appropriate, minor and intended elective themes work together. Include the six-axis assessment and cite answered question IDs and evidence IDs. If clarification is necessary, ask at most two questions.';
   schema=structuredClone(directionSchema);schema.properties.assessment=basis;schema.required.push('assessment');
+  if(request.answers?.trim()){
+   schema.properties.kind=enumeration(['recommend']);schema.properties.questions.maxItems=0;
+   context.task+=' The student has answered the follow-up. Recommend the best supported direction now, with questions empty. Do not ask another follow-up; explain any remaining tradeoff briefly.';
+  }
   if(request.studentContext?.degreeIntent==='keep'){
    schema.properties.academic.properties.program={type:'string',enum:['',request.studentContext.currentDegree]};
    context.task+=' The student explicitly chose to keep their current degree. Recommend only that degree; tailor its focus, minor and electives. A different degree requires the student to choose exploration first.';
   }
   if(request.studentContext)context.task+=' Use studentContext as self-reported academic progress, not verified transfer approval. Completed courses stay completed and current registrations remain in their semester. Do not infer a degree already earned or assume unmatched credits satisfy a new requirement.';
   check=r=>{
+   if(request.answers?.trim()&&r?.kind!=='recommend')throw Error('Recommend a direction after the follow-up answer.');
    if(r?.kind==='recommend'&&request.studentContext?.degreeIntent==='keep'&&r.academic?.program!==request.studentContext.currentDegree)throw Error('Keep the degree selected by the student. Degree exploration must be explicitly enabled before changing it.');
    return {...validateDirection(r,request),assessment:validateBasis(r.assessment,q)};
   };

@@ -17,17 +17,17 @@ const friendly=e=>['REQUEST_BUDGET','RESPONSE_INCOMPLETE','ADVISER_TIMEOUT'].inc
 
 export function createDashboardController(h){
  const r=h.runtime,state=()=>h.read(),current=()=>state().phase==='draft'?state().draftPlan:state().plan;
- let locked=false,retry=null,activeAction='',rescueAction='';
+ let locked=false,retry=null,operation=null,activeAction='',rescueAction='';
  const guided=()=>r.service&&!r.service.saved&&r.service.step<5;
  async function loadService(){try{r.service=await loadAllowance();r.serviceError='';}catch(e){r.serviceError=e.message;}display();}
- async function reserveAction(kind,step=r.service?.step||0){if(!r.service)await loadService();const result=await beginAction(kind,Math.min(4,step));r.service=result.allowance;return result.action;}
+ async function reserveAction(kind,step=r.service?.step||0){if(!r.service)await loadService();const index=operation?operation.cursor++:0;let request=operation?.actions[index];if(!request){request={kind,step,id:crypto.randomUUID()};if(operation)operation.actions[index]=request;}if(request.kind!==kind||request.step!==step)throw Object.assign(Error('Your plan changed. Use a new request to continue.'),{retryable:false});const result=await beginAction(kind,Math.min(4,step),request.id);r.service=result.allowance;return result.action;}
  async function authorizeAdvice(stage){if(!guided())throw Error('Use a remaining global change from Your space.');const step=r.service.step;if(SERVICE_STAGES[step].agent!==stage)throw Error('Continue your current stage first.');return reserveAction('initial',step);}
  async function initialStage(){const def=SERVICE_STAGES[r.service.step];if(!def)return;if(def.target){state().journey.refinements||={};state().journey.refinements.targets=def.target==='exchanges'?'Choose exchange destinations and preserve the company recommendations.':'Choose company recommendations.';}const token=await reserveAction('initial');activeAction=token;await advice(def.agent);if(def.id==='semesters'){state().draftPlan=buildProposal(state().journey,state().plan);state().phase='draft';}r.dashboardPanel=def.panel;if(def.id==='courses')r.courseGroup=state().journey.profile.minor?'minor':'specialization';r.targetGroup=def.target||'internships';h.persist();}
  async function nextStage(){if(r.service.step===0&&!state().journey.programChosen)throw Error('Choose your degree before continuing.');r.service=await advanceStage(r.service.step);h.persist();if(r.service.step<5)await initialStage();else{if(!state().draftPlan)state().draftPlan=buildProposal(state().journey,state().plan);state().phase='draft';r.dashboardPanel='overview';h.persist();}}
  function display(){h.render();}
  function commit(message=''){h.changed(message);}
  function panel(name){if(guided())return;r.dashboardPanel=name;r.dashboardWelcome=false;display();}
- async function advice(stage){r.dashboardWork=stages[stage];const ok=await h.getAdvice(stage,{serviceAction:activeAction||undefined});if(!ok)throw Object.assign(Error(r.aiError||'Tell GoPlan a little more about what you want.'),{handled:true});return true;}
+ async function advice(stage){r.dashboardWork=stages[stage];const ok=await h.getAdvice(stage,{serviceAction:activeAction||undefined});if(!ok&&!(stage==='direction'&&state().journey.advice?.kind==='clarify'&&!r.aiError))throw Object.assign(Error(r.aiError||'Tell GoPlan a little more about what you want.'),{handled:true});return true;}
  async function ensure(part){
   if(guided()){if(!(r.service.initialMask&(1<<r.service.step)))await initialStage();return;}
   const j=state().journey;
@@ -40,9 +40,11 @@ export function createDashboardController(h){
   }
   r.dashboardPanel=part;r.dashboardNotice='';h.persist();display();return true;
  }
- async function run(job,repeat=job){
-  if(locked)return;locked=true;retry=repeat;r.aiError='';r.dashboardNotice='';
-  try{await job();}catch(e){if(!e.handled)r.aiError=friendly(e)||'That change could not be completed.';}finally{locked=false;r.busy=false;activeAction='';display();}
+ async function run(job,replay=null){
+  if(locked)return;
+  if(replay){if(replay.after!==JSON.stringify(state())){r.aiError='Your plan changed. Use a new request to continue.';r.aiFailure={retryable:false};retry=null;display();return;}Object.assign(state(),structuredClone(replay.before));r.service=structuredClone(replay.service);}
+  locked=true;operation=replay||{job,before:structuredClone(state()),service:structuredClone(r.service),actions:[]};operation.cursor=0;r.aiError='';r.aiFailure=null;r.dashboardNotice='';
+  try{await job();}catch(e){if(!e.handled){r.aiError=friendly(e)||'That change could not be completed.';r.aiFailure={retryable:e.retryable!==false,code:e.code};}}finally{retry=r.aiError?operation:null;if(retry)retry.after=JSON.stringify(state());operation=null;locked=false;r.busy=false;activeAction='';h.persist();display();}
  }
  async function start(){
   if(state().journey.studentContext&&!state().plan&&!state().draftPlan){r.dashboardWelcome=false;h.showPlan();display();return;}
@@ -127,7 +129,7 @@ export function createDashboardController(h){
   if(!form.id.startsWith('dashboard-'))return false;
   if(locked||r.busy)return true;
   const data=new FormData(form);
-  if(form.id==='dashboard-clarification-form'){state().journey.answers=String(data.get('answer')||'').slice(0,2500);await run(()=>advice('direction'));return true;}
+  if(form.id==='dashboard-clarification-form'){const answer=String(data.get('answer')||'').trim().slice(0,2500);if(!answer)return true;await run(async()=>{activeAction=await reserveAction('stage',0);state().journey.answers=answer;await advice('direction');});return true;}
   if(['dashboard-command-form','dashboard-modal-command'].includes(form.id)){
    const text=String(data.get('request')||'');if(form.id==='dashboard-modal-command')h.close();await run(()=>command(text));return true;
   }
@@ -190,7 +192,7 @@ export function createDashboardController(h){
   else if(a==='dashboard-unavailable'){if(r.service?.saved&&r.service.globalRemaining>0)rescue();else h.notify('Use manual course editing or Excel to continue.');}
   else if(a==='dashboard-save')await save();
   else if(a==='dashboard-export')await h.exportPlan();
-  else if(a==='dashboard-retry'){if(retry)await run(retry);else await run(async()=>{if(await h.getAdvice('direction'))state().journey.step=2;});}
+  else if(a==='dashboard-retry'){if(r.aiFailure?.retryable===false)return true;if(retry)await run(retry.job,retry);else await run(async()=>{if(await h.getAdvice('direction'))state().journey.step=2;});}
   return true;
  }
  function change(target){if(target.id!=='dashboard-degree')return;const old=current()?.profile||state().journey.profile,p=normalizeProfile({...old,program:target.value,track:'',minor:'',secondTrack:''});target.form.querySelector('#dashboard-focus-options').innerHTML=focusOptions(p);}
