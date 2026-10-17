@@ -32,6 +32,8 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 - **Operational visibility:** private usage aggregates, adviser reliability, registered profiles and feedback review. Student answers and grades are excluded from aggregate analytics.
 - **Excel output:** a generated workbook retains the semester-block layout of the planning template.
 
+The proposed university offer is one payment of US$12 per student for one roadmap and its included AI prompts. The financial basis is a US$10 API allowance budget plus 20% markup, excluding hosting, support and other business costs. The public demo does not collect payments.
+
 ## Stack
 
 Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; OpenAI GPT-6.1 Sol for advice and GPT-6 Luna for focused live web research. Production email delivery requires a configured SMTP service.
