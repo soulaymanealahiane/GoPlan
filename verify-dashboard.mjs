@@ -77,4 +77,26 @@ const previousFormData=globalThis.FormData;globalThis.FormData=class{constructor
 try{const count=calls.length;await controller.submit({id:'dashboard-command-form',values:{request:'Keep my summers free and adjust my pace.'}});assert.equal(routes,1);assert.ok(calls.slice(count).includes('pace'));assert.equal(state.phase,'draft');assert.ok(state.draftPlan);assert.equal(JSON.stringify(state.plan),saved,'An agent change must create a preview instead of overwriting the saved roadmap.');state.plan=completed;state.draftPlan=null;state.phase='saved';state.journey=newJourney(completed);const savedTerms=JSON.stringify(completed.terms);routeStep=4;await controller.submit({id:'dashboard-command-form',values:{request:'Suggest more startup companies, keeping my courses.'}});assert.equal(JSON.stringify(state.draftPlan.terms),savedTerms,'Destination edits must preserve manual semester changes.');assert.equal(state.draftPlan.tracking[course.id].status,'completed');
 routeStep=5;state.plan=completed;state.draftPlan=null;state.phase='saved';state.journey=newJourney(completed);await controller.submit({id:'dashboard-command-form',values:{request:'Keep summers free.'}});assert.equal(state.draftPlan.tracking[course.id].status,'completed','An adviser edit after progress must retain completed study.');
 }finally{globalThis.fetch=originalFetch;globalThis.FormData=previousFormData;}
+// Language Center is a direct manual map control, including after AI changes run out.
+{
+ const lcJourney=suggestChoices(newcomerWorkspace({year:2026}).journey),originalPlan=makePlan(lcJourney),originalRows=JSON.stringify(originalPlan.courses.map(c=>[c.id,c.code,c.credits]));
+ let lcState={...seed,phase:'saved',plan:originalPlan,draftPlan:null,journey:newJourney(originalPlan)},formError='',commits=0;
+ const lcRuntime={dashboardPanel:'semesters',service:{saved:true,step:5,globalRemaining:0,stageChanges:[0,0,0,0,0]}};
+ const lcController=createDashboardController({...hooks,runtime:lcRuntime,read:()=>lcState,changed(){commits++;},getAdvice:async()=>{throw Error('Language Center editing must not call AI.');}});
+ const savedFormData=globalThis.FormData;globalThis.FormData=class{constructor(form){this.form=form;}get(key){return this.form.values[key];}};
+ const setLC=value=>lcController.submit({id:'dashboard-language-center-form',values:{lc:String(value)},querySelector:()=>({set textContent(text){formError=text;}})});
+ try{
+  for(const count of [1,2,0]){
+   formError='';await setLC(count);assert.equal(formError,'');assert.equal(lcState.draftPlan.profile.lc,count);assert.equal(lcState.draftPlan.terms.filter(t=>t.lc).length,count);assert.equal(JSON.stringify(lcState.draftPlan.courses.map(c=>[c.id,c.code,c.credits])),originalRows,'Language Center cannot add degree courses or credits.');
+   const terms=lcState.draftPlan.terms,firstDegree=terms.findIndex(t=>t.courses.length);assert.ok(terms.filter(t=>t.lc).every(t=>terms.indexOf(t)<firstDegree&&t.courses.length===0),'Degree courses must follow the Language Center buffer.');
+   assert.equal(lcState.plan.profile.lc,0,'Editing creates a preview without changing the saved plan.');validateSavedWorkspace(JSON.parse(JSON.stringify(lcState)));assert.equal(lcRuntime.service.globalRemaining,0);
+   const map=dashboardView(lcState,lcRuntime);assert.ok(map.includes('dashboard-language-center-form'));if(count){assert.ok(map.includes('· Language Center'));assert.ok(map.includes('Time reserved for Language Center.'));assert.ok(!map.includes('Space for your next chapter.'));}
+  }
+  assert.equal(commits,3);const before=JSON.stringify(lcState);await setLC(3);assert.match(formError,/zero, one or two/);assert.equal(JSON.stringify(lcState),before);
+  // Current registrations cannot be displaced into a language-only semester.
+  const c=originalPlan.courses.find(c=>originalPlan.terms[0].courses.includes(c.id)&&c.code),taking=manualCoursePlan(originalPlan,{id:c.id,status:'in-progress',termId:originalPlan.terms[0].id}).candidate;
+  lcState={...lcState,phase:'saved',plan:taking,draftPlan:null,journey:newJourney(taking)};const protectedState=JSON.stringify(lcState);formError='';await setLC(1);assert.ok(formError);assert.equal(JSON.stringify(lcState),protectedState);
+ }finally{globalThis.FormData=savedFormData;}
+ console.log('Passed visible Language Center map editing, zero/one/two reserved semesters, unchanged degree credits, saved previews, cloud roundtrip, exhausted-AI manual access and protected current registrations. No live calls.');
+}
 console.log('Passed newcomer entry, one-click roadmap construction, dashboard navigation without API calls, quiet research handling, five-course business minor, mechanical progress, degree-change credit retention, saved-plan previews and actionable adviser routing. No live provider calls.');

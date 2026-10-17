@@ -142,6 +142,15 @@ export function createDashboardController(h){
     h.close();r.dashboardPanel='direction';commit(p?'Degree updated in your preview. Save when ready.':'Your degree choices are updated.');
    }catch(e){form.querySelector('#dashboard-degree-error').textContent=e.message;}return true;
   }
+  if(form.id==='dashboard-language-center-form'){
+   try{
+    const p=current(),lc=Number(data.get('lc'));if(!p||![0,1,2].includes(lc))throw Error('Choose zero, one or two Language Center semesters.');
+    if(lc===p.profile.lc){h.notify('Your Language Center setting is already applied.');return true;}
+    const candidate=manualDegreePlan(p,{...p.profile,lc});
+    state().draftPlan=candidate;state().phase='draft';state().journey=newJourney(candidate);r.dashboardPanel='semesters';r.selectedTerm=candidate.terms.find(t=>t.lc)?.id||candidate.terms.find(t=>!['prior','pending'].includes(t.id))?.id||'';
+    commit(lc?'Language Center semesters added. Review your updated map.':'Language Center semesters removed. Your map is updated.');
+   }catch(e){form.querySelector('#dashboard-language-center-error').textContent=e.message;}return true;
+  }
   if(form.id==='dashboard-pace-form'){
    try{const p=current(),j=state().journey,old=p?.profile||j.profile,profile=normalizeProfile({...old,regularCourses:Number(data.get('regular')),summers:data.get('summer')!=='0',summerCourses:data.get('summer')==='0'?old.summerCourses:Number(data.get('summer')),startYear:Number(data.get('year')),lc:Number(data.get('lc'))});
     if(p){state().draftPlan=manualDegreePlan(p,profile);state().phase='draft';state().journey=newJourney(state().draftPlan);}else j.profile=profile;
