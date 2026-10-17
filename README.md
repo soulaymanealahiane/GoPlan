@@ -24,7 +24,7 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 - **Constrained AI recommendations:** server-side OpenAI Responses API calls produce structured proposals that are validated against reviewed program data before they can change a plan.
 - **Deterministic academic scheduling:** prerequisite and corequisite checks, credit limits, independent regular/summer loads, minor requirements and preserved completed courses.
 - **Progress-aware replanning:** unavailable courses and changed goals produce a preview; delayed graduation is surfaced before acceptance.
-- **Evidence-aware research:** bounded web research for opportunities, with source attribution and explicit uncertainty about current availability.
+- **Evidence-aware research:** profile-based ranking across 39 reviewed Moroccan internship targets and 33 institutions from the supplied AUI exchange list, plus bounded web discovery. Alternative requests avoid previously suggested targets; current openings and exchange access still require confirmation.
 - **Bounded one-time service:** five guided stages, two structural AI prompts per stage and five global prompts after saving. Atomic server-side counters and persistent response receipts enforce the allowance across devices and avoid duplicate paid work.
 - **Private cloud workspaces:** per-account ownership checks, optimistic revision control, recovery of interrupted saves and deliberate resolution of conflicting edits.
 - **Independent email authentication:** Supabase verifies email during account creation and recovery, and authenticates email/password sign-ins; GoPlan issues revocable, hashed sessions in HttpOnly cookies. Admin access uses a server-configured email allowlist.

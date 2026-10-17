@@ -1,0 +1,1123 @@
+{
+  "reviewedAt": "2026-10-17",
+  "scope": "Additional primary-source internship research targets and academic-fit review of institutions already present in the supplied AUI Spring 2027 list. Fit is inference, not a vacancy or registration guarantee.",
+  "internships": [
+    {
+      "id": "alten-maroc",
+      "name": "ALTEN Maroc",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "engineering",
+        "software",
+        "automotive"
+      ],
+      "tags": [
+        "engineering",
+        "software",
+        "automotive",
+        "aerospace"
+      ],
+      "fields": [
+        "engineering",
+        "software",
+        "automotive",
+        "aerospace"
+      ],
+      "programs": [
+        "BSCSC",
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "MSSE",
+        "MSSEM"
+      ],
+      "reason": "Engineering and IT services in Morocco, including product and process engineering.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.alten.ma/carrieres/",
+      "sources": [
+        {
+          "title": "ALTEN Maroc official activity evidence",
+          "url": "https://www.alten.ma/carrieres/",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "dabadoc",
+      "name": "DabaDoc",
+      "organizationType": "unknown",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "health",
+        "software",
+        "digital-health"
+      ],
+      "tags": [
+        "health",
+        "software",
+        "digital-health",
+        "product"
+      ],
+      "fields": [
+        "health",
+        "software",
+        "digital-health",
+        "product"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "MSSE",
+        "MSBDA"
+      ],
+      "reason": "Moroccan digital-health platform connecting patients and healthcare professionals.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://info.dabadoc.com/a-propos",
+      "sources": [
+        {
+          "title": "DabaDoc official activity evidence",
+          "url": "https://info.dabadoc.com/a-propos",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "yolafresh",
+      "name": "YoLa Fresh",
+      "organizationType": "unknown",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "agriculture",
+        "logistics",
+        "supply-chain"
+      ],
+      "tags": [
+        "agriculture",
+        "logistics",
+        "supply-chain",
+        "data",
+        "food",
+        "sustainability"
+      ],
+      "fields": [
+        "agriculture",
+        "logistics",
+        "supply-chain",
+        "data",
+        "food",
+        "sustainability"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BSEMS",
+        "BSESS",
+        "BSGE",
+        "MSBDA",
+        "MBA"
+      ],
+      "reason": "Casablanca-based platform connecting farmers and produce retailers, using supply-chain data to reduce waste.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://yolafresh.com/",
+      "sources": [
+        {
+          "title": "YoLa Fresh official activity evidence",
+          "url": "https://yolafresh.com/",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "deepecho",
+      "name": "DeepEcho",
+      "organizationType": "unknown",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "health",
+        "ai",
+        "machine-learning"
+      ],
+      "tags": [
+        "health",
+        "ai",
+        "machine-learning",
+        "computer-vision",
+        "software"
+      ],
+      "fields": [
+        "health",
+        "ai",
+        "machine-learning",
+        "computer-vision",
+        "software"
+      ],
+      "programs": [
+        "BSCSC",
+        "BSGE",
+        "MSSE",
+        "MSBDA"
+      ],
+      "reason": "Rabat-based company applying AI and deep learning to ultrasound video diagnosis.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://deepecho.io/",
+      "sources": [
+        {
+          "title": "DeepEcho official activity evidence",
+          "url": "https://deepecho.io/",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        },
+        {
+          "title": "DeepEcho Morocco address",
+          "url": "https://deepecho.io/get-in-touch/",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "green-watech",
+      "name": "Green Watech",
+      "organizationType": "unknown",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "water",
+        "environment",
+        "wastewater"
+      ],
+      "tags": [
+        "water",
+        "environment",
+        "wastewater",
+        "agriculture",
+        "sustainability",
+        "engineering"
+      ],
+      "fields": [
+        "water",
+        "environment",
+        "wastewater",
+        "agriculture",
+        "sustainability",
+        "engineering"
+      ],
+      "programs": [
+        "BSESS",
+        "BSRESE",
+        "BSGE",
+        "BSEMS",
+        "BBA",
+        "MSSEM"
+      ],
+      "reason": "Moroccan water-treatment business focused on wastewater reuse and access to sanitation.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.greenwatech.com/",
+      "sources": [
+        {
+          "title": "Green Watech official activity evidence",
+          "url": "https://www.greenwatech.com/",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "policy-center-new-south",
+      "name": "Policy Center for the New South",
+      "organizationType": "unknown",
+      "kind": "organization",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "politics",
+        "public-policy",
+        "economics"
+      ],
+      "tags": [
+        "politics",
+        "public-policy",
+        "economics",
+        "international-studies",
+        "social-sciences",
+        "research",
+        "communication"
+      ],
+      "fields": [
+        "politics",
+        "public-policy",
+        "economics",
+        "international-studies",
+        "social-sciences",
+        "research",
+        "communication"
+      ],
+      "programs": [
+        "BAIS",
+        "BBA",
+        "BACS",
+        "BSESS",
+        "MAISD",
+        "MACDM",
+        "MBA"
+      ],
+      "reason": "Rabat think tank conducting applied research in geopolitics, economics and social sciences.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.policycenter.ma/page/careers",
+      "sources": [
+        {
+          "title": "Policy Center for the New South official activity evidence",
+          "url": "https://www.policycenter.ma/page/careers",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "cih-bank",
+      "name": "CIH Bank",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "finance",
+        "banking",
+        "fintech"
+      ],
+      "tags": [
+        "finance",
+        "banking",
+        "fintech",
+        "accounting",
+        "risk"
+      ],
+      "fields": [
+        "finance",
+        "banking",
+        "fintech",
+        "accounting",
+        "risk"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "MSBDA",
+        "MBA"
+      ],
+      "reason": "Moroccan banking group with retail banking and financial-services activities.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.cihbank.ma/sites/default/files/2025-06/Document_de_reference_CIH_Bank_2024_T1_2025.pdf",
+      "sources": [
+        {
+          "title": "CIH Bank official activity evidence",
+          "url": "https://www.cihbank.ma/sites/default/files/2025-06/Document_de_reference_CIH_Bank_2024_T1_2025.pdf",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "veolia-maroc",
+      "name": "Veolia Maroc",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "water",
+        "waste",
+        "energy"
+      ],
+      "tags": [
+        "water",
+        "waste",
+        "energy",
+        "environment",
+        "sustainability",
+        "engineering"
+      ],
+      "fields": [
+        "water",
+        "waste",
+        "energy",
+        "environment",
+        "sustainability",
+        "engineering"
+      ],
+      "programs": [
+        "BSESS",
+        "BSRESE",
+        "BSGE",
+        "BSEMS",
+        "BBA",
+        "MSSEM"
+      ],
+      "reason": "Moroccan operations providing water, waste and energy services for resource management.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.veolia.ma/veolia-au-maroc/nos-activites-au-maroc",
+      "sources": [
+        {
+          "title": "Veolia Maroc official activity evidence",
+          "url": "https://www.veolia.ma/veolia-au-maroc/nos-activites-au-maroc",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "labelvie",
+      "name": "Groupe LabelVie",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "retail",
+        "marketing",
+        "supply-chain"
+      ],
+      "tags": [
+        "retail",
+        "marketing",
+        "supply-chain",
+        "logistics",
+        "business",
+        "operations",
+        "data"
+      ],
+      "fields": [
+        "retail",
+        "marketing",
+        "supply-chain",
+        "logistics",
+        "business",
+        "operations",
+        "data"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BACS",
+        "BSEMS",
+        "MSBDA",
+        "MBA"
+      ],
+      "reason": "Moroccan multi-format retail group, a target for retail operations, supply-chain and marketing interests.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://labelvie.ma/le-groupe/",
+      "sources": [
+        {
+          "title": "Groupe LabelVie official activity evidence",
+          "url": "https://labelvie.ma/le-groupe/",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "oncf",
+      "name": "ONCF",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "rail",
+        "transport",
+        "logistics"
+      ],
+      "tags": [
+        "rail",
+        "transport",
+        "logistics",
+        "engineering",
+        "infrastructure",
+        "operations",
+        "sustainability"
+      ],
+      "fields": [
+        "rail",
+        "transport",
+        "logistics",
+        "engineering",
+        "infrastructure",
+        "operations",
+        "sustainability"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MBA"
+      ],
+      "reason": "Moroccan railway group working on passenger and freight transport infrastructure and operations.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.oncf.ma/en/Company/Oncf-profile/Presenting-the-group",
+      "sources": [
+        {
+          "title": "ONCF official activity evidence",
+          "url": "https://www.oncf.ma/en/Company/Oncf-profile/Presenting-the-group",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "ciments-du-maroc",
+      "name": "Ciments du Maroc",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "materials",
+        "manufacturing",
+        "construction"
+      ],
+      "tags": [
+        "materials",
+        "manufacturing",
+        "construction",
+        "industrial-engineering",
+        "sustainability"
+      ],
+      "fields": [
+        "materials",
+        "manufacturing",
+        "construction",
+        "industrial-engineering",
+        "sustainability"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSESS",
+        "BSRESE",
+        "BBA",
+        "MSSEM"
+      ],
+      "reason": "Moroccan producer of cement, ready-mix concrete and aggregates for construction.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.cimentsdumaroc.com/fr/ciments-du-maroc",
+      "sources": [
+        {
+          "title": "Ciments du Maroc official activity evidence",
+          "url": "https://www.cimentsdumaroc.com/fr/ciments-du-maroc",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "azura",
+      "name": "Azura Group",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "agriculture",
+        "food",
+        "sustainability"
+      ],
+      "tags": [
+        "agriculture",
+        "food",
+        "sustainability",
+        "supply-chain",
+        "operations",
+        "quality"
+      ],
+      "fields": [
+        "agriculture",
+        "food",
+        "sustainability",
+        "supply-chain",
+        "operations",
+        "quality"
+      ],
+      "programs": [
+        "BSESS",
+        "BSEMS",
+        "BSGE",
+        "BBA",
+        "BSRESE",
+        "MSSEM",
+        "MBA"
+      ],
+      "reason": "Agricultural production group with nursery operations in Agadir, Morocco.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.azura-group.com/le-groupe-azura/4-poles-d-activite",
+      "sources": [
+        {
+          "title": "Azura Group official activity evidence",
+          "url": "https://www.azura-group.com/le-groupe-azura/4-poles-d-activite",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "snrt",
+      "name": "SNRT",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "media",
+        "journalism",
+        "television"
+      ],
+      "tags": [
+        "media",
+        "journalism",
+        "television",
+        "film",
+        "communication",
+        "creative",
+        "broadcasting"
+      ],
+      "fields": [
+        "media",
+        "journalism",
+        "television",
+        "film",
+        "communication",
+        "creative",
+        "broadcasting"
+      ],
+      "programs": [
+        "BACS",
+        "BAIS",
+        "BBA",
+        "BSCSC",
+        "MACDM",
+        "MSDMA"
+      ],
+      "reason": "Moroccan public broadcaster producing television, radio and digital news content.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.snrt.ma/fr",
+      "sources": [
+        {
+          "title": "SNRT official activity evidence",
+          "url": "https://www.snrt.ma/fr",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "rekrute",
+      "name": "ReKrute",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "industries": [
+        "human-resources",
+        "recruitment",
+        "communication"
+      ],
+      "tags": [
+        "human-resources",
+        "recruitment",
+        "communication",
+        "marketing",
+        "software",
+        "business"
+      ],
+      "fields": [
+        "human-resources",
+        "recruitment",
+        "communication",
+        "marketing",
+        "software",
+        "business"
+      ],
+      "programs": [
+        "BBA",
+        "BACS",
+        "BSCSC",
+        "BAIS",
+        "MACDM",
+        "MSDMA",
+        "MBA"
+      ],
+      "reason": "Recruitment and employment platform operating in Morocco, with employer communication and digital services.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-17",
+      "sourceUrl": "https://www.rekrute.com/site-carriere/emploi-rekrute/",
+      "sources": [
+        {
+          "title": "ReKrute official activity evidence",
+          "url": "https://www.rekrute.com/site-carriere/emploi-rekrute/",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Check the organization official careers or contact page.",
+      "selectionProbabilityKnown": false
+    }
+  ],
+  "exchangePatches": [
+    {
+      "id": "american-university-in-cairo-bilateral",
+      "programs": [
+        "BBA",
+        "BAIS"
+      ],
+      "tags": [
+        "business",
+        "entrepreneurship",
+        "politics",
+        "international-studies",
+        "economics"
+      ],
+      "disciplines": [
+        "business",
+        "entrepreneurship",
+        "politics",
+        "international-studies",
+        "economics"
+      ],
+      "reason": "Political science and business subjects offer directions to explore; verify exchange course access.",
+      "sourceUrl": "https://www.aucegypt.edu/academics/undergraduate-programs/political-science",
+      "sourcesToAdd": [
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://www.aucegypt.edu/academics/undergraduate-programs/political-science",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        },
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://business.aucegypt.edu/academics/undergraduate-programs",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "amsterdam-university-of-applied-sciences-bilateral",
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSGE",
+        "BSEMS"
+      ],
+      "tags": [
+        "computing",
+        "business",
+        "communication",
+        "media",
+        "design",
+        "engineering"
+      ],
+      "disciplines": [
+        "computing",
+        "business",
+        "communication",
+        "media",
+        "design",
+        "engineering"
+      ],
+      "reason": "Exchange programme catalogue covers creative business, design, computing and technology. Faculty-specific routes and capacity apply.",
+      "sourceUrl": "https://www.amsterdamuas.com/study/education/exchange",
+      "sourcesToAdd": [
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://www.amsterdamuas.com/study/education/exchange",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "constructor-university-bilateral",
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BSGE",
+        "BSEMS",
+        "BAIS",
+        "BSESS"
+      ],
+      "tags": [
+        "computing",
+        "ai",
+        "cybersecurity",
+        "data",
+        "robotics",
+        "engineering",
+        "business",
+        "international-studies",
+        "environment"
+      ],
+      "disciplines": [
+        "computing",
+        "ai",
+        "cybersecurity",
+        "data",
+        "robotics",
+        "engineering",
+        "business",
+        "international-studies",
+        "environment"
+      ],
+      "reason": "Undergraduate subjects include computing, robotics, business, international relations and sustainability. Check exchange-specific access.",
+      "sourceUrl": "https://constructor.university/programs/undergraduate-education",
+      "sourcesToAdd": [
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://constructor.university/programs/undergraduate-education",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "copenhagen-business-school-bilateral",
+      "programs": [
+        "BBA",
+        "BSEMS"
+      ],
+      "tags": [
+        "business",
+        "finance",
+        "marketing",
+        "entrepreneurship",
+        "sustainability",
+        "management"
+      ],
+      "disciplines": [
+        "business",
+        "finance",
+        "marketing",
+        "entrepreneurship",
+        "sustainability",
+        "management"
+      ],
+      "reason": "Business exchange course lists include green transition and business innovation. Home-university nomination and course prerequisites apply.",
+      "sourceUrl": "https://www.cbs.dk/study-programmes/international-students/exchange-students/undergraduate-courses?page=1",
+      "sourcesToAdd": [
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://www.cbs.dk/study-programmes/international-students/exchange-students/undergraduate-courses?page=1",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "sabanci-university-bilateral",
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BSGE",
+        "BSEMS",
+        "BAIS"
+      ],
+      "tags": [
+        "computing",
+        "engineering",
+        "business",
+        "industrial-engineering",
+        "politics",
+        "international-studies"
+      ],
+      "disciplines": [
+        "computing",
+        "engineering",
+        "business",
+        "industrial-engineering",
+        "politics",
+        "international-studies"
+      ],
+      "reason": "Computing, engineering, management and political science curricula offer possible academic matches. New-partner course approval remains required.",
+      "sourceUrl": "https://ects.sabanciuniv.edu/en/degree-programs/undergraduate-programs",
+      "sourcesToAdd": [
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://ects.sabanciuniv.edu/en/degree-programs/undergraduate-programs",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        },
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://iro.sabanciuniv.edu/en/incoming-students",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "sciences-po-toulouse-bilateral",
+      "programs": [
+        "BAIS",
+        "BBA",
+        "BACS",
+        "BSESS"
+      ],
+      "tags": [
+        "politics",
+        "economics",
+        "public-policy",
+        "international-studies",
+        "social-sciences",
+        "communication"
+      ],
+      "disciplines": [
+        "politics",
+        "economics",
+        "public-policy",
+        "international-studies",
+        "social-sciences",
+        "communication"
+      ],
+      "reason": "Exchange courses cover political science and related subjects. At least one year of relevant higher education is required.",
+      "sourceUrl": "https://www.sciencespo-toulouse.fr/en/international/exchange-student-at-sciences-po-toulouse",
+      "sourcesToAdd": [
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://www.sciencespo-toulouse.fr/en/international/exchange-student-at-sciences-po-toulouse",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "university-of-turku-pel",
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BAIS",
+        "BSESS",
+        "BSGE"
+      ],
+      "tags": [
+        "computing",
+        "engineering",
+        "business",
+        "environment",
+        "social-sciences"
+      ],
+      "disciplines": [
+        "computing",
+        "engineering",
+        "business",
+        "environment",
+        "social-sciences"
+      ],
+      "reason": "English exchange courses span technology, social sciences and business. Business courses are restricted to business majors; course places are not guaranteed.",
+      "sourceUrl": "https://www.utu.fi/en/study-at-utu/courses-in-english-for-exchange-students",
+      "sourcesToAdd": [
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://www.utu.fi/en/study-at-utu/courses-in-english-for-exchange-students",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "hanyang-university-pel",
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BSGE",
+        "BSEMS"
+      ],
+      "tags": [
+        "computing",
+        "engineering",
+        "business",
+        "economics",
+        "technology"
+      ],
+      "disciplines": [
+        "computing",
+        "engineering",
+        "business",
+        "economics",
+        "technology"
+      ],
+      "reason": "Use the official exchange catalogue and English-only filter to identify compatible courses; confirm campus, prerequisites and capacity.",
+      "sourceUrl": "https://exchangein.hanyang.ac.kr/course-catalogue",
+      "sourcesToAdd": [
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://exchangein.hanyang.ac.kr/course-catalogue",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ]
+    },
+    {
+      "id": "adam-mickiewicz-university-bilateral",
+      "programs": [
+        "BAIS",
+        "BACS"
+      ],
+      "tags": [
+        "politics",
+        "international-studies",
+        "journalism",
+        "media",
+        "communication"
+      ],
+      "disciplines": [
+        "politics",
+        "international-studies",
+        "journalism",
+        "media",
+        "communication"
+      ],
+      "reason": "Political science and journalism are potential matches. New-partner course approval and exchange-specific teaching language must be checked.",
+      "sourceUrl": "https://wnpid.amu.edu.pl/en/study-with-us/programms-in-english",
+      "sourcesToAdd": [
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://wnpid.amu.edu.pl/en/study-with-us/programms-in-english",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        },
+        {
+          "title": "Official academic or exchange information",
+          "url": "https://usosirk.amu.edu.pl/en-gb/offer/DWZ-2026/programme/EXCHANGE_STUDENT/",
+          "checkedAt": "2026-10-17",
+          "primary": true
+        }
+      ]
+    }
+  ]
+}
