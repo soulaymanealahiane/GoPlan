@@ -18,6 +18,10 @@ flowchart LR
 
 The model proposes decisions; it does not write directly to a student's saved roadmap. Academic choices are bounded by the reviewed dataset and checked after generation. The scheduler computes semester placement using prerequisites, credit caps and recorded progress. A changed roadmap is previewed before acceptance. At most one repair within the shared time and spending budget corrects rejected proposals; network failure does not silently produce fabricated advice.
 
+## Academic sources
+
+The applicable curriculum’s program sheet takes priority for explicit requirements, course choices, prerequisites and titles. The catalog fills facts the applicable sheet does not specify. Historical curricula do not overwrite newcomer requirements; explicit delegation of a minor to its providing school is preserved. Structured rules drive both scheduling and the course-details UI.
+
 ## Research boundary
 
 GPT-6 Luna runs focused native Responses web search without extra reasoning, required tool use, a low search context and at most two tool calls. Academic direction uses reviewed evidence unless live market refresh is explicitly enabled. Search and extraction share a 24-second budget; the complete request is limited to 55 seconds. Exact token counting and conservative reservations guard $0.20 of planned spending, including repairs and the Fast-mode premium used for target ranking. There are no automatic paid transport retries. D1 leases prevent simultaneous requests for the same authenticated student across Worker instances. Only completed web-search items establish consulted URLs. The server reads those public pages without provider credentials, validates redirects and exact short support fragments, then extracts facts under a strict JSON schema. Search prose alone is not a source receipt. Failed pages and unsupported claims are excluded. Exchange research enriches reviewed partner IDs without creating partnerships or confirming nomination. Raw search text and page bodies never enter the student response.
@@ -27,6 +31,8 @@ GPT-6 Luna runs focused native Responses web search without extra reasoning, req
 Newcomers enter through three quick-choice question cards, then a dashboard of direction, courses, opportunities and semesters. Ready panels are local navigation and never trigger paid AI requests. One action can build the remaining plan; an edit router executes the relevant adviser stages across panels and produces a reviewable draft.
 
 Returning students open their saved dashboard directly. They can edit degree, focus and minor without repeating onboarding, record course completion or current study, move a course, or swap a source-listed elective manually. Degree changes preserve their study record, check exact applicability and flag unmatched credit or a later finish. New account onboarding does not accept prior university study.
+
+The dashboard exposes one active saved plan, direct edits and a clean start-over action. Course groups distinguish general education, common and major core, specialization, minor and elective requirements; each course links to its actual saved semester. Course details show resolved requirements only, omitting empty descriptions.
 
 A workspace contains the planning decisions, saved and draft plans, progress and a small revision history. The server derives the owner from its authenticated session. Updates include an expected revision; a stale revision returns a conflict rather than overwriting newer work. Browser recovery copies are keyed by the verified account and workspace. They are not the authoritative cross-device store.
 

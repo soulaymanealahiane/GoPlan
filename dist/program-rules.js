@@ -23,7 +23,7 @@ export function businessRule(program,code){
   GBU2301:{all:[],any:['MTH1305','MTH1304','MTH1311','MTH1303']},
   GBU3302:{minCredits:60},GBU3203:{minCredits:60},
   GBU3311:{all:['GBU2301'],any:[]},GBU4101:{minCredits:90,finalTerm:true},
-  INT4301:{all:['INT4001','GBU3203','ACC3201'],any:[],minCredits:90},
+  INT4301:{all:['GBU3203','ACC3201'],any:[],minCredits:90},
   MGT3302:{all:['MGT3301','MKT3301','FIN3301'],any:[]},
   MGT4303:{all:['MGT3301'],any:['GBU3311','MTH3301']},
   MGT4301:{all:['INT4301','MGT3301'],any:[],finalTerm:true},

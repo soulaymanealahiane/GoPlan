@@ -4,7 +4,8 @@ import {dashboardView,dashboardReady} from './dist/dashboard-view.js';
 import {createDashboardController} from './dist/dashboard-controller.js';
 import {minorSummary} from './dist/minor-summary.js';
 import {newJourney,suggestChoices,makePlan,validateSavedWorkspace} from './dist/guidance.js';
-import {normalizeProfile,coursesFor} from './dist/planner.js';
+import {normalizeProfile,coursesFor,DATA} from './dist/planner.js';
+import {courseGroups,courseGroupKey,courseSemester} from './dist/course-groups.js';
 import {acceptAdvice} from './dist/journey-state.js';
 import {availableTargets} from './server/advisor.mjs';
 const seed=newcomerWorkspace({year:2026,name:'Synthetic'});assert.equal(seed.journey.studentContext.route,'admitted');assert.deepEqual(seed.journey.studentContext.records,[]);assert.equal(seed.journey.level,'undergraduate');assert.throws(()=>newcomerWorkspace({degree:'MBA'}));
@@ -24,7 +25,29 @@ await controller.click({dataset:{action:'dashboard-build'}});assert.deepEqual(ca
 let html=dashboardView(state,runtime,{firstName:'Synthetic'});
 for(const unwanted of ['STEP 1 OF 6','journey-steps','data-study=','Update course offerings','Verified findings are retained','Research again'])assert.ok(!html.includes(unwanted),unwanted+' leaked into the main dashboard.');
 assert.ok(html.includes('dashboard-command-form'));assert.ok(html.includes('Your space'));assert.equal(minorSummary(state.draftPlan.profile).requiredCourses,5);assert.equal(minorSummary(state.draftPlan.profile).listedCredits,15);
-const earlierCalls=calls.length;await controller.click({dataset:{action:'dashboard-panel',panel:'courses'}});await controller.click({dataset:{action:'dashboard-panel',panel:'opportunities'}});assert.equal(calls.length,earlierCalls,'Opening a ready panel must not trigger paid advice.');
+
+// Partition real requirement slots, including both kinds of elective and second focus.
+for(const program of DATA.programs){for(const track of program.tracks.length?program.tracks:[{id:''}]){
+ const profile=normalizeProfile({program:program.id,track:track.id,minor:program.id==='BSCSC'?'business-administration':'',secondTrack:['BSCSC','BBA'].includes(program.id)?program.tracks.find(t=>t.id!==track.id)?.id||'':''});
+ const courses=coursesFor(profile),groups=courseGroups(courses,profile),rows=groups.flatMap(g=>g.courses);
+ assert.equal(rows.length,courses.length);assert.equal(new Set(rows.map(c=>c.id)).size,courses.length,'A course must appear in exactly one group.');
+ assert.ok(groups.every(g=>g.courses.length));
+ for(const c of courses.filter(c=>c.focusRole==='secondary'))assert.equal(courseGroupKey(c,profile),'second');
+ for(const c of courses.filter(c=>c.minorId))assert.equal(courseGroupKey(c,profile),'minor');
+ for(const c of courses.filter(c=>c.groupId==='free'))assert.equal(courseGroupKey(c,profile),'free');
+}}
+const profile=state.draftPlan.profile,rows=state.draftPlan.courses;
+assert.equal(courseGroupKey(rows.find(c=>c.id==='bscsc-arabic'),profile),'general');
+assert.equal(courseGroupKey(rows.find(c=>c.id==='bscsc-computing'),profile),'open');
+assert.equal(courseGroupKey(rows.find(c=>c.id==='csc4307'),profile),'specialization');
+assert.equal(courseGroupKey(rows.find(c=>c.id==='csc1401'),profile),'major');
+assert.equal(courseGroupKey(rows.find(c=>c.id==='bscsc-free-1'),profile),'free');
+for(const group of courseGroups(rows,profile)){html=dashboardView(state,{dashboardPanel:'courses',courseGroup:group.id});assert.equal((html.match(/data-course-id=/g)||[]).length,group.courses.length);assert.ok(!html.includes('Your choice'));assert.ok(!html.includes('Your choices'));}
+const first=rows.find(c=>c.id==='csc1401'),placement=courseSemester(state.draftPlan,first);assert.ok(placement.termId);assert.ok(dashboardView(state,{dashboardPanel:'courses',courseGroup:'major'}).includes(placement.text));
+const notMapped=dashboardView({...state,phase:'journey',draftPlan:null,plan:null},{dashboardPanel:'courses'});assert.ok(notMapped.includes('Semester timing appears when you build your roadmap.'));assert.ok(!notMapped.includes('Fall 2026'));
+const delayed=structuredClone(state.draftPlan),oldTerm=delayed.terms.find(t=>t.courses.includes(first.id)),newTerm=delayed.terms.find(t=>t.id!==oldTerm.id&&!['pending','prior'].includes(t.id));oldTerm.courses=oldTerm.courses.filter(id=>id!==first.id);newTerm.courses.push(first.id);assert.equal(courseSemester(delayed,first).termId,newTerm.id,'Course labels must use actual saved placement, including manual moves.');
+
+const earlierCalls=calls.length;await controller.click({dataset:{action:'dashboard-course-semester',term:placement.termId}});assert.equal(runtime.dashboardPanel,'semesters');assert.equal(runtime.selectedTerm,placement.termId);await controller.click({dataset:{action:'dashboard-panel',panel:'courses'}});await controller.click({dataset:{action:'dashboard-panel',panel:'opportunities'}});assert.equal(calls.length,earlierCalls,'Opening a ready panel must not trigger paid advice.');
 runtime.dashboardPanel='opportunities';state.journey.details.targetResearch={status:'partial',notice:'Verified findings are retained. Research again.'};html=dashboardView(state,runtime);assert.ok(!html.includes('Verified findings'));assert.ok(!html.includes('Research again'));assert.ok(html.includes('Openings and eligibility still need checking.'));
 runtime.dashboardPanel='semesters';html=dashboardView(state,runtime);assert.equal((html.match(/class="semester-focus"/g)||[]).length,1,'Only the selected semester is expanded.');assert.ok(!html.includes('Progress note'));
 await controller.click({dataset:{action:'dashboard-save'}});assert.equal(state.phase,'saved');assert.equal(state.draftPlan,null);

@@ -1,0 +1,7 @@
+export function dashboardCopy(panel='overview',group='',target='internships'){
+ if(panel==='direction')return {title:'Edit your degree choices',label:'What would you like to study instead?',placeholder:'Tell GoPlan which degree, specialization or minor you want to change.',action:'Edit degree choices'};
+ if(panel==='courses')return {title:group?'Edit '+group.toLowerCase():'Edit your courses',label:'Which course would you like to change?',placeholder:'Name a course to replace, or describe the subject you would prefer.',action:'Edit courses'};
+ if(panel==='opportunities')return target==='exchanges'?{title:'Edit exchange destinations',label:'Where would you like to study abroad?',placeholder:'Tell GoPlan your preferred countries, universities or exchange experience.',action:'Edit destinations'}:{title:'Edit company recommendations',label:'What kind of company would you like to explore?',placeholder:'Describe your preferred industry, location or company type.',action:'Edit companies'};
+ if(panel==='semesters')return {title:'Edit your semester plan',label:'What needs to change in your semesters?',placeholder:'Name a semester, course or workload you would like to adjust.',action:'Edit semesters'};
+ return {title:'Edit your plan',label:'What would you like to change in your plan?',placeholder:'Describe the change you want GoPlan to make.',action:'Edit plan'};
+}

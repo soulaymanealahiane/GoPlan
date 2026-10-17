@@ -1,4 +1,7 @@
 import {dashboardReady,short} from './dashboard-view.js';
+import {courseGroups} from './course-groups.js';
+import {dashboardCopy} from './dashboard-copy.js';
+import {courseDetailFacts} from './course-details.js';
 import {newcomerWorkspace,manualCoursePlan,manualDegreePlan,manualCourseOptions,studyBoundary} from './dashboard-flow.js';
 import {newJourney,eligibleMinors,allowedChoices,planIssues} from './guidance.js';
 import {DATA,programFor,coursesFor,normalizeProfile,label} from './planner.js';
@@ -37,8 +40,13 @@ export function createDashboardController(h){
   const seed=newcomerWorkspace({name:h.account()?.firstName||''});await h.startWorkspace(seed);r.dashboardPanel='overview';r.dashboardWelcome=false;display();
  }
  function ask(initial=''){
-  h.modal(h.head('Make it more you')+`<form id="dashboard-modal-command"><label class="field">What would you like to change or know?<textarea name="request" rows="3" minlength="5" maxlength="2500" required placeholder="For example: keep my minor to five courses, or suggest more startups.">${esc(initial)}</textarea></label><button class="button primary" type="submit">Ask GoPlan ↗</button></form>`);
+  const p=current()?.profile||state().journey.profile,group=courseGroups(current()?.courses||coursesFor(p),p).find(g=>g.id===r.courseGroup),copy=dashboardCopy(r.dashboardPanel,group?.title,r.targetGroup);
+  h.modal(h.head(copy.title)+`<form id="dashboard-modal-command"><label class="field">${esc(copy.label)}<textarea name="request" rows="3" minlength="5" maxlength="2500" required placeholder="${esc(copy.placeholder)}">${esc(initial)}</textarea></label><button class="button primary" type="submit">Update with GoPlan ↗</button></form>`);
  }
+ function restart(){
+  h.modal(h.head('Start from scratch?')+`<p>Begin a new plan with fresh answers.</p><div class="deck-actions">${action('close','Keep editing this plan')}<button type="button" class="button primary" data-action="dashboard-confirm-restart">Start from scratch</button></div>`);
+ }
+
  async function command(text){
   if(!text?.trim())return;
   const before=JSON.stringify([state().journey.profile,current()?.id,current()?.updatedAt]),j=structuredClone(state().phase==='journey'?state().journey:newJourney(current()));
@@ -82,8 +90,8 @@ export function createDashboardController(h){
  }
  function course(id){
   const p=current(),profile=p?.profile||state().journey.profile,c=(p?.courses||coursesFor(profile)).find(c=>c.id===id);if(!c)return;
-  const term=p?.terms.find(t=>t.courses.includes(id)),progress=p?.tracking?.[id]?.status||'planned',alternatives=manualCourseOptions(c,profile);
-  h.modal(h.head(c.title,c.code||'Course choice')+`<p class="course-detail-meta">${c.credits} credits · ${esc(c.minorId?'Your minor':c.choice?'Personal choice':'Degree core')}</p>${p?`<form id="dashboard-course-form" data-course-id="${esc(id)}"><div class="field-grid"><label class="field">Status<select name="status">${options([['planned','Planned'],['in-progress','Taking now'],['completed','Completed'],['retake','Need to retake']],progress)}</select></label><label class="field">Semester<select name="term">${options(p.terms.filter(t=>t.id!=='prior'||term?.id==='prior').map(t=>[t.id,label(t)]),term?.id)}</select></label></div>${alternatives.length?`<details class="quiet-details"><summary>Choose a different course</summary><label class="field">Course<select name="course">${options([['','Keep this course'],...alternatives.map(x=>[x.code,x.title+' · '+x.code])],c.code)}</select></label></details>`:''}<p id="dashboard-course-error" class="field-error" role="alert"></p><button class="button primary" type="submit">Save changes</button></form>`:''}<div class="deck-actions">${action('dashboard-course-replace','Ask GoPlan for an alternative',`data-course-id="${esc(id)}"`)}</div><details class="quiet-details"><summary>Course details</summary><p>${esc(c.prerequisiteText||'GoPlan checks the course sequence.')}</p>${c.condition?`<p>${esc(c.condition)}</p>`:''}</details>`);
+  const term=p?.terms.find(t=>t.courses.includes(id)),progress=p?.tracking?.[id]?.status||'planned',alternatives=manualCourseOptions(c,profile),detail=courseDetailFacts(c,profile);
+  h.modal(h.head(detail.course.title,c.code||'Course to confirm')+`<p class="course-detail-meta">${c.credits} credits · ${esc(courseGroups([c],profile)[0]?.title||c.category)}</p>${p?`<form id="dashboard-course-form" data-course-id="${esc(id)}"><div class="field-grid"><label class="field">Status<select name="status">${options([['planned','Planned'],['in-progress','Taking now'],['completed','Completed'],['retake','Need to retake']],progress)}</select></label><label class="field">Semester<select name="term">${options(p.terms.filter(t=>t.id!=='prior'||term?.id==='prior').map(t=>[t.id,label(t)]),term?.id)}</select></label></div>${alternatives.length?`<details class="quiet-details"><summary>Choose a different course</summary><label class="field">Course<select name="course">${options([['','Keep this course'],...alternatives.map(x=>[x.code,x.title+' · '+x.code])],c.code)}</select></label></details>`:''}<p id="dashboard-course-error" class="field-error" role="alert"></p><button class="button primary" type="submit">Save changes</button></form>`:''}<div class="deck-actions">${term&&term.id!=='prior'? action('dashboard-course-semester','View in semester map ↗',`data-term="${esc(term.id)}"`):''}${action('dashboard-course-replace','Ask GoPlan for an alternative',`data-course-id="${esc(id)}"`)}</div>${detail.facts.length?`<details class="quiet-details"><summary>Course details</summary><dl class="course-facts">${detail.facts.map(f=>`<div><dt>${esc(f.label)}</dt><dd>${esc(f.text)}</dd></div>`).join('')}</dl>${detail.source?`<p class="course-fact-source">Program sheet · page ${detail.source.page}</p>`:''}</details>`:''}`);
  }
  function degreeOptions(){
   const p=current()?.profile||state().journey.profile;
@@ -92,7 +100,7 @@ export function createDashboardController(h){
  function focusOptions(p){const degree=programFor(p);return `${degree.tracks.length?`<label class="field">Focus<select name="track">${options(degree.tracks.map(t=>[t.id,t.name]),p.track)}</select></label>`:''}<label class="field">Minor<select name="minor">${options([['','No minor for now'],...eligibleMinors(p).map(m=>[m.id,m.name])],p.minor)}</select></label><details class="quiet-details"><summary>More choices</summary>${['BBA','BSCSC'].includes(p.program)?`<label class="field">Second focus<select name="secondTrack">${options([['','None'],...degree.tracks.map(t=>[t.id,t.name])],p.secondTrack)}</select></label>`:''}</details>`;}
  function pace(){
   const p=current()?.profile||state().journey.profile;
-  h.modal(h.head('Make room for your life')+`<form id="dashboard-pace-form"><label class="field">Regular semester<select name="regular">${options([['5','Up to 5 courses'],['6','Up to 6 courses']],String(p.regularCourses))}</select></label><label class="field">Summer<select name="summer">${options([['0','Keep summers free'],['2','Up to 2 courses'],['3','Up to 3 courses']],p.summers?String(p.summerCourses):'0')}</select></label><details class="quiet-details"><summary>Starting year and placement</summary><label class="field">First fall year<input name="year" type="number" min="2000" max="2040" value="${p.startYear}" required></label><label class="field">Language preparation still needed<select name="lc">${options([['0','None / not sure'],['1','One semester'],['2','Two semesters']],String(p.lc))}</select></label><p class="small-note">Extra course loads depend on your academic standing or approval.</p></details><p id="dashboard-pace-error" class="field-error" role="alert"></p><button class="button primary" type="submit">Update my semesters</button></form>`);
+  h.modal(h.head('Make room for your life')+`<form id="dashboard-pace-form"><label class="field">Regular semester<select name="regular">${options([['5','Up to 5 courses'],['6','Up to 6 courses']],String(p.regularCourses))}</select></label><label class="field">Summer<select name="summer">${options([['0','Keep summers free'],['2','Up to 2 courses'],['3','Up to 3 courses']],p.summers?String(p.summerCourses):'0')}</select></label><details class="quiet-details"><summary>Starting year and placement</summary><label class="field">First fall year<input name="year" type="number" min="2000" max="2040" value="${p.startYear}" required></label><label class="field">Language Center semesters<select name="lc">${options([['0','No Language Center semesters'],['1','One semester'],['2','Two semesters']],String(p.lc))}</select></label><p class="small-note">Extra course loads depend on your academic standing or approval.</p></details><p id="dashboard-pace-error" class="field-error" role="alert"></p><button class="button primary" type="submit">Update my semesters</button></form>`);
  }
  function target(type,index){
   const t=(current()?.targets||state().journey.details||{})[type]?.[index];if(!t)return;
@@ -147,6 +155,8 @@ export function createDashboardController(h){
   const a=b.dataset.action;if(!a?.startsWith('dashboard-'))return false;
   if(locked||r.busy){h.notify('Your adviser is finishing this change.');return true;}
   if(a==='dashboard-start')await start();
+  else if(a==='dashboard-restart')restart();
+  else if(a==='dashboard-confirm-restart'){h.close();await h.startWorkspace(newcomerWorkspace({name:h.account()?.firstName||''}));r.dashboardWelcome=false;r.dashboardPanel='overview';display();}
   else if(a==='dashboard-home'){r.dashboardWelcome=true;panel('overview');r.dashboardWelcome=true;display();}
   else if(a==='dashboard-panel')panel(b.dataset.panel);
   else if(a==='dashboard-open')await run(()=>ensure(b.dataset.panel));
@@ -157,6 +167,7 @@ export function createDashboardController(h){
   else if(a==='dashboard-course-group'){r.courseGroup=b.dataset.group;display();}
   else if(a==='dashboard-target-group'){r.targetGroup=b.dataset.group;display();}
   else if(a==='dashboard-term'){r.selectedTerm=b.dataset.term;display();}
+  else if(a==='dashboard-course-semester'){r.selectedTerm=b.dataset.term;h.close();panel('semesters');}
   else if(a==='dashboard-course')course(b.dataset.courseId);
   else if(a==='dashboard-course-replace'){const c=(current()?.courses||coursesFor(state().journey.profile)).find(c=>c.id===b.dataset.courseId);ask(`Replace ${c?.code||c?.title||'this course'} with another eligible course that fits my interests.`);}
   else if(a==='dashboard-target')target(b.dataset.targetType,Number(b.dataset.targetIndex));

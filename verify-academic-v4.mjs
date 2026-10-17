@@ -22,7 +22,7 @@ const rowsIn = (term,courses) => term.courses.map(id=>courses.find(c=>c.id===id)
 const counted = rows => rows.filter(c=>c.loadCredits>0).length;
 const sumLoad = rows => rows.reduce((n,c)=>n+c.loadCredits,0);
 // Catalogue p263 separates zero-credit SBA fieldwork from its later credit-bearing assessment.
-const isFieldwork = c => ['EGR4300','INT4001','INT4012'].includes(c.code);
+const isFieldwork = c => ['EGR4300','INT4301','INT4001','INT4012'].includes(c.code);
 
 // Fill only explicit source-listed choices, using distinct entries with the correct credit allocation.
 // This fixture utility deliberately does not rank courses or approximate AI recommendations.
@@ -100,13 +100,13 @@ test('BBA common-core prerequisites match the November 2025 program sheet',()=>{
   assert.ok(find('ECO2302').rule.all.includes('ECO2301'));assert.ok(find('GBU3311').rule.all.includes('GBU2301'));
   for(const code of ['GBU3302','GBU3203'])assert.equal(find(code).rule.minCredits,60);
   assert.equal(find('GBU4101').rule.minCredits,90);assert.ok(find('GBU4101').rule.finalTerm);
-  for(const code of ['INT4001','GBU3203','ACC3201'])assert.ok(find('INT4301').rule.all.includes(code));
+  for(const code of ['GBU3203','ACC3201'])assert.ok(find('INT4301').rule.all.includes(code));
   assert.equal(find('INT4301').rule.minCredits,90);
   assert.deepEqual(new Set(find('MGT3302').rule.all),new Set(['MGT3301','MKT3301','FIN3301']));
   assert.ok(find('MGT4303').rule.all.includes('MGT3301'));assert.deepEqual(new Set(find('MGT4303').rule.any),new Set(['GBU3311','MTH3301']));
   assert.ok(find('MIS3301').rule.all.includes('MGT3301'));assert.deepEqual(new Set(find('MIS3301').rule.any),new Set(['CSC1300','CSC1401']));
   assert.deepEqual(new Set(find('MGT4301').rule.all),new Set(['INT4301','MGT3301']));assert.ok(find('MGT4301').rule.finalTerm);
-  assert.equal(find('INT4001').rule.minCredits,0,'p263 fieldwork must not inherit the p4 senior-standing condition of its later assessment');
+  assert.equal(find('INT4001'),undefined,'The applicable BBA sheet lists INT4301, not a separate catalog-derived INT4001 requirement.');
 });
 test('generated BBA courses respect the source prerequisites before timing targets',()=>{
   for(const pace of ['balanced','accelerated']){
@@ -189,23 +189,16 @@ for(const pace of ['balanced','accelerated']) {
     const thirdSummer=result.terms.find(t=>t.season==='Summer'&&t.year===2029);
     assert.ok(thirdSummer,'third-year summer exists as the internship target');
     const rows=rowsIn(thirdSummer,result.courses);
-    assert.ok(rows.length>0&&rows.every(isFieldwork),'the internship target is not mixed with teaching courses');
-    assert.ok(result.terms.filter(t=>t.id!=='prior'&&t.id!=='pending'&&t!==thirdSummer).every(t=>rowsIn(t,result.courses).every(c=>!isFieldwork(c))),'fieldwork is not prematurely placed in a teaching semester');
+    assert.ok(rows.every(isFieldwork),'the internship target is not mixed with teaching courses');
+    if(program==='BSCSC')assert.ok(rows.length>0);
+    assert.ok(result.terms.filter(t=>!['prior','pending'].includes(t.id)&&t.season!=='Summer').every(t=>rowsIn(t,result.courses).every(c=>!isFieldwork(c))),'fieldwork is not placed in a teaching semester');
     if(program==='BBA'){
-      const fieldwork=result.courses.find(c=>c.code==='INT4001'),assessment=result.courses.find(c=>c.code==='INT4301');
-      assert.equal(fieldwork.credits,0,'catalogue fieldwork stage carries no degree credit');
-      assert.equal(assessment.credits,3,'internship assessment retains its three degree credits');
-      const assessmentTerm=result.terms.find(t=>t.courses.includes(assessment.id));
-      assert.ok(['Fall','Spring'].includes(assessmentTerm.season),'INT4301 assessment is a later teaching-term registration');
-      assert.ok(result.terms.indexOf(assessmentTerm)>result.terms.indexOf(thirdSummer),'assessment follows completed fieldwork');
-      const nextRegular=result.terms.slice(result.terms.indexOf(thirdSummer)+1).find(t=>['Fall','Spring'].includes(t.season));
-      const creditsBeforeNext=result.terms.slice(0,result.terms.indexOf(nextRegular)).flatMap(t=>rowsIn(t,result.courses)).reduce((n,c)=>n+c.credits,0);
-      if(creditsBeforeNext>=90){assert.equal(assessmentTerm.season,'Fall');assert.equal(assessmentTerm.year,2029);}
-      else assert.ok(result.terms.indexOf(assessmentTerm)>result.terms.indexOf(nextRegular),'senior-standing eligibility takes precedence over the next-fall target');
-      assert.ok(assessment.rule.all.includes('INT4001'),'fieldwork is an earlier prerequisite, not a concurrent assessment');
-      assert.ok(fieldwork.rule.review||fieldwork.approvalRequired,'BBA fieldwork remains subject to registration confirmation');
-      const note=[fieldwork.condition,fieldwork.prerequisiteText,...result.issues.map(i=>i.text)].filter(Boolean).join(' ');
-      assert.ok(/catalogue|catalog/i.test(note)&&/sheet|SBA|confirm/i.test(note),'newer program-sheet registration difference is retained for review');
+      const internship=result.courses.find(c=>c.code==='INT4301');
+      assert.equal(internship.credits,3,'The BBA program sheet p4 specifies one three-credit internship.');
+      const actual=result.terms.find(t=>t.courses.includes(internship.id));assert.ok(actual?.season==='Summer'&&actual.year>=2029);const earlier=result.terms.slice(0,result.terms.indexOf(actual)).flatMap(t=>rowsIn(t,result.courses)).reduce((n,c)=>n+c.credits,0);assert.ok(earlier>=90,'The program sheet senior-standing condition cannot be waived to hit the summer target.');
+      assert.ok(!result.courses.some(c=>c.code==='INT4001'),'No separate catalog-derived fieldwork requirement is added.');
+      assert.equal(internship.rule.minCredits,90);assert.deepEqual(internship.rule.all,['GBU3203','ACC3201']);
+
     }
   });
 }

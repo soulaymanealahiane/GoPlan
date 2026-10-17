@@ -88,7 +88,11 @@ export function buildStudentPlan(j,previous){
  for(const record of records){const id=matches.get(record.courseCode);if(id)plan.tracking[id]={status:record.status,grade:record.grade,note:record.note};}
  plan.terms=generatePlan(profile,inputs.scheduling);
  plan.academicRecord=records.map(r=>{const requirementId=matches.get(r.courseCode)||'',countsTowardDegree=!!requirementId&&r.status==='completed';return {...r,requirementId,countsTowardDegree,review:!requirementId,reason:requirementId?r.status==='completed'?'Exact source-listed course matches this requirement in the draft.':r.status==='in-progress'?'Current registration is retained; it is not completed credit.':'Retake remains required; failed study is not completed credit.':'Recorded study is retained. Degree applicability needs university review; no replacement or transferred credit is assumed.'};});
- const issues=validatePlan(plan.terms,courses,profile,scheduling),conflicts=issues.filter(i=>i.level==='conflict'),blocking=conflicts.filter(i=>!/^\d+ requirements need manual placement\./.test(i.text)),unmatched=plan.academicRecord.filter(r=>r.review);
+ const issues=validatePlan(plan.terms,courses,profile,scheduling),currentIds=new Set(current.map(r=>matches.get(r.courseCode)).filter(Boolean));
+ // A student's recorded registration is retained rather than presented as a new
+ // recommendation. Unverified prerequisites remain explicit review items.
+ for(const issue of issues)if(issue.level==='conflict'&&currentIds.has(issue.id)&&/complete .* first\.|needs one of .*earlier term\.|must be taken earlier or together\.|needs \d+ earlier credits\./.test(issue.text))issue.level='review';
+ const conflicts=issues.filter(i=>i.level==='conflict'),blocking=conflicts.filter(i=>!/^\d+ requirements need manual placement\./.test(i.text)),unmatched=plan.academicRecord.filter(r=>r.review);
  for(const record of unmatched)issues.push({level:'review',id:'',text:`${record.courseCode}: recorded ${record.status} study is retained outside the new degree requirements. Confirm its applicability with your academic adviser.`});
  const pending=plan.terms.find(t=>t.id==='pending')?.courses||[],after=plan.terms.filter(t=>!['prior','pending'].includes(t.id)&&t.courses.length).at(-1),before=previous?.terms?.filter(t=>!['prior','pending'].includes(t.id)&&t.courses.length).at(-1);
  const extraRegularTerms=before&&after?Math.max(0,(after.year-before.year)*2+Number(after.season==='Fall')-Number(before.season==='Fall')):0;

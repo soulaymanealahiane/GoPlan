@@ -1,4 +1,6 @@
 import DATA from './academic-data.js';
+import {applyProgramSheetPolicy,sheetRule} from './program-sheet-policy.js';
+applyProgramSheetPolicy(DATA);
 import GUIDED from './guided-data.js';
 import {withMinor,selectedMinor} from './minors.js';
 import {withSecondFocus} from './second-focus.js';
@@ -26,12 +28,12 @@ export function normalizeProfile(raw={}){
 export function coursesFor(raw=DEFAULT_PROFILE){
  const p=normalizeProfile(raw),program=programFor(p),track=program.tracks.find(t=>t.id===p.track);
  const requirements=withMinor(withSecondFocus(track?[...program.requirements.filter(r=>r.groupId!==track.replacesGroup),...track.requirements]:program.requirements,p),p);
- if(p.program==='BBA')requirements.push({id:'bba-internship-fieldwork',code:'INT4001',title:'Business internship fieldwork',credits:0,category:'Internship',source:DATA.courses.INT4001.source,choice:false,options:[],condition:'The catalogue separates fieldwork and INT4301 assessment; confirm SBA registration against the newer program sheet.'});
+
  const planned=requirements.map(r=>{
   const selected=code(p.choices[r.id]),topics=(r.allowedOptions||[]).filter(x=>x.id&&x.title&&!x.courseCode),topic=topics.find(x=>code(x.id)===selected),permitted=courseOptions(r,p).some(x=>x.code===selected&&!x.topic);
   const cid=r.choice?(permitted?selected:''):r.code,entry=DATA.courses[cid]||{};
   let rule={all:[],any:[],coreq:[],minCredits:0,review:true,...entry.rule};
-  const override=program.overrides?.[cid];if(override)rule={...rule,all:override.all,any:override.any,review:rule.review||override.review};
+  const override=program.trackOverrides?.[r.secondTrack||p.track]?.[cid]||program.overrides?.[cid];if(override?.source)rule=sheetRule(override);
   if(program.level==='graduate'){
    const inProgram=new Set(requirements.flatMap(x=>[x.code,...(x.options||[])]));
    rule={...rule,minCredits:0,all:rule.all.filter(x=>inProgram.has(x)||p.priorCodes.includes(x))};
@@ -48,16 +50,17 @@ export function coursesFor(raw=DEFAULT_PROFILE){
   if(cid==='FYE1102')rule={...rule,all:['FYE1101'],review:false};
   if(r.rule)rule={...rule,...r.rule};
   if(r.conditionalRules?.[cid])rule={...rule,...r.conditionalRules[cid]};
-  const schoolRule=businessRule(p.program,cid);if(schoolRule)rule={...rule,...schoolRule};
+  const schoolRule=businessRule(p.program,cid);if(override?.source)rule=sheetRule(override);
+  if(schoolRule)rule=sheetRule(schoolRule);
   if(topic)rule={...rule,all:(topic.prerequisiteCourses||[]).map(code),review:true};
   const credits=r.choice&&cid?(entry.credits??r.credits):r.credits;
-  return {...r,offeredTerms:rule.offeredTerms||r.offeredTerms,id:r.id,code:cid,topicId:topic?.id||'',title:topic?`${topic.title} · course code to confirm`:cid?(r.choice?entry.title||cid:r.title):r.title,credits,loadCredits:credits+(r.nonDegreeCredits||0),unresolved:r.choice&&!cid||entry.creditsProvisional===true,rule,prerequisiteText:schoolRule?describeRule(rule):topic?'CSC 4308; exact CSC 41xx registration code requires confirmation.':override?.prerequisiteText||entry.prerequisiteText||'',ruleSource:schoolRule?BUSINESS_SOURCE:override?.source||entry.source||r.source,description:entry.description||'',lab:entry.lab===true,kind:/[Ee]lective|[Mm]inor|[Ss]pecial|[Tt]hematic|[Cc]oncentration/.test(r.category)?'focus':/[Gg]eneral/.test(r.category)?'general':/[Mm]ath|[Ss]cience and/.test(r.category)?'foundation':'core'};
+  return {...r,offeredTerms:rule.offeredTerms||r.offeredTerms,id:r.id,code:cid,topicId:topic?.id||'',title:topic?`${topic.title} · course code to confirm`:cid?(override?.title||(r.choice?entry.title||cid:r.title)):r.title,credits,loadCredits:credits+(r.nonDegreeCredits||0),unresolved:r.choice&&!cid||entry.creditsProvisional===true,rule,prerequisiteText:schoolRule?describeRule(rule):topic?'CSC 4308; exact CSC 41xx registration code requires confirmation.':override?.source?describeRule(rule):entry.prerequisiteText||'',ruleSource:schoolRule?BUSINESS_SOURCE:override?.source||entry.source||r.source,description:entry.description||'',lab:entry.lab===true,kind:/[Ee]lective|[Mm]inor|[Ss]pecial|[Tt]hematic|[Cc]oncentration/.test(r.category)?'focus':/[Gg]eneral/.test(r.category)?'general':/[Mm]ath|[Ss]cience and/.test(r.category)?'foundation':'core'};
  });
  if(p.minor){const present=new Set([...planned.map(c=>c.code),...p.priorCodes]);for(let i=0;i<planned.length&&planned.length<200;i++){const c=planned[i];if(!c.minorId&&!c.supportingPrerequisite)continue;for(const id of [...c.rule.all,...c.rule.coreq]){const e=DATA.courses[id];if(present.has(id)||!e||+id.slice(3)>=5000)continue;present.add(id);planned.push({id:'support-'+id.toLowerCase(),code:id,title:e.title,credits:e.credits,loadCredits:e.credits,category:'Supporting prerequisite',source:e.source,ruleSource:e.source,prerequisiteText:e.prerequisiteText||'',rule:{all:[],any:[],coreq:[],minCredits:0,review:true,...e.rule},choice:false,options:[],unresolved:e.creditsProvisional===true,kind:'foundation',lab:e.lab===true,supportingPrerequisite:true,condition:`Listed prerequisite for ${c.code||c.title}. This is additional study unless an approved degree elective or equivalency can cover it.`});}}}
  return planned;
 }
 export function limits(p,summer){if(programFor(p).level==='graduate')return {count:summer?2:4,credits:summer?7:12};const profile=normalizeProfile(p),count=summer?profile.summerCourses:profile.regularCourses;return {count,credits:summer?(count===3?10:7):(count===6?20:17)};}
-export const isFieldwork=c=>['EGR4300','INT4001','INT4012'].includes(c.code);
+export const isFieldwork=c=>['EGR4300','INT4301','INT4001','INT4012'].includes(c.code);
 function eligible(c,done,credits,same=[]){const r=c.rule;return r.all.every(x=>done.has(x))&&(!r.any.length||r.any.some(x=>done.has(x)))&&r.coreq.every(x=>done.has(x)||same.includes(x))&&credits>=r.minCredits&&(!r.minProgramCourses||(r.programCourseCodes||[]).filter(x=>done.has(x)).length>=r.minProgramCourses);}
 export const termOrder=t=>t.year*3+({Spring:0,Summer:1,Fall:2}[t.season]??0);
 export function generatePlan(raw=DEFAULT_PROFILE,scheduling={}){

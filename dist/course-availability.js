@@ -1,4 +1,4 @@
-import {DATA,coursesFor,limits,termOrder,label} from './planner.js';
+import {DATA,coursesFor,limits,termOrder,label,isFieldwork} from './planner.js';
 import {courseOptions,needsPersonalConfirmation} from './course-options.js';
 
 const termPattern=/^(Fall|Spring|Summer)-(20\d\d)$/;
@@ -63,7 +63,7 @@ export function analyzeCourseAvailability(plan,currentTerm,supplied=plan.schedul
  const earlierTerms=plan.terms.filter(t=>t.id==='prior'||t.id!=='pending'&&termOrder(t)<termOrder(term)),earlierIds=new Set(earlierTerms.flatMap(t=>t.courses));
  const done=new Set([...(plan.profile.priorCodes||[]),...courses.filter(c=>earlierIds.has(c.id)&&c.code&&protectedCourse(plan,c)).map(c=>c.code)]);
  const credits=[...done].reduce((n,id)=>n+(DATA.courses[id]?.credits||0),0),currentIds=plan.terms.find(t=>t.id===currentTerm)?.courses||[],current=courses.filter(c=>currentIds.includes(c.id)),cap=limits(plan.profile,term.season==='Summer');
- const isFieldwork=c=>['EGR4300','INT4001','INT4012'].includes(c.code),internshipOnly=term.season==='Summer'&&(plan.terms.find(t=>t.id===currentTerm)?.internshipOnly||current.some(isFieldwork)||term.year===plan.profile.startYear+3&&courses.some(c=>isFieldwork(c)&&!done.has(c.code)));
+ const internshipOnly=term.season==='Summer'&&(plan.terms.find(t=>t.id===currentTerm)?.internshipOnly||current.some(isFieldwork)||term.year===plan.profile.startYear+3&&courses.some(c=>isFieldwork(c)&&!done.has(c.code)));
  const affected=courses.filter(c=>currentIds.includes(c.id)&&!courseAvailability(c.code,currentTerm,scheduling).allowed).map(c=>{
   const protectedWork=protectedCourse(plan,c),selectable=c.choice&&!c.approvalOnly&&!needsPersonalConfirmation(c),kind=protectedWork?'protected':selectable?'selectable':'required';
   const alternatives=selectable&&!protectedWork?courseOptions(c,plan.profile).filter(o=>o.code!==c.code&&!o.topic&&!o.creditsProvisional).map(o=>{

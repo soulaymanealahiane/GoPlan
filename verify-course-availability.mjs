@@ -26,11 +26,12 @@ assert.equal(postponed.assessment.postponed.find(c=>c.courseCode==='CSC1401').av
 assert.equal(validatePlan(postponed.candidate.terms,postponed.candidate.courses,profile,postponed.candidate.scheduling).filter(i=>i.level==='conflict').length,0);
 assert.throws(()=>proposeReplan(base,{choices:[{requirementId:'csc1401',courseCode:'CSC2302'}]},first),/verified equivalent|approval/);
 
-const artTerm=termOf(base,'bscsc-arts').id,artReport={offerings:[offered(artTerm,['ART1302'],['ART1301'])]};
-const alternatives=analyzeCourseAvailability(base,artTerm,mergeScheduling(base.scheduling,artReport)).affected.find(c=>c.requirementId==='bscsc-arts');
+const artPlan=make();artPlan.tracking.fye1101={status:'completed'};
+const artTerm=termOf(artPlan,'bscsc-arts').id,artReport={offerings:[offered(artTerm,['ART1302'],['ART1301'])]};
+const alternatives=analyzeCourseAvailability(artPlan,artTerm,mergeScheduling(artPlan.scheduling,artReport)).affected.find(c=>c.requirementId==='bscsc-arts');
 assert.equal(alternatives.kind,'selectable');
 assert.ok(alternatives.alternatives.some(c=>c.courseCode==='ART1302'&&c.eligible&&c.availability==='reported-offered'));
-const substitute=proposeReplan(base,{...artReport,choices:[{requirementId:'bscsc-arts',courseCode:'ART1302',reason:'Reported offered alternative for this same arts requirement.'}]},artTerm);
+const substitute=proposeReplan(artPlan,{...artReport,choices:[{requirementId:'bscsc-arts',courseCode:'ART1302',reason:'Reported offered alternative for this same arts requirement.'}]},artTerm);
 assert.equal(substitute.candidate.courses.find(c=>c.id==='bscsc-arts').code,'ART1302');
 assert.ok(substitute.assessment.replacements.some(c=>c.from==='ART1301'&&c.to==='ART1302'));
 assert.equal(substitute.candidate.scheduling.offerings[0].offeredCourseCodes[0],'ART1302');

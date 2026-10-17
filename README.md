@@ -10,6 +10,8 @@ GoPlan helps students turn their interests into an editable degree plan: academi
 
 - Separate website (`/`) and AUI planner (`/demo`) routes with shared styles and SVG branding.
 - Newcomer onboarding with three quick-choice question cards, optional elaboration and a dashboard of degree, courses, opportunities and semesters.
+- One active saved plan with a clean start-over action. Course groups identify general education, common and major core, specialization, minor and electives, with links to actual semester placement.
+- Applicable curriculum program sheets take priority over conflicting catalog facts; concise course details use the same resolved rules as scheduling.
 - Saved-plan controls for manual degree changes, course completion, semester moves and eligible elective swaps. Returning users resume their dashboard without repeating onboarding.
 - A cross-panel adviser command executes requested changes as a reviewable plan preview; completed study and scheduling constraints remain protected.
 - University-scoped email roster imports, hashed roster entries, access checks during authentication and eligibility rechecks on authenticated requests.

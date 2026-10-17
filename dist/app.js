@@ -65,7 +65,7 @@ async function next(){
  j.step=Math.min(5,j.step+1);runtime.nextAfterAdvice=null;runtime.aiError='';changed();$('#main').scrollIntoView({block:'start'});
 }
 function startDecisions(){if(state.plan){openChange();return;}view='plan';render();}
-function resetWorkspaceAdvice(){dashboard?.reset();runtime.dashboardPanel='overview';runtime.dashboardWelcome=false;runtime.dashboardNotice='';runtime.dashboardAnswer='';runtime.pendingDashboardRequest='';runtime.courseGroup='personal';runtime.targetGroup='internships';runtime.selectedTerm='';runtime.studyError='';runtime.aiError='';runtime.aiFailure=null;runtime.validation={};runtime.nextAfterAdvice=null;lastStage='direction';replanPreview=null;replanBase='';targetPreview=null;targetBase='';resetAdviserSession();}
+function resetWorkspaceAdvice(){dashboard?.reset();runtime.dashboardPanel='overview';runtime.dashboardWelcome=false;runtime.dashboardNotice='';runtime.dashboardAnswer='';runtime.pendingDashboardRequest='';runtime.courseGroup='general';runtime.targetGroup='internships';runtime.selectedTerm='';runtime.studyError='';runtime.aiError='';runtime.aiFailure=null;runtime.validation={};runtime.nextAfterAdvice=null;lastStage='direction';replanPreview=null;replanBase='';targetPreview=null;targetBase='';resetAdviserSession();}
 let entrySeed=null,entryMode='new';
 function openEntry(){void startFresh();}
 async function startFresh(){if(runtime.busy||dashboard?.busy)return;await startWorkspace(newcomerWorkspace({name:accounts.profile?.firstName||''}));runtime.dashboardWelcome=false;runtime.dashboardPanel='overview';render();}

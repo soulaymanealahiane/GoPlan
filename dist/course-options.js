@@ -10,8 +10,9 @@ export function courseOptions(requirement, profile) {
   const graduate=DATA.programs.find(p=>p.id===profile.program)?.level==='graduate';
   const excluded=new Set((requirement.excludedCourses||[]).map(x=>x.replace(/\s/g,'')));
   const computing=requirement.groupId==='computing'||requirement.id==='bscsc-computing';
-  return (explicit.length?explicit:Object.keys(DATA.courses)).map(id=>DATA.courses[id]).filter(c=>{
+  return (explicit.length?explicit:Object.keys(DATA.courses)).map(id=>{const c=DATA.courses[id],title=DATA.programs.find(p=>p.id===profile.program)?.overrides?.[id]?.title;return c&&title?{...c,title}:c;}).filter(c=>{
     if(!c||excluded.has(c.code)||!(c.credits>0))return false;
+    if(c.code==='ECO1300'&&(profile.program==='BBA'||['business-administration','human-resources-development'].includes(profile.minor)))return false;
     if(explicit.length)return true;
     const n=Number(c.code.slice(3)),prefix=c.code.slice(0,3);
     if(!Number.isFinite(n)||n<1000||n>=(graduate?7000:5000)||['FYE','FAS','INT','ALS','AWR','ARD','AGR'].includes(prefix))return false;
