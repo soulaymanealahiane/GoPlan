@@ -5,6 +5,7 @@ import GUIDED from './guided-data.js';
 import {withMinor,selectedMinor} from './minors.js';
 import {withSecondFocus} from './second-focus.js';
 import {courseOptions} from './course-options.js';
+import {allocatePrerequisiteSlots,uncoveredPrerequisites,isFreeSlot} from './prerequisite-slots.js';
 import {businessRule,BUSINESS_SOURCE,describeRule} from './program-rules.js';
 import {normalizeScheduling,courseAvailability} from './course-availability.js';
 for(const x of GUIDED.supplementaryCourses||[])if(!DATA.courses[x.id]||DATA.courses[x.id].creditsProvisional)DATA.courses[x.id]={code:x.id,title:x.title,credits:x.credits,source:x.source,prerequisiteText:x.prerequisiteStatus,rule:{all:[],any:[],coreq:[],minCredits:0,review:true}};
@@ -29,8 +30,8 @@ export function coursesFor(raw=DEFAULT_PROFILE){
  const p=normalizeProfile(raw),program=programFor(p),track=program.tracks.find(t=>t.id===p.track);
  const requirements=withMinor(withSecondFocus(track?[...program.requirements.filter(r=>r.groupId!==track.replacesGroup),...track.requirements]:program.requirements,p),p);
 
- const planned=requirements.map(r=>{
-  const selected=code(p.choices[r.id]),topics=(r.allowedOptions||[]).filter(x=>x.id&&x.title&&!x.courseCode),topic=topics.find(x=>code(x.id)===selected),permitted=courseOptions(r,p).some(x=>x.code===selected&&!x.topic);
+ const resolve=(r,selected=code(p.choices[r.id]))=>{
+  const topics=(r.allowedOptions||[]).filter(x=>x.id&&x.title&&!x.courseCode),topic=topics.find(x=>code(x.id)===selected),permitted=courseOptions(r,p).some(x=>x.code===selected&&!x.topic);
   const cid=r.choice?(permitted?selected:''):r.code,entry=DATA.courses[cid]||{};
   let rule={all:[],any:[],coreq:[],minCredits:0,review:true,...entry.rule};
   const override=program.trackOverrides?.[r.secondTrack||p.track]?.[cid]||program.overrides?.[cid];if(override?.source)rule=sheetRule(override);
@@ -55,8 +56,29 @@ export function coursesFor(raw=DEFAULT_PROFILE){
   if(topic)rule={...rule,all:(topic.prerequisiteCourses||[]).map(code),review:true};
   const credits=r.choice&&cid?(entry.credits??r.credits):r.credits;
   return {...r,offeredTerms:rule.offeredTerms||r.offeredTerms,id:r.id,code:cid,topicId:topic?.id||'',title:topic?`${topic.title} · course code to confirm`:cid?(override?.title||(r.choice?entry.title||cid:r.title)):r.title,credits,loadCredits:credits+(r.nonDegreeCredits||0),unresolved:r.choice&&!cid||entry.creditsProvisional===true,rule,prerequisiteText:schoolRule?describeRule(rule):topic?'CSC 4308; exact CSC 41xx registration code requires confirmation.':override?.source?describeRule(rule):entry.prerequisiteText||'',ruleSource:schoolRule?BUSINESS_SOURCE:override?.source||entry.source||r.source,description:entry.description||'',lab:entry.lab===true,kind:/[Ee]lective|[Mm]inor|[Ss]pecial|[Tt]hematic|[Cc]oncentration/.test(r.category)?'focus':/[Gg]eneral/.test(r.category)?'general':/[Mm]ath|[Ss]cience and/.test(r.category)?'foundation':'core'};
- });
- return planned;
+ };
+ return allocatePrerequisiteSlots(requirements.map(r=>resolve(r)),p,(row,selected)=>resolve(requirements.find(r=>r.id===row.id),selected));
+}
+// Saved plans may have filled both elective slots before a prerequisite was
+// allocated. Find a minimal unprotected replacement for a reviewable draft.
+export function fitDegreePrerequisites(raw,{protectedIds=[]}={}){
+ let profile=normalizeProfile(raw),courses=coursesFor(profile);const protectedSet=new Set(protectedIds);
+ for(let pass=0;pass<courses.length;pass++){
+  const missing=uncoveredPrerequisites(courses,profile.priorCodes);if(!missing.length)break;
+  const needed=new Set(missing.map(([code])=>code));let improved=false;
+  for(const slot of [...courses].reverse().filter(c=>isFreeSlot(c)&&!protectedSet.has(c.id))){
+   // Never displace another prerequisite to make space for this one.
+   if(slot.code&&courses.some(c=>c.id!==slot.id&&[...c.rule.all,...c.rule.coreq,...c.rule.any].includes(slot.code)))continue;
+   const choices={...profile.choices};delete choices[slot.id];
+   const candidate=coursesFor({...profile,choices}),replacement=candidate.find(c=>c.id===slot.id);
+   if(!replacement.code||replacement.code===slot.code||!needed.has(replacement.code)||uncoveredPrerequisites(candidate,profile.priorCodes).length>=missing.length)continue;
+   profile=normalizeProfile({...profile,choices:{...choices,[slot.id]:replacement.code}});courses=coursesFor(profile);improved=true;break;
+  }
+  if(!improved)break;
+ }
+ // Persist inferred choices in a draft so subsequent advice sees the allocation.
+ for(const c of courses)if(isFreeSlot(c)&&c.code&&c.prerequisiteFor?.length&&!profile.choices[c.id])profile.choices[c.id]=c.code;
+ return {profile,courses:coursesFor(profile)};
 }
 export function limits(p,summer){if(programFor(p).level==='graduate')return {count:summer?2:4,credits:summer?7:12};const profile=normalizeProfile(p),count=summer?profile.summerCourses:profile.regularCourses;return {count,credits:summer?(count===3?10:7):(count===6?20:17)};}
 export const isFieldwork=c=>['EGR4300','INT4301','INT4001','INT4012'].includes(c.code);

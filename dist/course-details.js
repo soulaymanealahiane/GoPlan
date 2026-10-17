@@ -2,10 +2,11 @@ import {coursesFor,DATA} from './planner.js';
 
 export function currentCourse(course,profile){
  const fresh=coursesFor(profile).find(c=>c.id===course.id&&c.code===course.code);
- return fresh?{...course,title:fresh.title,rule:fresh.rule,prerequisiteText:fresh.prerequisiteText,ruleSource:fresh.ruleSource,condition:fresh.condition,source:fresh.source}:course;
+ return fresh?{...course,title:fresh.title,prerequisiteFor:fresh.prerequisiteFor,rule:fresh.rule,prerequisiteText:fresh.prerequisiteText,ruleSource:fresh.ruleSource,condition:fresh.condition,source:fresh.source}:course;
 }
 export function courseDetailFacts(course,profile){
  const c=currentCourse(course,profile),r=c.rule||{},facts=[];
+ if(c.prerequisiteFor?.length){facts.push({label:'Counts toward',text:'Free elective · '+c.credits+' credits within your degree'});facts.push({label:'Needed before',text:c.prerequisiteFor.join(', ')});}
  if(r.all?.length)facts.push({label:'Complete first',text:r.all.join(' + ')});
  if(r.any?.length)facts.push({label:'One of these first',text:r.any.join(' or ')});
  if(r.coreq?.length)facts.push({label:'Before or alongside',text:r.coreq.join(' + ')});

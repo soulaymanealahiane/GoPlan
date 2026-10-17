@@ -113,7 +113,7 @@ export function validateDetails(result,request,checkTargets=true){
  const choices={...profile.choices},reasons={};
  for(const item of result.choices){const c=byId.get(item?.requirementId);
   if(!c?.choice||ids.has(c.id)||typeof item.reason!=='string'||c.approvalOnly||needsPersonalConfirmation(c))throw selectionError('This course choice needs placement, approval or a supported requirement.',[item?.requirementId]);
-  if(c.code&&profile.choices[c.id]!==item.courseCode)throw selectionError('Preserve the current selected course for '+c.id+'.',[c.id]);
+  if(c.code&&c.code!==item.courseCode)throw selectionError('Preserve the current selected course for '+c.id+'.',[c.id]);
   const option=allowedChoices(c,profile).find(x=>x.code===item.courseCode&&!x.topic&&!x.creditsProvisional);
   if(!option||used.has(option.code)||reserved.some(r=>r.id!==c.id&&r.code===option.code))throw selectionError('Unknown or repeated course: '+item.courseCode,[c.id]);
   ids.add(c.id);used.add(option.code);choices[c.id]=option.code;reasons[c.id]=item.reason;

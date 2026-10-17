@@ -52,7 +52,7 @@ export async function handleApi(request,env,options={}){
  const identity=signedIn?.id||(session&&/^[a-zA-Z0-9-]{16,80}$/.test(session)?session:request.headers.get('CF-Connecting-IP')||options.clientAddress||'demo');
  const scope=await digest(JSON.stringify([env.OPENAI_API_KEY,env.AI_ACCESS_CODE,env.OPENAI_MODEL,env.OPENAI_RESEARCH_MODEL,env.OPENAI_REASONING_EFFORT,env.OPENAI_RESEARCH_REASONING_EFFORT,env.OPENAI_WEB_RESEARCH,env.OPENAI_DIRECTION_RESEARCH,identity]));
  // Earlier budget/timeout failures must not block work under revised limits.
- const key=await digest('course-context-v4-degree-only:'+scope+JSON.stringify([data,corrections,REQUEST_BUDGET_USD,REQUEST_TIMEOUT_MS,RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS])),now=Date.now();
+ const key=await digest('course-context-v5-prerequisite-slots:'+scope+JSON.stringify([data,corrections,REQUEST_BUDGET_USD,REQUEST_TIMEOUT_MS,RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS])),now=Date.now();
  for(const [id,item] of recent)if(item.expires<=now)recent.delete(id);
  for(const [id,item] of failures)if(item.expires<=now)failures.delete(id);
  if(failures.has(key)){const failure=failures.get(key);return reply(failure.value,failure.status,origin);}

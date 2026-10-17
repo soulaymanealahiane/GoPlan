@@ -15,7 +15,7 @@ for(const program of DATA.programs)for(const track of program.tracks.length?prog
 
 const profile=normalizeProfile({program:'BSCSC',track:'SE',minor:'business-administration'}),j=newJourney();j.profile=profile;j.programChosen=true;
 const rows=coursesFor(profile),slot=rows.find(c=>c.minorId&&c.options?.includes('MGT3302'));
-assert.throws(()=>validateDetails({summary:'Business choice.',choices:[{requirementId:slot.id,courseCode:'MGT3302',reason:'Management interest.'}]},{profile},false),/unmet prerequisites|cannot be scheduled/,'Removing extra courses must not waive their prerequisites.');
+assert.throws(()=>validateDetails({summary:'Business choice.',choices:[{requirementId:slot.id,courseCode:'MGT3302',reason:'Management interest.'}]},{profile:{...profile,choices:{'bscsc-free-1':'HIS1301','bscsc-free-2':'GEO1301'}}},false),/unmet prerequisites|cannot be scheduled/,'Removing extra courses must not waive their prerequisites.');
 const free=rows.find(c=>c.groupId==='free'&&allowedChoices(c,profile).some(o=>o.code==='EGR2302'));
 assert.ok(free,'This degree has an existing approved slot for EGR2302.');
 const other=rows.find(c=>c.minorId&&c.id!==slot.id&&c.options?.includes('MKT3301'));
@@ -24,7 +24,7 @@ const fitted=coursesFor({...profile,choices:valid.choices});
 assert.equal(fitted.length,rows.length);assert.equal(creditsOf(fitted),creditsOf(rows));
 assert.ok(!generatePlan({...profile,choices:valid.choices}).find(t=>t.id==='pending')?.courses.includes(slot.id));
 
-const legacy=makePlan(j),extra={...DATA.courses.EGR2302,id:'support-egr2302',code:'EGR2302',credits:3,loadCredits:3,kind:'foundation',category:'Supporting prerequisite',supportingPrerequisite:true,rule:{all:[],any:[],coreq:[],minCredits:0}};
+const legacy=makePlan({...j,profile:{...profile,choices:{'bscsc-free-1':'HIS1301','bscsc-free-2':'GEO1301'}}}),extra={...DATA.courses.EGR2302,id:'support-egr2302',code:'EGR2302',credits:3,loadCredits:3,kind:'foundation',category:'Supporting prerequisite',supportingPrerequisite:true,rule:{all:[],any:[],coreq:[],minCredits:0}};
 legacy.courses.push(extra);legacy.terms[0].courses.push(extra.id);
 legacy.tracking[extra.id]={status:'completed',grade:'A',note:'Retain my actual study.'};
 legacy.reports.push({courseId:extra.id,status:'open'});

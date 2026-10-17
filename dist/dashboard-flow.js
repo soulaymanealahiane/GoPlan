@@ -1,5 +1,5 @@
 import {newJourney,emptyWorkspace,makePlan} from './guidance.js';
-import {normalizeProfile,DATA,coursesFor,moveCourse,termOrder,validatePlan} from './planner.js';
+import {normalizeProfile,DATA,coursesFor,moveCourse,termOrder,validatePlan,fitDegreePrerequisites} from './planner.js';
 import {planningWorkspace,recordedStudy,buildStudentPlan} from './student-context.js';
 import {proposeReplan} from './replanning.js';
 import {courseOptions,needsPersonalConfirmation} from './course-options.js';
@@ -10,12 +10,14 @@ export function newcomerWorkspace({year=new Date().getFullYear(),name='',degree=
 }
 export function needsBusinessMinorRefresh(plan){return !!(plan?.profile?.program==='BSCSC'&&plan.profile.minor==='business-administration'&&plan.courses.filter(c=>c.minorId==='business-administration').length>5);}
 export function refreshMinorDraft(state){
- const plan=state.phase==='draft'?state.draftPlan:state.plan;
- if(!needsBusinessMinorRefresh(plan)||state.journey?.minorDataVersion===2)return state;
- // Existing completed records must be retained; an academic data correction is
- // a reviewable draft, never an invisible overwrite of a saved roadmap.
- const j=newJourney(plan);j.minorDataVersion=2;
- const result=manualDegreePlan(plan,j.profile);
+ const plan=state.phase==='draft'?state.draftPlan:state.plan;if(!plan)return state;
+ const minorCorrection=needsBusinessMinorRefresh(plan)&&state.journey?.minorDataVersion!==2;
+ const protectedCourses=plan.courses.filter(c=>['completed','in-progress'].includes(plan.tracking?.[c.id]?.status)||plan.profile.priorCodes?.includes(c.code)),protectedIds=protectedCourses.map(c=>c.id);
+ const profile={...plan.profile,choices:{...plan.profile.choices,...Object.fromEntries(protectedCourses.filter(c=>c.choice&&c.code).map(c=>[c.id,c.code]))}};
+ const fitted=fitDegreePrerequisites(profile,{protectedIds});
+ const allocations=fitted.courses.filter(c=>c.prerequisiteFor?.length&&plan.courses.find(old=>old.id===c.id)?.code!==c.code).map(c=>({id:c.id,courseCode:c.code,title:c.title,previousCode:plan.courses.find(old=>old.id===c.id)?.code||'',requiredBy:c.prerequisiteFor}));
+ if(!minorCorrection&&!allocations.length)return state;
+ const result=manualDegreePlan(plan,fitted.profile);result.degreeAllocationChanges=allocations;
  return {...state,journey:result.decisions,draftPlan:result,phase:'draft'};
 }
 export function studyBoundary(plan,profile=plan.profile){
