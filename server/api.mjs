@@ -1,3 +1,4 @@
+import {serviceEndpoint,reserveServiceCall} from './service-allowance.mjs';
 import {partnershipEndpoint} from './partnerships.mjs';
 import {rosterMode} from './university-access.mjs';
 import {authEndpoint,accountIdentity} from './auth.mjs';
@@ -29,6 +30,7 @@ export async function handleApi(request,env,options={}){
  let signedIn;try{signedIn=await accountIdentity(request,env);}catch{return reply({error:'Account connection unavailable. Please retry.'},503,origin);}
  if(signedIn&&!['GET','HEAD'].includes(request.method)&&origin!==new URL(request.url).origin)return reply({error:'Open this action from GoPlan.'},403,origin);
  if(rosterMode(env)&&!signedIn&&path!=='/api/status')return reply({error:'Sign in with an approved university email.',code:'ACCESS_REQUIRED'},401,origin);
+ if(path==='/api/service'||path.startsWith('/api/service/'))return serviceEndpoint(request,env,signedIn);
  if(path==='/api/status'&&request.method==='GET')return reply({available:!!env.OPENAI_API_KEY,provider:'openai',model:env.OPENAI_MODEL||'gpt-6.1-sol',requiresAccess:false,requiresSignIn:!signedIn,authenticated:!!signedIn,feedbackAvailable:!!env.DB},200,origin);
  const isFeedback=path==='/api/feedback'||path.startsWith('/api/feedback/')||path.startsWith('/api/review/');
  const isEvent=path==='/api/usage';
@@ -46,13 +48,13 @@ export async function handleApi(request,env,options={}){
  if(isEvent){if(!data||!EVENTS.has(data.event)||Object.keys(data).some(k=>k!=='event'))return reply({error:'Unknown usage event.'},400,origin);await recordSafely(env,{kind:'event',stage:data.event,channel:channelFor(origin)});return reply({accepted:true},200,origin);}
  if(isFeedback){try{return reply(await feedbackEndpoint(path,data,request,env,signedIn),200,origin);}catch(e){return reply({error:e.status?e.message:'Mistake reporting is unavailable. Your report was not confirmed; keep your text and retry.',code:e.status===401?'ACCESS_REQUIRED':'FEEDBACK_ERROR'},e.status||503,origin);}}
  let corrections=[];try{corrections=await approvedCorrections(env);}catch{console.warn('Feedback library unavailable for this request.');}
- // A normal sequential journey has no hourly allowance. Coalesce duplicate clicks
- // and bound simultaneous paid work instead. All maps are per server instance.
+ // Durable service receipts enforce package limits. These instance-local maps
+ // coalesce duplicate clicks and bound simultaneous paid work.
  const session=request.headers.get('X-GoPlan-Session');
  const identity=signedIn?.id||(session&&/^[a-zA-Z0-9-]{16,80}$/.test(session)?session:request.headers.get('CF-Connecting-IP')||options.clientAddress||'demo');
  const scope=await digest(JSON.stringify([env.OPENAI_API_KEY,env.AI_ACCESS_CODE,env.OPENAI_MODEL,env.OPENAI_RESEARCH_MODEL,env.OPENAI_REASONING_EFFORT,env.OPENAI_RESEARCH_REASONING_EFFORT,env.OPENAI_WEB_RESEARCH,env.OPENAI_DIRECTION_RESEARCH,identity]));
  // Earlier budget/timeout failures must not block work under revised limits.
- const key=await digest('course-context-v5-prerequisite-slots:'+scope+JSON.stringify([data,corrections,REQUEST_BUDGET_USD,REQUEST_TIMEOUT_MS,RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS])),now=Date.now();
+ const key=await digest('service-v1:'+scope+JSON.stringify([data,corrections,REQUEST_BUDGET_USD,REQUEST_TIMEOUT_MS,RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS])),now=Date.now();
  for(const [id,item] of recent)if(item.expires<=now)recent.delete(id);
  for(const [id,item] of failures)if(item.expires<=now)failures.delete(id);
  if(failures.has(key)){const failure=failures.get(key);return reply(failure.value,failure.status,origin);}
@@ -63,20 +65,25 @@ export async function handleApi(request,env,options={}){
   activeSessions.set(scope,(activeSessions.get(scope)||0)+1);
   const metric={stage:data.stage,channel:channelFor(origin),outcome:'error',providerCalls:0,inputTokens:0,outputTokens:0};
   const measuredFetch=async(...args)=>{const provider=new URL(args[0]).origin==='https://api.openai.com';if(provider)metric.providerCalls++;const response=await (options.fetcher||fetch)(...args);if(provider)try{const p=await response.clone().json();metric.inputTokens+=p.usage?.input_tokens||0;metric.outputTokens+=p.usage?.output_tokens||0;}catch{}return response;};
-  let lease;
+  let lease,serviceCall;
   job=Promise.resolve().then(async()=>{
    let blocked;
    try{blocked=await adviserFailure(env.DB,key);if(!blocked)lease=await acquireAdviserLease(env.DB,scope);}catch{throw Object.assign(Error('The adviser could not safely start this request. Your answers are saved; please retry.'),{status:503});}
    if(blocked)throw Object.assign(Error(blocked.code==='ADVISER_TIMEOUT'?timeoutMessage:'GoPlan could not finish this recommendation. Your answers and choices are saved; you can keep working manually.'),{status:blocked.code==='ADVISER_TIMEOUT'?504:422,code:blocked.code,retryable:false});
    if(!lease)throw Object.assign(Error('The adviser is finishing your previous request. Wait a moment before retrying.'),{status:429,code:'AGENT_BUSY'});
-   return advise(data,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections},measuredFetch);
-  }).then(value=>{
+   serviceCall=await reserveServiceCall(env.DB,identity,data.serviceAction,data.stage,key);
+   if(serviceCall.cached){if(serviceCall.status!==200)throw Object.assign(Error(serviceCall.cached.error),{status:serviceCall.status,code:serviceCall.cached.code});return serviceCall.cached;}
+   const input={...data};delete input.serviceAction;
+   return advise(input,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections},measuredFetch);
+  }).then(async value=>{
+   if(serviceCall?.finish)await serviceCall.finish(value,200);
    metric.outcome='success';
    while(recent.size>=200)recent.delete(recent.keys().next().value);
    // A temporary research failure must not pin the next retry to old evidence.
    if(!data.researchOnly&&!['unavailable','partial'].includes(value.research?.status))recent.set(key,{value,expires:Date.now()+600000});return value;
   }).catch(async error=>{
    if(error.name==='TimeoutError')error=Object.assign(Error(timeoutMessage),{name:'TimeoutError',status:504,code:'ADVISER_TIMEOUT',retryable:false});
+   if(serviceCall?.finish)await serviceCall.finish({error:error.message||'This request could not finish.',code:error.code,...(error.retryable===false?{retryable:false}:{})},error.status||(error.name==='TimeoutError'?504:422));
    if(['REQUEST_BUDGET','REQUEST_TOO_LARGE','RESPONSE_INCOMPLETE','ADVISER_TIMEOUT'].includes(error.code)){
     while(failures.size>=200)failures.delete(failures.keys().next().value);
     failures.set(key,{value:{error:error.name==='TimeoutError'?timeoutMessage:error.message,code:error.code,retryable:false},status:error.status||(error.name==='TimeoutError'?504:422),expires:Date.now()+600000});

@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS service_entitlements (
+ id TEXT PRIMARY KEY, step INTEGER NOT NULL DEFAULT 0, saved INTEGER NOT NULL DEFAULT 0,
+ global_used INTEGER NOT NULL DEFAULT 0, initial_mask INTEGER NOT NULL DEFAULT 0,
+ change0 INTEGER NOT NULL DEFAULT 0, change1 INTEGER NOT NULL DEFAULT 0,
+ change2 INTEGER NOT NULL DEFAULT 0, change3 INTEGER NOT NULL DEFAULT 0,
+ change4 INTEGER NOT NULL DEFAULT 0, workspace_id TEXT, created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS service_actions (
+ id TEXT PRIMARY KEY, owner TEXT NOT NULL, kind TEXT NOT NULL, step INTEGER NOT NULL,
+ calls INTEGER NOT NULL DEFAULT 0, max_calls INTEGER NOT NULL, created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS service_calls (
+ id TEXT PRIMARY KEY, action_id TEXT NOT NULL, owner TEXT NOT NULL, state TEXT NOT NULL,
+ response TEXT, status INTEGER, created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS service_actions_owner_idx ON service_actions(owner);
+CREATE INDEX IF NOT EXISTS service_calls_owner_idx ON service_calls(owner);

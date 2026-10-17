@@ -1,3 +1,4 @@
+import {serviceFixture} from './tests/service-fixture.mjs';
 // Synthetic admitted/continuing journeys plus the real browser account
 // controller and in-memory cloud API. No credentials or live inference.
 import assert from 'node:assert/strict';
@@ -125,49 +126,31 @@ const list=async()=>(await (await directFetch('/api/account/workspaces')).json()
 const currentId=()=>JSON.parse(storage.get(key)).id;
 let originalId,originalStored;
 
-await test('A restored saved account starts either route as a separate workspace',async()=>{
- assert.equal(account.phase,'choose');assert.equal(await account.prepareNew(keepContinuing),true);assert.deepEqual(state.journey.studentContext,keepContinuing.journey.studentContext);
+await test('An account keeps one saved roadmap and refuses onboarding restarts',async()=>{
+ assert.equal(account.phase,'choose');assert.equal(await account.prepareNew(keepAdmitted),true);
+ await serviceFixture(DB,'student-workflow-fixture');
  const old=makePlan(state.journey);old.finalizedAt=new Date().toISOString();state.plan=old;state.phase='saved';state.journey=newJourney(old);account.schedule(state);assert.equal(await account.flush(),true);
  originalId=currentId();originalStored=(await cloud(originalId)).state;
  account=setup();await account.boot();assert.equal(state.phase,'saved');assert.equal(currentId(),originalId);
- assert.equal(await account.prepareNew(exploreAdmitted),true);assert.equal(state.plan,null);assert.equal(state.journey.studentContext.route,'admitted');assert.equal(state.journey.preferredDegree,'undecided');
- assert.equal(await account.flush(),true);assert.notEqual(currentId(),originalId);assert.equal((await list()).length,2);
- assert.deepEqual((await cloud(originalId)).state,originalStored,'Restarting onboarding overwrote the saved roadmap.');
-});
-
-await test('An invalid restart seed cannot change active workspace or cached state',async()=>{
- const priorState=JSON.stringify(state),priorKey=key,priorId=currentId();
- const invalid=structuredClone(exploreAdmitted);invalid.journey.step=99;
- await assert.rejects(()=>account.prepareNew(invalid));
- assert.equal(key,priorKey);assert.equal(JSON.stringify(state),priorState);assert.equal(currentId(),priorId);
- assert.equal(account.phase,'ready');
-});
-
-await test('Busy refusal and returning to an old roadmap preserve both separate plans',async()=>{
- const count=(await list()).length,newId=currentId();busy=true;assert.equal(await account.prepareNew(keepAdmitted),false);busy=false;
- assert.equal(currentId(),newId);assert.equal((await list()).length,count);assert.ok(notifications.length);
- await events.click({target:{closest:()=>({dataset:{accountOpen:originalId}})},preventDefault(){}});
- assert.equal(currentId(),originalId);assert.equal(state.phase,'saved');assert.deepEqual(state,validateSavedWorkspace(structuredClone(originalStored)));
- assert.ok((await list()).some(w=>w.id===newId),'Cancelling a fresh direction must not erase the new separately saved draft.');
-});
-
-await test('Offline onboarding recovers its exact route and leaves the previous cloud plan intact',async()=>{
- offline=true;assert.equal(await account.prepareNew(exploreContinuing),true);
- state.journey.questionnaire.ambitions='Synthetic new career direction';account.schedule(state);assert.equal(await account.flush(),false);
- const recoveryKey=key,recoveryId=currentId();assert.equal(JSON.parse(storage.get(key)).pending,true);
- offline=false;state=emptyWorkspace();account=setup();await account.boot();
- assert.equal(key,recoveryKey);assert.equal(currentId(),recoveryId);assert.equal(state.journey.studentContext.route,'continuing');assert.equal(state.journey.preferredDegree,'undecided');assert.equal(state.journey.questionnaire.ambitions,'Synthetic new career direction');
- assert.equal(JSON.parse(storage.get(key)).pending,false);assert.deepEqual((await cloud(originalId)).state,originalStored);
-});
-
-await test('A delayed cloud open cannot replace a newer onboarding workspace',async()=>{
- holdWorkspace=originalId;const reached=new Promise(resolve=>heldReached=resolve);
- const opening=events.click({target:{closest:()=>({dataset:{accountOpen:originalId}})},preventDefault(){}});
- await reached;
- assert.equal(await account.prepareNew(keepAdmitted),true);const freshKey=key;await account.flush();const freshId=currentId();
- releaseHeld();holdWorkspace='';await opening;
- assert.equal(key,freshKey,'A stale cloud response changed the current workspace key.');assert.equal(currentId(),freshId);assert.equal(state.journey.studentContext.route,'admitted');assert.equal(state.journey.preferredDegree,'BBA');
+ assert.equal(await account.prepareNew(exploreAdmitted),false);assert.equal((await list()).length,1);
  assert.deepEqual((await cloud(originalId)).state,originalStored);
+});
+
+await test('An invalid or busy restart cannot replace the saved plan',async()=>{
+ const priorState=JSON.stringify(state),priorKey=key;
+ const invalid=structuredClone(exploreAdmitted);invalid.journey.step=99;
+ assert.equal(await account.prepareNew(invalid),false);
+ busy=true;assert.equal(await account.prepareNew(keepAdmitted),false);busy=false;
+ assert.equal(key,priorKey);assert.equal(JSON.stringify(state),priorState);assert.equal(currentId(),originalId);
+ assert.equal((await list()).length,1);assert.ok(notifications.length);
+});
+
+await test('Offline edits recover into the same roadmap without a fresh allowance',async()=>{
+ offline=true;state.journey.background='Synthetic changed preference';account.schedule(state);assert.equal(await account.flush(),false);
+ const recoveryKey=key;assert.equal(JSON.parse(storage.get(key)).pending,true);
+ offline=false;state=emptyWorkspace();account=setup();await account.boot();
+ assert.equal(key,recoveryKey);assert.equal(currentId(),originalId);assert.equal(state.journey.background,'Synthetic changed preference');
+ assert.equal(JSON.parse(storage.get(key)).pending,false);assert.equal((await list()).length,1);
 });
 
 await test('Workspace identity and route changes invalidate previous adviser acceptance',()=>{

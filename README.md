@@ -9,8 +9,8 @@ GoPlan helps students turn their interests into an editable degree plan: academi
 ## Application features
 
 - Separate website (`/`) and AUI planner (`/demo`) routes with shared styles and SVG branding.
-- Newcomer onboarding with three quick-choice question cards, optional elaboration and a dashboard of degree, courses, opportunities and semesters.
-- One active saved plan with a clean start-over action. Course groups identify general education, common and major core, specialization, minor and electives, with links to actual semester placement.
+- Newcomer onboarding with three quick-choice cards, optional elaboration and five guided stages: Direction, Courses, Companies, Exchanges and Semesters.
+- One saved plan per account with manual editing and Excel export. Course groups identify general education, common and major core, specialization, minor and electives, with links to actual semester placement.
 - Applicable curriculum program sheets take priority over conflicting catalog facts; concise course details use the same resolved rules as scheduling.
 - Saved-plan controls for manual degree changes, course completion, semester moves and eligible elective swaps. Returning users resume their dashboard without repeating onboarding.
 - A cross-panel adviser command executes requested changes as a reviewable plan preview; completed study and scheduling constraints remain protected.
@@ -25,6 +25,7 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 - **Deterministic academic scheduling:** prerequisite and corequisite checks, credit limits, independent regular/summer loads, minor requirements and preserved completed courses.
 - **Progress-aware replanning:** unavailable courses and changed goals produce a preview; delayed graduation is surfaced before acceptance.
 - **Evidence-aware research:** bounded web research for opportunities, with source attribution and explicit uncertainty about current availability.
+- **Bounded one-time service:** five guided stages, two structural AI prompts per stage and five global prompts after saving. Atomic server-side counters and persistent response receipts enforce the allowance across devices and avoid duplicate paid work.
 - **Private cloud workspaces:** per-account ownership checks, optimistic revision control, recovery of interrupted saves and deliberate resolution of conflicting edits.
 - **Independent email authentication:** Supabase verifies email during account creation and recovery, and authenticates email/password sign-ins; GoPlan issues revocable, hashed sessions in HttpOnly cookies. Admin access uses a server-configured email allowlist.
 - **Human-reviewed feedback:** optional mistake reports, receipt-based withdrawal, expiry, and consent-gated corrections. Feedback does not automatically retrain the underlying model.
@@ -35,7 +36,7 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 
 Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; OpenAI GPT-6.1 Sol for advice and GPT-6 Luna for focused live web research. Production email delivery requires a configured SMTP service.
 
-OpenAI is the inference provider. GPT-6.1 Sol handles academic advice and feedback, using medium reasoning for academic choices and low reasoning for short answers, routing and target selection. GPT-6 Luna performs focused search and strict evidence extraction. One request-wide 55-second deadline and a $0.20 conservative spending guard cover discovery, advice and repairs; browser requests stop at 58 seconds. Actual input tokens are counted before generation; target ranking uses Fast mode, whose premium is included in the guard. Completed search receipts and primary pages support extracted findings. Academic validators remain authoritative. The UI shows concise recommendations and clickable sources; search transcripts and page bodies stay on the server.
+OpenAI is the inference provider. GPT-6.1 Sol handles academic advice and feedback, using medium reasoning for academic choices and low reasoning for short answers, routing and target selection. GPT-6 Luna performs focused search and strict evidence extraction. One request-wide 180-second deadline and a $0.25 conservative spending guard cover discovery, advice and repairs; browser requests stop at 195 seconds. Actual input tokens are counted before generation; target ranking uses Fast mode, whose premium is included in the guard. Completed search receipts and primary pages support extracted findings. Academic validators remain authoritative. The UI shows concise recommendations and clickable sources; search transcripts and page bodies stay on the server.
 
 ## Run locally
 
@@ -81,4 +82,4 @@ Full catalogue extracts, original third-party university documents, credentials,
 
 ## Release status
 
-This GitHub snapshot was synchronized from the completed production source on 16 October 2026. Future live releases can diverge until explicitly synchronized. Email authentication requires a Supabase project, verified sending domain and production SMTP configuration; setting only a public project URL does not enable working sign-in. Follow [deployment](docs/DEPLOYMENT.md) for the required checks.
+This GitHub snapshot was synchronized from the completed production source on 17 October 2026. Future live releases can diverge until explicitly synchronized. Email authentication requires a Supabase project, verified sending domain and production SMTP configuration; setting only a public project URL does not enable working sign-in. Follow [deployment](docs/DEPLOYMENT.md) for the required checks.

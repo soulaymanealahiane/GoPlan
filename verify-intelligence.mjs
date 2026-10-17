@@ -1,3 +1,4 @@
+import {serviceFixture} from './tests/service-fixture.mjs';
 import {openaiFixture} from './tests/openai-fixture.mjs';
 import assert from 'node:assert/strict';
 import {advise as realAdvise,availableTargets} from './server/advisor.mjs';
@@ -82,9 +83,10 @@ assert.ok(!researchView(budgetStopped).includes('data-research-stage'));
 const {handleApi}=await import('./server/api.mjs');
 const {localDatabase}=await import('./server/local-db.mjs'),{testSession}=await import('./tests/session-fixture.mjs');
 const apiDB=localDatabase(':memory:'),researchSession=await testSession(apiDB,'research-fixture');
+const serviceActions=await serviceFixture(apiDB,'research-fixture');
 const apiEnv={...env,DB:apiDB,GOPLAN_TOKEN_COUNTER:async()=>8000,OPENAI_WEB_RESEARCH:'on',OPENAI_DIRECTION_RESEARCH:'on',AI_ACCESS_CODE:'research-fixture'};
 const directionValue={kind:'recommend',summary:'A provisional software direction.',themes:['Software'],questions:[],academic:{program:'BSCSC',track:'SE',secondTrack:'',minor:'',rationale:'Fits the stated programming work.',focusRationale:'Software foundations.',secondFocusRationale:'Keep workload manageable.',minorRationale:'Leave open.'},tradeoffs:[],assessment:Object.keys((await import('./dist/evidence.js')).AXES).map(axis=>({axis,explanation:'A qualified inference from the supplied interests and evidence.',answerIds:['activities'],evidenceIds:[]})),update:{summary:'Recommended a direction.',changes:[],limitations:[]}};
-const apiRequest=()=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json',...researchSession,'X-GoPlan-Session':'research-cache-regression-20261005'},body:JSON.stringify({...newJourney(),stage:'direction',flowVersion:5,questionnaire:j.questionnaire})});
+const apiRequest=(action=serviceActions[0])=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json',...researchSession,'X-GoPlan-Session':'research-cache-regression-20261005'},body:JSON.stringify({...newJourney(),serviceAction:action,stage:'direction',flowVersion:5,questionnaire:j.questionnaire})});
 let apiCalls=0;
 const apiFetch=async(_,init)=>{
  apiCalls++;const body=JSON.parse(init.body);
@@ -93,6 +95,7 @@ const apiFetch=async(_,init)=>{
  return openaiFixture(payload(directionValue));
 };
 const fallback=await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal(fallback.status,200);assert.equal((await fallback.json()).research.status,'unavailable');assert.equal(apiCalls,2);
-const refreshed=await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal(refreshed.status,200);assert.equal((await refreshed.json()).research.status,'live');assert.equal(apiCalls,5);
-await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal(apiCalls,5);
+const replay=await handleApi(apiRequest(),apiEnv,{fetcher:apiFetch});assert.equal((await replay.json()).research.status,'unavailable');assert.equal(apiCalls,2,'Replaying the same service action must not spend again.');
+const refreshed=await handleApi(apiRequest(serviceActions[1]),apiEnv,{fetcher:apiFetch});assert.equal(refreshed.status,200);assert.equal((await refreshed.json()).research.status,'live');assert.equal(apiCalls,5);
+await handleApi(apiRequest(serviceActions[1]),apiEnv,{fetcher:apiFetch});assert.equal(apiCalls,5);
 console.log('Passed no automatic research replay, stage-specific market evidence, private diagnostics, visible retry and successful-only research caching.');

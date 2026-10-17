@@ -1,3 +1,5 @@
+import {SERVICE_STAGES} from './service-policy.js';
+import {loadAllowance,beginAction,advanceStage} from './service-client.js';
 import {dashboardReady,short} from './dashboard-view.js';
 import {courseGroups} from './course-groups.js';
 import {dashboardCopy} from './dashboard-copy.js';
@@ -15,12 +17,19 @@ const friendly=e=>['REQUEST_BUDGET','RESPONSE_INCOMPLETE','ADVISER_TIMEOUT'].inc
 
 export function createDashboardController(h){
  const r=h.runtime,state=()=>h.read(),current=()=>state().phase==='draft'?state().draftPlan:state().plan;
- let locked=false,retry=null;
+ let locked=false,retry=null,activeAction='',rescueAction='';
+ const guided=()=>r.service&&!r.service.saved&&r.service.step<5;
+ async function loadService(){try{r.service=await loadAllowance();r.serviceError='';}catch(e){r.serviceError=e.message;}display();}
+ async function reserveAction(kind,step=r.service?.step||0){if(!r.service)await loadService();const result=await beginAction(kind,Math.min(4,step));r.service=result.allowance;return result.action;}
+ async function authorizeAdvice(stage){if(!guided())throw Error('Use a remaining global change from Your space.');const step=r.service.step;if(SERVICE_STAGES[step].agent!==stage)throw Error('Continue your current stage first.');return reserveAction('initial',step);}
+ async function initialStage(){const def=SERVICE_STAGES[r.service.step];if(!def)return;if(def.target){state().journey.refinements||={};state().journey.refinements.targets=def.target==='exchanges'?'Choose exchange destinations and preserve the company recommendations.':'Choose company recommendations.';}const token=await reserveAction('initial');activeAction=token;await advice(def.agent);if(def.id==='semesters'){state().draftPlan=buildProposal(state().journey,state().plan);state().phase='draft';}r.dashboardPanel=def.panel;if(def.id==='courses')r.courseGroup=state().journey.profile.minor?'minor':'specialization';r.targetGroup=def.target||'internships';h.persist();}
+ async function nextStage(){if(r.service.step===0&&!state().journey.programChosen)throw Error('Choose your degree before continuing.');r.service=await advanceStage(r.service.step);h.persist();if(r.service.step<5)await initialStage();else{if(!state().draftPlan)state().draftPlan=buildProposal(state().journey,state().plan);state().phase='draft';r.dashboardPanel='overview';h.persist();}}
  function display(){h.render();}
  function commit(message=''){h.changed(message);}
- function panel(name){r.dashboardPanel=name;r.dashboardWelcome=false;display();}
- async function advice(stage){r.dashboardWork=stages[stage];const ok=await h.getAdvice(stage);if(!ok)throw Object.assign(Error(r.aiError||'Tell GoPlan a little more about what you want.'),{handled:true});return true;}
+ function panel(name){if(guided())return;r.dashboardPanel=name;r.dashboardWelcome=false;display();}
+ async function advice(stage){r.dashboardWork=stages[stage];const ok=await h.getAdvice(stage,{serviceAction:activeAction||undefined});if(!ok)throw Object.assign(Error(r.aiError||'Tell GoPlan a little more about what you want.'),{handled:true});return true;}
  async function ensure(part){
+  if(guided()){if(!(r.service.initialMask&(1<<r.service.step)))await initialStage();return;}
   const j=state().journey;
   if(!dashboardReady(j,current()).direction){j.step=1;if(!await h.getAdvice('direction'))return false;j.step=2;}
   if(['courses','opportunities','semesters'].includes(part)&&!j.details?.choices)await advice('courses');
@@ -33,31 +42,32 @@ export function createDashboardController(h){
  }
  async function run(job,repeat=job){
   if(locked)return;locked=true;retry=repeat;r.aiError='';r.dashboardNotice='';
-  try{await job();}catch(e){if(!e.handled)r.aiError=friendly(e)||'That change could not be completed.';}finally{locked=false;r.busy=false;display();}
+  try{await job();}catch(e){if(!e.handled)r.aiError=friendly(e)||'That change could not be completed.';}finally{locked=false;r.busy=false;activeAction='';display();}
  }
  async function start(){
   if(state().journey.studentContext&&!state().plan&&!state().draftPlan){r.dashboardWelcome=false;h.showPlan();display();return;}
   const seed=newcomerWorkspace({name:h.account()?.firstName||''});await h.startWorkspace(seed);r.dashboardPanel='overview';r.dashboardWelcome=false;display();
  }
  function ask(initial=''){
+  if(r.service?.saved){panel('overview');r.dashboardPrefill=initial;return;}
   const p=current()?.profile||state().journey.profile,group=courseGroups(current()?.courses||coursesFor(p),p).find(g=>g.id===r.courseGroup),copy=dashboardCopy(r.dashboardPanel,group?.title,r.targetGroup);
   h.modal(h.head(copy.title)+`<form id="dashboard-modal-command"><label class="field">${esc(copy.label)}<textarea name="request" rows="3" minlength="5" maxlength="2500" required placeholder="${esc(copy.placeholder)}">${esc(initial)}</textarea></label><button class="button primary" type="submit">Update with GoPlan ↗</button></form>`);
  }
- function restart(){
-  h.modal(h.head('Start from scratch?')+`<p>Begin a new plan with fresh answers.</p><div class="deck-actions">${action('close','Keep editing this plan')}<button type="button" class="button primary" data-action="dashboard-confirm-restart">Start from scratch</button></div>`);
- }
+
 
  async function command(text){
   if(!text?.trim())return;
+  if(guided()){const def=SERVICE_STAGES[r.service.step],token=await reserveAction('stage');activeAction=token;const j=state().journey;j.refinements||={};j.refinements[def.agent]=(def.target==='internships'?'Change companies only. Preserve exchange destinations. ':def.target==='exchanges'?'Change exchange destinations only. Preserve companies. ':'')+text;if(def.agent==='courses')j.agentChoices={...j.profile.choices};await advice(def.agent);if(def.id==='semesters'){state().draftPlan=buildProposal(j,state().plan);state().phase='draft';}h.persist();return;}
+  activeAction=await reserveAction('global',4);
   const before=JSON.stringify([state().journey.profile,current()?.id,current()?.updatedAt]),j=structuredClone(state().phase==='journey'?state().journey:newJourney(current()));
   r.busy=true;r.dashboardWork='Understanding your change…';display();
   const request=r.pendingDashboardRequest?`${r.pendingDashboardRequest} Additional detail: ${text}`:text;
-  const route=await requestAdvice('change',j,{changeRequest:request});r.busy=false;
+  const route=await requestAdvice('change',j,{changeRequest:request,serviceAction:activeAction});r.busy=false;
   if(before!==JSON.stringify([state().journey.profile,current()?.id,current()?.updatedAt]))throw Error('Your plan changed while I was checking. Please send the request again.');
   if(route.kind==='answer'){r.dashboardNotice=route.summary;r.dashboardAnswer=route.summary;return;}
   if(route.kind==='clarify'){r.pendingDashboardRequest=request;r.dashboardNotice=route.questions?.[0]||route.summary;return;}
   r.pendingDashboardRequest='';
-  if(route.kind==='schedule'){rescue(request);return;}
+  if(route.kind==='schedule'){rescueAction=activeAction;rescue(request);return;}
   const previous=current(),wasPlanned=!!previous,next=previous?editJourney(previous,request,route.startStep,studyBoundary(previous).currentTerm):state().journey;
   state().journey=next;state().phase='journey';state().draftPlan=null;
   next.changeRequest=request;next.refinements||={};next.agentStamps||={};
@@ -66,7 +76,7 @@ export function createDashboardController(h){
   if(target==='direction'&&next.studentContext)next.studentContext.degreeIntent='explore';
   if(target==='courses')next.agentChoices={...next.profile.choices};
   const targetsBefore=next.details?{internships:next.details.internships||[],exchanges:next.details.exchanges||[],targetResearch:next.details.targetResearch}:null;
-  if(!await h.getAdvice(target))return;
+  if(!await h.getAdvice(target,{serviceAction:activeAction}))return;
   const programChanged=next.profile.program!==j.profile.program||next.profile.track!==j.profile.track||next.profile.minor!==j.profile.minor||next.profile.secondTrack!==j.profile.secondTrack;
   if(programChanged){next.details=null;next.paceAdvice=null;next.agentStamps={direction:next.agentStamps.direction};}
   if(target==='courses'&&targetsBefore)next.details={...next.details,...targetsBefore};
@@ -82,16 +92,16 @@ export function createDashboardController(h){
   if(target==='pace'&&!wasPlanned)r.dashboardPanel='overview';
   r.dashboardNotice=next.lastUpdates?.[target]?.summary||'Your plan has been updated.';h.persist();
  }
- function save(){
+ async function save(){
   const s=state();if(!s.draftPlan)return;
   if(s.plan)s.history=[structuredClone(s.plan),...(s.history||[])].slice(0,3);
   s.plan=structuredClone(s.draftPlan);s.plan.finalizedAt=new Date().toISOString();s.draftPlan=null;s.phase='saved';s.journey=newJourney(s.plan);r.dashboardPanel='overview';
-  commit('Saved. Come back whenever your plans change.');trackUsage('plan_saved');
+  commit('Saved. Your plan is ready.');if(h.saveAccount&&!await h.saveAccount())throw Error('Your plan is kept on this device. Retry cloud saving to finish.');await loadService();trackUsage('plan_saved');
  }
  function course(id){
   const p=current(),profile=p?.profile||state().journey.profile,c=(p?.courses||coursesFor(profile)).find(c=>c.id===id);if(!c)return;
   const term=p?.terms.find(t=>t.courses.includes(id)),progress=p?.tracking?.[id]?.status||'planned',alternatives=manualCourseOptions(c,profile),detail=courseDetailFacts(c,profile);
-  h.modal(h.head(detail.course.title,c.code||'Course to confirm')+`<p class="course-detail-meta">${c.credits} credits · ${esc(courseGroups([c],profile)[0]?.title||c.category)}</p>${p?`<form id="dashboard-course-form" data-course-id="${esc(id)}"><div class="field-grid"><label class="field">Status<select name="status">${options([['planned','Planned'],['in-progress','Taking now'],['completed','Completed'],['retake','Need to retake']],progress)}</select></label><label class="field">Semester<select name="term">${options(p.terms.filter(t=>t.id!=='prior'||term?.id==='prior').map(t=>[t.id,label(t)]),term?.id)}</select></label></div>${alternatives.length?`<details class="quiet-details"><summary>Choose a different course</summary><label class="field">Course<select name="course">${options([['','Keep this course'],...alternatives.map(x=>[x.code,x.title+' · '+x.code])],c.code)}</select></label></details>`:''}<p id="dashboard-course-error" class="field-error" role="alert"></p><button class="button primary" type="submit">Save changes</button></form>`:''}<div class="deck-actions">${term&&term.id!=='prior'? action('dashboard-course-semester','View in semester map ↗',`data-term="${esc(term.id)}"`):''}${action('dashboard-course-replace','Ask GoPlan for an alternative',`data-course-id="${esc(id)}"`)}</div>${detail.facts.length?`<details class="quiet-details"><summary>Course details</summary><dl class="course-facts">${detail.facts.map(f=>`<div><dt>${esc(f.label)}</dt><dd>${esc(f.text)}</dd></div>`).join('')}</dl>${detail.source?`<p class="course-fact-source">Program sheet · page ${detail.source.page}</p>`:''}</details>`:''}`);
+  h.modal(h.head(detail.course.title,c.code||'Course to confirm')+`<p class="course-detail-meta">${c.credits} credits · ${esc(courseGroups([c],profile)[0]?.title||c.category)}</p>${p?`<form id="dashboard-course-form" data-course-id="${esc(id)}"><div class="field-grid"><label class="field">Status<select name="status">${options([['planned','Planned'],['in-progress','Taking now'],['completed','Completed'],['retake','Need to retake']],progress)}</select></label><label class="field">Semester<select name="term">${options(p.terms.filter(t=>t.id!=='prior'||term?.id==='prior').map(t=>[t.id,label(t)]),term?.id)}</select></label></div>${alternatives.length?`<details class="quiet-details"><summary>Choose a different course</summary><label class="field">Course<select name="course">${options([['','Keep this course'],...alternatives.map(x=>[x.code,x.title+' · '+x.code])],c.code)}</select></label></details>`:''}<p id="dashboard-course-error" class="field-error" role="alert"></p><button class="button primary" type="submit">Save changes</button></form>`:''}<div class="deck-actions">${term&&term.id!=='prior'? action('dashboard-course-semester','View in semester map ↗',`data-term="${esc(term.id)}"`):''}</div>${detail.facts.length?`<details class="quiet-details"><summary>Course details</summary><dl class="course-facts">${detail.facts.map(f=>`<div><dt>${esc(f.label)}</dt><dd>${esc(f.text)}</dd></div>`).join('')}</dl>${detail.source?`<p class="course-fact-source">Program sheet · page ${detail.source.page}</p>`:''}</details>`:''}`);
  }
  function degreeOptions(){
   const p=current()?.profile||state().journey.profile;
@@ -105,7 +115,7 @@ export function createDashboardController(h){
  function target(type,index){
   const t=(current()?.targets||state().journey.details||{})[type]?.[index];if(!t)return;
   const source=t.researchSources?.[0]?.url||t.sourceUrl;
-  h.modal(h.head(t.name,t.country||t.organizationType||'A target to explore')+`<p>${esc(short(t.reason,220))}</p>${link(source,'Visit official source')}<details class="quiet-details"><summary>Why it fits and what to check</summary><p>${esc(t.industryReason||t.tierReason||'')}</p>${targetEvidence(t)}<p>${esc(Array.isArray(t.constraints)?t.constraints.join(' '):t.constraints||t.caveat||'Confirm current availability and eligibility.')}</p></details><div class="deck-actions">${action('dashboard-change','Suggest something different')}</div>`);
+  h.modal(h.head(t.name,t.country||t.organizationType||'A target to explore')+`<p>${esc(short(t.reason,220))}</p>${link(source,'Visit official source')}<details class="quiet-details"><summary>Why it fits and what to check</summary><p>${esc(t.industryReason||t.tierReason||'')}</p>${targetEvidence(t)}<p>${esc(Array.isArray(t.constraints)?t.constraints.join(' '):t.constraints||t.caveat||'Confirm current availability and eligibility.')}</p></details><div class="deck-actions"></div>`);
  }
  function why(kind){const a=current()?.decisions?.advice?.academic||state().journey.advice?.academic||{},key={'Degree':'rationale','Focus':'focusRationale','Minor':'minorRationale','Second focus':'secondFocusRationale'}[kind];h.modal(h.head('Why this match?')+`<p>${esc(a[key]||'Your combination connects your stated interests with its academic requirements.')}</p><details class="quiet-details"><summary>More context</summary>${(current()?.decisions?.advice?.assessment||state().journey.advice?.assessment||[]).map(x=>`<p>${esc(x.explanation)}</p>`).join('')}</details>`);}
  function rescue(request='',selectedId=''){
@@ -137,16 +147,16 @@ export function createDashboardController(h){
    }catch(e){form.querySelector('#dashboard-pace-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-rescue-form'){
-   const p=current();if(!p)return true;const original=JSON.stringify(p),term=String(data.get('term')),courseCode=String(data.get('course')),request=String(data.get('request')||'Find an eligible alternative and keep graduation on time when possible.');
+   const p=current();if(!p)return true;if(!rescueAction)rescueAction=await reserveAction('global',4);const original=JSON.stringify(p),term=String(data.get('term')),courseCode=String(data.get('course')),request=String(data.get('request')||'Find an eligible alternative and keep graduation on time when possible.');
    const button=form.querySelector('button[type="submit"]');button.disabled=true;button.textContent='Finding a replacement…';
    await run(async()=>{
     r.busy=true;r.dashboardWork='Finding a way around this course…';display();
-    const result=await requestAdvice('replan',newJourney(p),{plan:replanSnapshot(p),currentTerm:term,unavailable:[{courseCode,termId:term}],offerings:[],changeRequest:request});r.busy=false;
+    const result=await requestAdvice('replan',newJourney(p),{serviceAction:rescueAction,plan:replanSnapshot(p),currentTerm:term,unavailable:[{courseCode,termId:term}],offerings:[],changeRequest:request});r.busy=false;
     if(original!==JSON.stringify(current()))throw Error('Your plan changed. Please ask again.');
     if(result.kind==='clarify'){form.querySelector('#dashboard-rescue-error').textContent=result.questions?.[0]||result.summary;return;}
     const proposal=proposeReplan(p,result.change,term);if(!proposal.assessment.canApply)throw Error('This change still has a scheduling conflict. Try another course or ask your academic adviser.');
     state().draftPlan=proposal.candidate;state().draftPlan.revisionAssessment=proposal.assessment;state().phase='draft';state().journey=newJourney(state().draftPlan);r.dashboardPanel='semesters';r.dashboardNotice=result.summary;h.close();h.persist();
-   });button.disabled=false;button.textContent='Find a replacement';if(r.aiError)form.querySelector('#dashboard-rescue-error').textContent=r.aiError;return true;
+   });button.disabled=false;button.textContent='Find a replacement';if(r.aiError)form.querySelector('#dashboard-rescue-error').textContent=r.aiError;rescueAction='';return true;
   }
   return false;
  }
@@ -154,9 +164,12 @@ export function createDashboardController(h){
  async function click(b){
   const a=b.dataset.action;if(!a?.startsWith('dashboard-'))return false;
   if(locked||r.busy){h.notify('Your adviser is finishing this change.');return true;}
-  if(a==='dashboard-start')await start();
-  else if(a==='dashboard-restart')restart();
-  else if(a==='dashboard-confirm-restart'){h.close();await h.startWorkspace(newcomerWorkspace({name:h.account()?.firstName||''}));r.dashboardWelcome=false;r.dashboardPanel='overview';display();}
+  if(a==='dashboard-service-reload')await loadService();
+  else if(a==='dashboard-stage-next')await run(nextStage);
+  else if(a==='dashboard-stage-generate')await run(initialStage);
+  else if(a==='dashboard-start')await start();
+  else if(a==='dashboard-restart')h.notify('Continue your current roadmap.');
+  else if(a==='dashboard-confirm-restart')h.notify('Your service includes one roadmap.');
   else if(a==='dashboard-home'){r.dashboardWelcome=true;panel('overview');r.dashboardWelcome=true;display();}
   else if(a==='dashboard-panel')panel(b.dataset.panel);
   else if(a==='dashboard-open')await run(()=>ensure(b.dataset.panel));
@@ -174,12 +187,12 @@ export function createDashboardController(h){
   else if(a==='dashboard-why')why(b.dataset.kind);
   else if(a==='dashboard-direction-options')degreeOptions();
   else if(a==='dashboard-pace')pace();
-  else if(a==='dashboard-unavailable')rescue();
-  else if(a==='dashboard-save')save();
+  else if(a==='dashboard-unavailable'){if(r.service?.saved&&r.service.globalRemaining>0)rescue();else h.notify('Use manual course editing or Excel to continue.');}
+  else if(a==='dashboard-save')await save();
   else if(a==='dashboard-export')await h.exportPlan();
   else if(a==='dashboard-retry'){if(retry)await run(retry);else await run(async()=>{if(await h.getAdvice('direction'))state().journey.step=2;});}
   return true;
  }
  function change(target){if(target.id!=='dashboard-degree')return;const old=current()?.profile||state().journey.profile,p=normalizeProfile({...old,program:target.value,track:'',minor:'',secondTrack:''});target.form.querySelector('#dashboard-focus-options').innerHTML=focusOptions(p);}
- return {click,submit,change,reset(){retry=null;},get busy(){return locked;}};
+ return {click,submit,change,loadService,authorizeAdvice,reset(){retry=null;},get busy(){return locked;}};
 }

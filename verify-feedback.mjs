@@ -1,3 +1,4 @@
+import {serviceFixture} from './tests/service-fixture.mjs';
 import {openaiFixture} from './tests/openai-fixture.mjs';
 import assert from 'node:assert/strict';
 import {localDatabase} from './server/local-db.mjs';
@@ -29,10 +30,12 @@ const shared=report({consentImprove:true});await submitFeedback(shared,env,'sess
 let corrections=await approvedCorrections(env);assert.equal(corrections.length,1);assert.ok(!JSON.stringify(corrections).includes(shared.issue),'Only the reviewed correction, not the raw complaint, enters guidance');
 let calls=0;const j=newJourney();j.programChosen=true;j.profile.program='BSCSC';
 const fetcher=async(_,init)=>{calls++;const body=JSON.parse(init.body),context=JSON.parse(body.input);assert.equal(context.reviewedCorrections.length,1);assert.ok(context.correctionPolicy.includes('unverified'));assert.ok(!init.body.includes('PRIVATE'));return openaiFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({answer:'A reviewed correction confirms every required minor slot must be checked.',update:{summary:'Explained the requirement.',changes:[],limitations:[]}})}]}]});};
-const query={...j,stage:'question',question:'Does every minor slot need to be satisfied?'};
+const licensedActions=await serviceFixture(DB,'feedback-student');
+const query={...j,serviceAction:licensedActions[0],stage:'question',question:'Does every minor slot need to be satisfied?'};
 let answer=await handleApi(new Request('http://127.0.0.1:4317/api/advice',{method:'POST',headers:{Origin:'http://127.0.0.1:4317',Cookie:localFeedbackCookie,'Content-Type':'application/json','X-GoPlan-Session':'correction-advice-session'},body:JSON.stringify(query)}),env,{fetcher});assert.equal(answer.status,200);assert.equal(calls,1);
 await withdrawFeedback(shared,env);assert.equal((await approvedCorrections(env)).length,0);assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM feedback_reviews WHERE report_id=?').bind(shared.id).first()).n,0);
 const withoutCorrection=async(_,init)=>{calls++;assert.equal(JSON.parse(JSON.parse(init.body).input).reviewedCorrections.length,0);return openaiFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({answer:'Check all minor requirements with your adviser.',update:{summary:'Explained the requirements.',changes:[],limitations:[]}})}]}]});};
+query.serviceAction=licensedActions[1];
 answer=await handleApi(new Request('http://127.0.0.1:4317/api/advice',{method:'POST',headers:{Origin:'http://127.0.0.1:4317',Cookie:localFeedbackCookie,'Content-Type':'application/json','X-GoPlan-Session':'correction-advice-session'},body:JSON.stringify(query)}),env,{fetcher:withoutCorrection});assert.equal(answer.status,200);assert.equal(calls,2,'Withdrawal invalidates cached advice containing that correction');
 await assert.rejects(()=>readFeedback(shared,env),e=>e.status===404);
 const expired=report({consentImprove:true});const past=Date.now()-91*86400000;await submitFeedback(expired,env,'old-session',past);await reviewFeedback({...decision,id:expired.id},env,past);assert.equal((await approvedCorrections(env)).length,0);await purgeExpired(DB);assert.equal(await DB.prepare('SELECT id FROM feedback_reports WHERE id=?').bind(expired.id).first(),null);

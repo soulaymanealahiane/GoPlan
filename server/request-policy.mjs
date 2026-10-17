@@ -1,6 +1,7 @@
+import {AI_REQUEST_BUDGET} from '../dist/service-policy.js';
 // One budget and deadline cover discovery, extraction, advice and repairs.
 export const REQUEST_TIMEOUT_MS=180000;
-export const REQUEST_BUDGET_USD=0.25;
+export const REQUEST_BUDGET_USD=AI_REQUEST_BUDGET;
 const prices={'gpt-6.1-sol':[2,10],'gpt-6-luna':[0.1,0.5]};
 export function boundedRequest(env,fetcher=fetch,{timeoutMs=REQUEST_TIMEOUT_MS}={}){
  const controller=new AbortController(),started=Date.now();let spent=0;

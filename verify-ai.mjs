@@ -1,3 +1,4 @@
+import {serviceFixture} from './tests/service-fixture.mjs';
 import {openaiFixture} from './tests/openai-fixture.mjs';
 import assert from 'node:assert/strict';
 import {requestAdvice,setAccessCode,hasAccessCode} from './dist/ai-client.js';
@@ -46,7 +47,9 @@ await advise({...input,stage:'details',profile:{program:'BSCSC',track:'AI',secon
 });
 await assert.rejects(()=>advise(input,env,async()=>openaiFixture({error:{type:'insufficient_quota',code:'credit_balance_exhausted'}},{status:429})),e=>e.status===503&&e.message.includes('service budget'));
 await assert.rejects(()=>advise(input,env,async()=>openaiFixture({error:{type:'rate_limit_exceeded'}},{status:429})),e=>e.status===502&&e.message.includes('busy'));
-const req=(body=input,headers={})=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json',...authSession,...headers},body:typeof body==='string'?body:JSON.stringify(body)});
+const actions=await serviceFixture(authDB,'ai-fixture'),otherActions=await serviceFixture(authDB,'other-ai-fixture'),requestActions=new Map();
+const withService=(body,headers)=>{if(typeof body==='string')return body;const key=JSON.stringify(body);if(!requestActions.has(key))requestActions.set(key,actions[Math.floor(requestActions.size/5)]);return {...body,serviceAction:headers.Cookie===otherSession.Cookie?otherActions[0]:requestActions.get(key)};};
+const req=(body=input,headers={})=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json',...authSession,...headers},body:typeof body==='string'?body:JSON.stringify(withService(body,headers))});
 assert.equal((await handleApi(req(),{})).status,503);
 assert.equal((await handleApi(req(input,{Cookie:'','X-GoPlan-Access':'fixture-access'}),env)).status,401);
 assert.equal((await handleApi(req(input,{Origin:'https://unrelated.example'}),env)).status,403);
@@ -55,9 +58,9 @@ assert.equal((await handleApi(req('{bad'),env)).status,400);
 const results=await Promise.all(Array.from({length:14},()=>handleApi(req(),env,{clientAddress:'concurrency-fixture',fetcher:provider})));
 assert.equal(calls,1);assert.ok(results.every(r=>r.status===200));
 assert.equal((await handleApi(req(),env,{clientAddress:'concurrency-fixture',fetcher:provider})).status,200);assert.equal(calls,1);
-// Twenty distinct sequential recommendations must not share an hourly allowance.
-for(let i=0;i<20;i++)assert.equal((await handleApi(req({...input,goal:input.goal+' Scenario '+i}),env,{clientAddress:'concurrency-fixture',fetcher:provider})).status,200);
-assert.equal(calls,21);
+// Distinct recommendations within the licensed allowance do not share an hourly bucket.
+for(let i=0;i<10;i++)assert.equal((await handleApi(req({...input,goal:input.goal+' Scenario '+i}),env,{clientAddress:'concurrency-fixture',fetcher:provider})).status,200);
+assert.equal(calls,11);
 // Session isolation, bounded simultaneous work, and slot release on failure.
 let release;const gate=new Promise(resolve=>release=resolve);let started=0;
 const slow=async(...args)=>{started++;await gate;return provider(...args);};
@@ -76,13 +79,13 @@ transportCalls=0;
 await fetchOpenAI('fixture',{},async()=>{transportCalls++;return openaiFixture({error:{code:'insufficient_quota'}},{status:429});},{pause:async()=>assert.fail('Never retry exhausted credit')});assert.equal(transportCalls,1);
 const failOpts={clientAddress:'failed-fixture',fetcher:async()=>{throw Error('fixture failure');}};
 for(let i=0;i<3;i++)assert.equal((await handleApi(req({...input,goal:input.goal+' Uncached failed request'}),env,failOpts)).status,422);
-assert.equal((await handleApi(req({...input,goal:input.goal+' Uncached failed request'}),env,{...failOpts,fetcher:provider})).status,200);
+assert.equal((await handleApi(req({...input,goal:input.goal+' Uncached failed request'}),env,{...failOpts,fetcher:provider})).status,422,'An unchanged failed paid action replays its receipt instead of charging again.');
 let attempts=0;await advise(input,env,async()=>{attempts++;return openaiFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(attempts===1?{...direction,academic:{...direction.academic,program:'FAKE'}}:direction)}]}]});});assert.equal(attempts,2);
 const state=emptyWorkspace();state.journey.advice=direction;state.journey.goal=input.goal;state.journey.details={...details,summary:'Specific test recommendations'};
 for(let step=0;step<6;step++){state.journey.step=step;assert.ok(journeyView(state).includes('journey'));}
 assert.ok(!journeyView({...state,journey:{...state.journey,step:4}}).includes('data-target='));
 state.journey.advice.themes={};assert.throws(()=>validateSavedWorkspace(state));
-console.log('Passed AI input privacy, schema, academic validation, 15-program evidence coverage, API authorization, request deduplication, independent sessions, 20 sequential requests, concurrency limits, bounded retry, six-screen rendering and malformed backup checks. Model responses were fixtures; no live AI call was made.');
+console.log('Passed AI input privacy, schema, academic validation, 15-program evidence coverage, API authorization, request deduplication, independent sessions, licensed sequential requests, concurrency limits, bounded retry, six-screen rendering and malformed backup checks. Model responses were fixtures; no live AI call was made.');
 
 // Browser transport: busy replies retry automatically without changing the draft.
 const savedFetch=globalThis.fetch,savedTimer=globalThis.setTimeout;

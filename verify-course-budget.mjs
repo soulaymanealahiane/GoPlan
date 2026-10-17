@@ -1,3 +1,4 @@
+import {serviceFixture} from './tests/service-fixture.mjs';
 import assert from 'node:assert/strict';
 import {advise,detailsContext,sanitizeRequest} from './server/advisor.mjs';
 import {compactCourseContext} from './server/course-context.mjs';
@@ -59,8 +60,9 @@ assert.equal(recovered.choices['bscsc-history'],'HIS1301');assert.ok(recovered.o
 
 const DB=localDatabase(':memory:'),apiEnv={...base,DB,AI_ACCESS_CODE:'fixture-access',GOPLAN_TOKEN_COUNTER:async()=>60000};
 const {testSession}=await import('./tests/session-fixture.mjs'),budgetSession=await testSession(DB,'budget-fixture');
+const serviceActions=await serviceFixture(DB,'budget-fixture');
 const failedInput={stage:'direction',flowVersion:5,questionnaire,level:'undergraduate',preferredDegree:'undecided'};
-const req=(body=failedInput)=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json',...budgetSession,'X-GoPlan-Session':'budget-fixture-session-1234'},body:JSON.stringify(body)});
+const req=(body=failedInput)=>new Request('https://planwithgoplan.com/api/advice',{method:'POST',headers:{Origin:'https://planwithgoplan.com','Content-Type':'application/json',...budgetSession,'X-GoPlan-Session':'budget-fixture-session-1234'},body:JSON.stringify({...body,serviceAction:serviceActions[0]})});
 let paid=0;
 const fail=async()=>{paid++;return response({kind:'recommend',academic:{program:'UNSUPPORTED'}},{input_tokens:60000,output_tokens:6000});};
 let result=await handleApi(req(),apiEnv,{fetcher:fail});assert.equal(result.status,422);

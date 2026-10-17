@@ -1,3 +1,4 @@
+import {serviceEntitlement,serviceOwner,allowanceView} from './service-allowance.mjs';
 import {accountIdentity} from './auth.mjs';
 import {validateSavedWorkspace} from '../dist/guidance.js';
 import {hash} from './feedback.mjs';
@@ -52,15 +53,19 @@ export async function accountEndpoint(request,env){
    }
    if(request.method==='PUT'){
     const data=await body(request);if(!Number.isInteger(data.revision)||data.revision<0)fail('Invalid saved revision.');
+    const allowance=await serviceEntitlement(db,uid);
+    if(data.revision===0){const existing=await db.prepare('SELECT id FROM student_workspaces WHERE user_id=? LIMIT 1').bind(uid).first();if(existing&&existing.id!==id)return json({error:'Your service includes one roadmap. Open your saved plan to edit it.',code:'ONE_ROADMAP'},403);}
+    if(data.state?.phase==='saved'&&allowance.step<5)return json({error:'Finish the five stages before saving your plan.',code:'FINISH_STAGES'},403);
     let state;try{state=validateSavedWorkspace(data.state);}catch{fail('The roadmap could not be validated. Your existing cloud copy is unchanged.');}
     // Store the supported workspace fields only; never arbitrary authentication data.
     const clean={version:3,phase:state.phase,journey:state.journey,plan:state.plan,draftPlan:state.draftPlan,history:state.history,updatedAt:new Date(now).toISOString()};
     const title=String(state.plan?.program?.name||state.draftPlan?.program?.name||'Plan in progress').slice(0,160),serialized=JSON.stringify(clean);
     let result;
     if(data.revision===0){
-     result=await db.prepare(`INSERT OR IGNORE INTO student_workspaces(user_id,id,title,phase,state,revision,updated_at) SELECT ?,?,?,?,?,1,? WHERE (SELECT COUNT(*) FROM student_workspaces WHERE user_id=?)<20`).bind(uid,id,title,state.phase,serialized,now,uid).run();
+     result=await db.prepare(`INSERT OR IGNORE INTO student_workspaces(user_id,id,title,phase,state,revision,updated_at) SELECT ?,?,?,?,?,1,? WHERE (SELECT COUNT(*) FROM student_workspaces WHERE user_id=?)<1`).bind(uid,id,title,state.phase,serialized,now,uid).run();
     }else result=await db.prepare('UPDATE student_workspaces SET title=?,phase=?,state=?,revision=revision+1,updated_at=? WHERE user_id=? AND id=? AND revision=?').bind(title,state.phase,serialized,now,uid,id,data.revision).run();
-    if(!result.meta?.changes){const exists=await db.prepare('SELECT revision FROM student_workspaces WHERE user_id=? AND id=?').bind(uid,id).first();if(!exists&&data.revision===0)fail('Your account has reached the 20-plan limit. Export your plans before removing an old one.',409);return json({error:'This roadmap changed on another device. Choose which version to keep.',code:'SYNC_CONFLICT'},409);}
+    if(!result.meta?.changes){const exists=await db.prepare('SELECT revision FROM student_workspaces WHERE user_id=? AND id=?').bind(uid,id).first();if(!exists&&data.revision===0)fail('Your service includes one roadmap. Open your saved plan to edit it.',409);return json({error:'This roadmap changed on another device. Choose which version to keep.',code:'SYNC_CONFLICT'},409);}
+    await db.prepare('UPDATE service_entitlements SET workspace_id=COALESCE(workspace_id,?),saved=CASE WHEN ?=1 THEN 1 ELSE saved END WHERE id=?').bind(id,state.phase==='saved'?1:0,allowance.id).run();
     await db.prepare('UPDATE student_profiles SET active_workspace_id=?,last_seen_at=? WHERE id=?').bind(id,now,uid).run();
     return json({id,revision:data.revision+1,updatedAt:now});
    }
@@ -71,10 +76,11 @@ export async function accountEndpoint(request,env){
   }
   if(url.pathname==='/api/account/export'&&request.method==='GET'){
    const plans=(await db.prepare('SELECT id,title,state,revision,updated_at FROM student_workspaces WHERE user_id=? ORDER BY updated_at DESC').bind(uid).all()).results.map(p=>({...p,state:JSON.parse(p.state)}));
-   return new Response(JSON.stringify({profile:profile(row),workspaces:plans,exportedAt:new Date(now).toISOString()},null,2),{headers:{...privateHeaders,'Content-Type':'application/json','Content-Disposition':'attachment; filename="GoPlan-account.json"'}});
+   return new Response(JSON.stringify({profile:profile(row),workspaces:plans,serviceAllowance:allowanceView(await serviceEntitlement(db,uid)),exportedAt:new Date(now).toISOString()},null,2),{headers:{...privateHeaders,'Content-Type':'application/json','Content-Disposition':'attachment; filename="GoPlan-account.json"'}});
   }
   if(url.pathname==='/api/account'&&request.method==='DELETE'){
    const data=await body(request);if(data.confirm!=='DELETE MY GOPLAN DATA')fail('Confirm account deletion.');
+   await serviceEntitlement(db,uid);await db.prepare('DELETE FROM service_calls WHERE owner=?').bind(await serviceOwner(uid)).run();
    await db.batch([db.prepare('DELETE FROM student_workspaces WHERE user_id=?').bind(uid),db.prepare('DELETE FROM student_profiles WHERE id=?').bind(uid),db.prepare('DELETE FROM auth_sessions WHERE user_id=?').bind(uid)]);return json({deleted:true});
   }
   return json({error:'Unsupported account request.'},405);
