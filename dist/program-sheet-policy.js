@@ -5,7 +5,7 @@ const csFile='BSCSC_Course-Sequence_Catalog 2025-2027_October_2025.pdf',bbaFile=
 const source=(file,page)=>({file,page,edition:'2025–2026'});
 const complete=(rule={})=>({all:[],any:[],coreq:[],minCredits:0,review:false,...rule});
 export function applyProgramSheetPolicy(data){
- data.version='aui-2025-26-r3-sheet-priority';
+ data.version='aui-2025-26-r4-degree-only';
  const cs=data.programs.find(p=>p.id==='BSCSC'),bba=data.programs.find(p=>p.id==='BBA');
  for(const p of data.programs)p.sourcePolicy=SHEET_POLICY;
  for(const override of Object.values(cs.overrides))Object.assign(override,{coreq:override.coreq||[],minCredits:override.minCredits||0});

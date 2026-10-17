@@ -7,7 +7,6 @@ export function courseGroupKey(course,profile){
  if(/^General education$/i.test(category))return 'general';
  if(course.focusRole==='secondary'||course.secondTrack||/^Second (specialization|concentration)/i.test(category))return 'second';
  if(course.minorId||course.groupId==='minor'||/^Minor$/i.test(category))return 'minor';
- if(course.supportingPrerequisite||category==='Supporting prerequisite')return 'preparation';
  if(track?.requirements.some(r=>r.id===course.id)||/^(Specialization|Concentration|Thematic area)$/i.test(category))return 'specialization';
  if(course.groupId==='free'||/^Free elective/i.test(category)||category==='Elective')return 'free';
  if(course.groupId==='optional'||/^(Computing elective|Major optional|Graduate elective)$/i.test(category)||course.choice&&/elective/i.test(category))return 'open';
@@ -27,11 +26,10 @@ export function courseGroups(courses,profile){
   ['second',`Second ${focus}`,second?.name||`Second ${focus}`,'Courses for your second focus.'],
   ['open','Open electives','Your open electives','Choose within your degree’s approved options.'],
   ['free','Free electives','Your free electives','Room to explore beyond your main field.'],
-  ['preparation','Preparation','Supporting prerequisites','Extra preparation required by your chosen courses.'],
   ['experience','Experience','Your experience courses','Internship and fieldwork requirements.']
  ];
  const rows=new Map(definitions.map(([id])=>[id,[]]));
- for(const c of courses)rows.get(courseGroupKey(c,profile)).push(c);
+ for(const c of courses)if(!c.supportingPrerequisite&&!c.id.startsWith('support-'))rows.get(courseGroupKey(c,profile)).push(c);
  return definitions.map(([id,title,heading,description])=>({id,title,heading,description,courses:rows.get(id),credits:creditsOf(rows.get(id))})).filter(g=>g.courses.length);
 }
 

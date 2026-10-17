@@ -4,7 +4,7 @@ import {selectedMinor} from './minors.js';
 import {courseOptions} from './course-options.js';
 import {normalizeScheduling} from './course-availability.js';
 import {emptyQuestionnaire,cleanQuestionnaire} from './questionnaire.js';
-import {normalizeStudentContext} from './student-context.js';
+import {normalizeStudentContext,recordedStudy} from './student-context.js';
 export {GUIDED};
 export const INTERESTS=[
  {id:'technology',name:'Build software & products',icon:'⌘',words:['software','comput','programming','digital','system','technology']},
@@ -77,6 +77,7 @@ export function validateSavedWorkspace(raw){
  if(j.advice&&(!object(j.advice)||!['clarify','recommend'].includes(j.advice.kind)||!strings(j.advice.themes)||!strings(j.advice.questions)||!strings(j.advice.tradeoffs)||!object(j.advice.academic)||typeof j.advice.summary!=='string'))throw Error('Invalid saved AI direction.');
  if(j.details&&(!object(j.details)||typeof j.details.summary!=='string'||!['internships','exchanges'].every(k=>Array.isArray(j.details[k])&&j.details[k].length<=5&&j.details[k].every(t=>object(t)&&typeof t.name==='string'&&typeof t.reason==='string'))))throw Error('Invalid saved recommendations.');
  for(const key of ['interests','internships','exchanges','auiMasters','globalMasters'])if(!strings(j[key]))throw Error('Invalid saved choices.');
+ const migratedPlans=new Set();
  for(const plan of [raw.plan,raw.draftPlan,...(raw.history||[])].filter(Boolean)){
   if(!Array.isArray(plan.courses)||plan.courses.length>300||!Array.isArray(plan.terms)||plan.terms.length>100)throw Error('The saved roadmap is invalid.');
   if(plan.courses.some(c=>!object(c)||typeof c.id!=='string'||!number(c.credits)||!number(c.loadCredits)||!['focus','general','foundation','core','experience'].includes(c.kind)||!object(c.rule)||!strings(c.rule.all)||!strings(c.rule.any)||!strings(c.rule.coreq)||!number(c.rule.minCredits)))throw Error('Invalid saved course information.');
@@ -98,8 +99,37 @@ export function validateSavedWorkspace(raw){
   for(const [id,t] of Object.entries(plan.tracking))if(!ids.has(id)||!object(t)||!['planned','in-progress','completed','retake'].includes(t.status))throw Error('Invalid progress record.');
   for(const r of plan.reports)if(!ids.has(r.courseId)||!['open','resolved'].includes(r.status))throw Error('Invalid conflict report.');
   for(const type of ['internships','exchanges','auiMasters','globalMasters'])if(!Array.isArray(plan.targets[type])||plan.targets[type].some(t=>!object(t)||typeof t.id!=='string'))throw Error('Invalid research targets.');
+  if(removeExtraPrerequisites(plan))migratedPlans.add(plan);
  }
  if(raw.phase==='saved'&&!raw.plan||raw.phase==='draft'&&!raw.draftPlan)throw Error('The saved plan is missing.');
+ const active=raw.phase==='draft'?raw.draftPlan:raw.plan;
+ if(migratedPlans.has(active)){raw.journey.profile.priorCodes=[...(active.profile.priorCodes||[])];if(active.studentContext)raw.journey.studentContext=structuredClone(active.studentContext);raw.journey.agentStamps={};}
  raw.history=(raw.history||[]).slice(0,3);return raw;
 }
 const textRecordReason=value=>typeof value==='string'?value.slice(0,1000):'';
+
+// Retire automatically appended rows from older roadmaps without discarding
+// study the student actually recorded. Required degree slots stay unchanged.
+function removeExtraPrerequisites(plan){
+ const extras=plan.courses.filter(c=>c.supportingPrerequisite||c.id.startsWith('support-'));
+ if(!extras.length)return;
+ const removed=new Set(extras.map(c=>c.id)),records=recordedStudy(plan);
+ plan.courses=plan.courses.filter(c=>!removed.has(c.id));
+ plan.terms=plan.terms.map(t=>({...t,courses:t.courses.filter(id=>!removed.has(id))}));
+ plan.tracking=Object.fromEntries(Object.entries(plan.tracking).filter(([id])=>!removed.has(id)));
+ plan.reports=plan.reports.filter(r=>!removed.has(r.courseId));
+ plan.profile.choices=Object.fromEntries(Object.entries(plan.profile.choices||{}).filter(([id])=>!removed.has(id)));
+ if(plan.scheduling?.fixedTerms)plan.scheduling.fixedTerms=plan.scheduling.fixedTerms.map(t=>({...t,courses:t.courses.filter(id=>!removed.has(id))}));
+ if(records.length){
+  const dates=records.map(r=>r.termId).filter(id=>/^(Fall|Spring|Summer)-20\d\d$/.test(id)).sort((a,b)=>{const order=id=>Number(id.split('-')[1])*3+['Spring','Summer','Fall'].indexOf(id.split('-')[0]);return order(a)-order(b);});
+  const saved=plan.studentContext||plan.decisions?.studentContext||{},currentTerm=records.find(r=>r.status==='in-progress')?.termId||dates.at(-1)||saved.currentTerm||'Fall-'+plan.profile.startYear;
+  const context=normalizeStudentContext({...saved,route:'continuing',degreeIntent:'keep',currentDegree:plan.profile.program,studyStartYear:plan.profile.startYear,currentTerm,records});
+  plan.studentContext=context;
+  plan.academicRecord=records.map(record=>{const c=plan.courses.find(c=>c.code===record.courseCode);return {...record,requirementId:c?.id||'',countsTowardDegree:record.status==='completed'&&!!c,review:!c,reason:c?'Recorded study retained in its degree requirement.':'Recorded study retained outside the degree requirements.'};});
+  plan.profile.priorCodes=[...new Set([...(plan.profile.priorCodes||[]),...records.filter(r=>r.status==='completed'&&extras.some(c=>c.code===r.courseCode)).map(r=>r.courseCode)])];
+  plan.decisions={...plan.decisions,studentContext:structuredClone(context)};
+ }
+ plan.decisions={...plan.decisions,profile:structuredClone(plan.profile),agentStamps:{}};
+ plan.dataVersion=DATA.version;
+ return true;
+}
