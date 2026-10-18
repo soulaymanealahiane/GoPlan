@@ -4,7 +4,7 @@ import {serviceEndpoint,serviceEntitlement,reserveServiceCall} from './server/se
 import {createDashboardController} from './dist/dashboard-controller.js';
 import {dashboardView} from './dist/dashboard-view.js';
 import {newcomerWorkspace} from './dist/dashboard-flow.js';
-import {newJourney,suggestChoices} from './dist/guidance.js';
+import {newJourney,suggestChoices,emptyWorkspace} from './dist/guidance.js';
 import {acceptAdvice} from './dist/journey-state.js';
 import {availableTargets} from './server/advisor.mjs';
 const DB=localDatabase(':memory:'),uid='service-flow',originalFetch=globalThis.fetch,originalForm=globalThis.FormData;
@@ -29,9 +29,12 @@ globalThis.fetch=async(url,init={})=>{
  const data=JSON.parse(init.body);return Response.json(await call(data.stage,data.serviceAction,{stage:data.stage,request:data.changeRequest}));
 };
 try{
- await controller.loadService();const first=await controller.authorizeAdvice('direction');await getAdvice('direction',{serviceAction:first});
+ await controller.loadService();
+ const welcome=dashboardView(emptyWorkspace(),runtime,{firstName:'Demo'});
+ assert.match(welcome,/Your one-time GoPlan allowance/);assert.match(welcome,/<dt>Roadmap<\/dt><dd>1<\/dd>/);assert.match(welcome,/<dt>Guided AI changes<\/dt><dd>10<\/dd>/);assert.match(welcome,/<dt>Global AI changes<\/dt><dd>5<\/dd>/);
+ const first=await controller.authorizeAdvice('direction');await getAdvice('direction',{serviceAction:first});
  for(let step=0;step<5;step++){
-  assert.equal(runtime.service.step,step);let html=dashboardView(state,runtime);assert.ok(html.includes('OF 5'));assert.ok(!html.includes('class="dashboard-tabs"'));assert.ok(!html.includes('Start over'));
+  assert.equal(runtime.service.step,step);let html=dashboardView(state,runtime);assert.ok(html.includes('OF 5'));assert.match(html,/2 of 2 AI changes left/);assert.ok(!html.includes('class="dashboard-tabs"'));assert.ok(!html.includes('Start over'));
   for(let n=0;n<2;n++)await controller.submit({id:'dashboard-command-form',values:{request:'Refine this stage '+step+' preference '+n}});
   assert.equal(runtime.service.stageChanges[step],0);html=dashboardView(state,runtime);assert.ok(!html.includes('id="dashboard-request"'));
   const before=paid;await controller.submit({id:'dashboard-command-form',values:{request:'A third prompt must be refused.'}});assert.equal(paid,before);
@@ -39,6 +42,7 @@ try{
  }
  assert.equal(runtime.service.step,5);assert.equal(state.phase,'draft');assert.ok(!dashboardView(state,runtime).includes('id="dashboard-request"'),'Global prompts unlock only after saving.');
  await controller.click({dataset:{action:'dashboard-save'}});assert.equal(runtime.service.saved,true);assert.equal(runtime.service.globalRemaining,5);
+ assert.match(dashboardView(state,{...runtime,dashboardPanel:'courses'}),/5 of 5 global AI changes left/,'The saved allowance stays visible outside Your space.');
  for(let n=0;n<5;n++){
   if(n===0){routeStep=2;directionTrack='AI';loseCourses=true;}else routeStep=5;
   const before=paid;await controller.submit({id:'dashboard-command-form',values:{request:'Make global change '+n}});assert.equal(runtime.service.globalRemaining,4-n);if(n===0){assert.match(runtime.aiError,/lost courses/);await controller.click({dataset:{action:'dashboard-retry'}});assert.equal(runtime.aiError,'');assert.equal(runtime.service.globalRemaining,4,'Retry must reuse the same global change.');}assert.ok(paid-before<=5,'A global change cannot exceed five backend requests.');

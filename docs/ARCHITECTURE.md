@@ -59,3 +59,7 @@ Reports are separate from identity-linked workspaces. Report receipts authorize 
 ## Portability
 
 The HTTP handlers use Fetch API requests/responses and a small D1-style database interface. Development uses Node SQLite; the production builder embeds static assets in a Workers-compatible module. Hosting-specific deployment metadata is excluded from the public export. AI, auth and email services are runtime dependencies, not dependencies on the development assistant.
+
+## Cohort intake and operations
+
+The owner can append a cohort to the configured university’s approved email list or explicitly replace the list. Append imports use atomic, duplicate-safe inserts and never touch workspace or service-entitlement tables. Removed students lose access on their next request; re-adding them does not restore used prompts. The current deployment model isolates each university; it is not a shared multi-university tenant selector. [Operations](OPERATIONS.md) documents the intake procedure and the difference between provider quotas and student allowances.

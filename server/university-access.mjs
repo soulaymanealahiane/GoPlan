@@ -23,6 +23,14 @@ export async function replaceRoster(text,env){
  await env.DB.batch([env.DB.prepare('DELETE FROM university_access WHERE university_id=?').bind(id),env.DB.prepare('INSERT INTO university_access(university_id,email_hash,updated_at) SELECT ?,value,? FROM json_each(?)').bind(id,now,JSON.stringify(hashes))]);
  return {universityId:id,count:hashes.length,updatedAt:now};
 }
+export async function appendRoster(text,env){
+ const id=universityId(env);if(!id)throw Object.assign(Error('Set the university ID before importing its approved students.'),{status:400});
+ const emails=parseRoster(text,env),hashes=await Promise.all(emails.map(e=>hash(id+':'+e))),now=Date.now();
+ // Add a cohort atomically. Existing access, plans and lifetime allowances are untouched.
+ const result=await env.DB.prepare('INSERT OR IGNORE INTO university_access(university_id,email_hash,updated_at) SELECT ?,value,? FROM json_each(?)').bind(id,now,JSON.stringify(hashes)).run();
+ const summary=await rosterSummary(env);
+ return {...summary,added:result.meta?.changes||0,submitted:hashes.length};
+}
 export async function rosterSummary(env){
  const id=universityId(env);const row=id?await env.DB.prepare('SELECT count(*) AS count,max(updated_at) AS updated_at FROM university_access WHERE university_id=?').bind(id).first():null;
  return {mode:rosterMode(env)?'roster':'demo',universityId:id,count:row?.count||0,updatedAt:row?.updated_at||null};

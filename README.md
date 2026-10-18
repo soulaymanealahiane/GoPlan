@@ -85,3 +85,5 @@ Full catalogue extracts, original third-party university documents, credentials,
 ## Release status
 
 This GitHub snapshot was synchronized from the completed production source on 17 October 2026. Future live releases can diverge until explicitly synchronized. Email authentication requires a Supabase project, verified sending domain and production SMTP configuration; setting only a public project URL does not enable working sign-in. Follow [deployment](docs/DEPLOYMENT.md) for the required checks.
+
+University cohort intake and provider-capacity checks are documented in [Operations](docs/OPERATIONS.md).
