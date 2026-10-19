@@ -13,7 +13,7 @@ import {buildProposal,editJourney} from './workspace-flow.js';
 import {requestAdvice,requestReviewedTargets,trackUsage} from './ai-client.js';
 import {acceptAdvice} from './journey-state.js';
 import {proposeReplan,replanSnapshot} from './replanning.js';
-import {esc,options,link,targetEvidence} from './views.js';
+import {esc,options,link,opportunityDetail} from './views.js';
 const action=(id,text,extra='')=>`<button type="button" class="button secondary" data-action="${id}" ${extra}>${text}</button>`;
 const stages={direction:'Finding your direction…',courses:'Choosing your courses…',targets:'Finding your matches…',pace:'Mapping your semesters…'};
 const friendly=e=>['REQUEST_BUDGET','RESPONSE_INCOMPLETE','ADVISER_TIMEOUT'].includes(e.code)?'This suggestion isn’t ready yet. Try a different request or keep your current plan.':e.message;
@@ -164,8 +164,8 @@ export function createDashboardController(h){
  }
  function target(type,index){
   const t=(current()?.targets||state().journey.details||{})[type]?.[index];if(!t)return;
-  const source=t.researchSources?.[0]?.url||t.sourceUrl;
-  h.modal(h.head(t.name,t.country||t.organizationType||'A target to explore')+`<p>${esc(short(t.reason,220))}</p>${link(source,'Visit official source')}<details class="quiet-details"><summary>Why it fits and what to check</summary><p>${esc(t.industryReason||t.tierReason||'')}</p>${targetEvidence(t)}<p>${esc(Array.isArray(t.constraints)?t.constraints.join(' '):t.constraints||t.caveat||'Confirm current availability and eligibility.')}</p></details><div class="deck-actions"></div>`);
+  const plan=current(),journey=plan?{...plan.decisions,profile:plan.profile}:state().journey;
+  h.modal(h.head(t.name,t.country||t.organizationType||'A target to explore')+opportunityDetail(t,journey,type));
  }
  function why(kind){const a=current()?.decisions?.advice?.academic||state().journey.advice?.academic||{},key={'Degree':'rationale','Focus':'focusRationale','Minor':'minorRationale','Second focus':'secondFocusRationale'}[kind];h.modal(h.head('Why this match?')+`<p>${esc(a[key]||'Your combination connects your stated interests with its academic requirements.')}</p><details class="quiet-details"><summary>More context</summary>${(current()?.decisions?.advice?.assessment||state().journey.advice?.assessment||[]).map(x=>`<p>${esc(x.explanation)}</p>`).join('')}</details>`);}
  async function submit(form){

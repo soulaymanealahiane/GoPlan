@@ -30,3 +30,9 @@ Initial opportunity work has a 45-second server deadline covering discovery, tok
 The interruption walkthrough injects a non-JSON 502 and an abandoned running receipt at both Companies and Exchanges, then saves/reloads and finishes the roadmap. It uses an isolated synthetic account and no real provider requests. See `docs/COMPANIES-RECOVERY.md` for the incident analysis and failure matrix.
 
 Recovery retires only the matching owner/action server lease. A legacy orphan lock or a still-running old Worker cannot halt the remaining initial stages: reviewed course choices and local semester construction remain available without spending a guided change. Lease ownership and late cleanup are tested separately.
+
+## Opportunity explanation checks
+
+Each detail contains its website and one short paragraph connecting a real questionnaire phrase, the chosen degree/focus/minor and a concrete fact about the target. Research diagnostics and duplicate explanations are absent. Existing plans render the clearer description without AI calls or rewriting their saved choices. A new AI paragraph is used only with matching academic/questionnaire context and a genuine answer quotation; old or stale paragraphs use reviewed facts and current answers. Critical course exclusions remain concise when relevant.
+
+`verify-opportunity-copy.mjs` covers 353 compatible target/profile combinations across eight degrees, the reported ReKrute/Richmond regressions, fresh/stale model descriptions, changed degree choices, undecided and negative answers, escaped text, safe website selection, route restrictions, saved reload, guided details and zero-allowance controller behavior. Browser QA opens both reported examples from an old synthetic saved plan at zero remaining AI changes and after reload. No paid generation or customer data is used.

@@ -3,6 +3,7 @@ import {rankOpportunityTargets} from './opportunity-matching.mjs';
 import {cleanQuestionnaire,questionnaireGoal} from '../dist/questionnaire.js';
 import {EVIDENCE_REVIEWED} from '../dist/evidence.js';
 import {DATA} from '../dist/planner.js';
+import {opportunityDescription,opportunityContextKey} from '../dist/opportunity-description.js';
 
 const initialPrompts=new Set(['','Choose company recommendations.','Choose exchange destinations and preserve the company recommendations.']);
 export const isInitialOpportunityRequest=(input,env)=>env.GOPLAN_SERVICE_ACTION_KIND==='initial'&&initialPrompts.has(String(input?.refinement||'').trim());
@@ -31,7 +32,8 @@ export function reviewedOpportunityShortlist(input,{reasonCode='unavailable'}={}
   out[type]=selected.map((record,i)=>{
    const tier=i<selected.length-2?'reach':i===selected.length-2?'target':'safety';
    return {...record,tier,
-    reason:preserve&&record.reason?record.reason:record.matchThemes?.length?'Explore how '+record.matchThemes.slice(0,2).join(' and ')+' connect with your degree.':'A reviewed option to explore alongside your degree.',
+    reason:preserve&&record.reason?record.reason:opportunityDescription(record,request,type,{preferAgent:false}),
+    ...(!preserve?{fitVersion:2,fitContext:opportunityContextKey(request)}:{}),
     tierReason:preserve&&record.tierReason?record.tierReason:tier==='reach'?'A stretch to explore; compare preparation requirements.':tier==='target'?'Compare its subjects or activities with your interests.':'A broader search route; admission or hiring is not guaranteed.',
     industryReason:preserve&&record.industryReason?record.industryReason:'Fit is inferred from your profile and the reviewed source.',
     answerIds:[],evidenceIds:[]};

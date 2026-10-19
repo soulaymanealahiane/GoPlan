@@ -4,6 +4,7 @@ import {DATA,programFor,coursesFor,creditsOf,label} from './planner.js';
 import {GUIDED,STEPS,suggestMinors,allowedChoices,planIssues,completedIds} from './guidance.js';
 import {minorSummary} from './minor-summary.js';
 import {selectedMinor} from './minors.js';
+import {opportunityDescription,opportunityWebsite} from './opportunity-description.js';
 export const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const source=s=>({file:s?.file||s?.filename||'aui academic catalogue.pdf',page:Math.max(1,Math.min(1000,Number(s?.page||s?.pdfPage||s?.pages?.[0])||1))});
 export const cite=(s,text)=>{s=source(s);return `<button type="button" class="source-link" data-source-file="${esc(s.file)}" data-source-page="${s.page}">${esc(text||`${s.file} · p${s.page}`)} ↗</button>`;};
@@ -19,7 +20,11 @@ export function targetEvidence(t){
  return [t.researchFit||t.academicFit,t.eligibilityEvidence,t.languageEvidence,t.termEvidence].filter(Boolean).map(s=>`<p>${esc(s)}</p>`).join('')+(checked?`<p class="small-note">Evidence checked: ${esc(checked)}. ${t.sourceDateKnown?'Source publication: '+esc(t.sourcePublishedDate)+'.':'Source publication date unknown.'}</p>`:'')+limitations.map(s=>`<p class="small-note">${esc(s)}</p>`).join('')+(t.applicationRoute?`<p>${esc(t.applicationRoute)}</p>`:'')+(t.researchSources||[]).map(s=>link(s.url,s.title||'Research source')).join(' · ');
 }
 export const targetSourceLink=t=>link(t.researchSources?.[0]?.url||t.sourceUrl,'Source');
-export function experienceCards(items=[]){return '<div class="target-grid">'+items.map(t=>`<article class="target-card"><h3>${esc(t.name)}</h3><small>${esc([t.organizationType,t.country].filter(Boolean).join(' · '))}</small><p>${esc(t.reason)}</p><div class="evidence-links">${targetSourceLink(t)}</div><details><summary>Why this fits</summary><p>${esc(t.industryReason||t.tierReason||'')}</p>${targetEvidence(t)}<p class="small-note">${esc((Array.isArray(t.constraints)?t.constraints.join(' '):t.constraints)||t.caveat||'Check current openings, eligibility and dates.')}</p>${link(t.sourceUrl,'Learn more')}</details></article>`).join('')+'</div>';}
+export function opportunityDetail(t,journey={},type='internships'){
+ const website=opportunityWebsite(t,type),label=website?new URL(website).hostname.replace(/^www\./,''):'';
+ return `${website?`<p class="opportunity-website">${link(website,label)}</p>`:''}<p class="opportunity-fit">${esc(opportunityDescription(t,journey,type))}</p>`;
+}
+export function experienceCards(items=[],journey={},type='internships'){return '<div class="target-grid">'+items.map(t=>`<article class="target-card"><h3>${esc(t.name)}</h3><small>${esc([t.organizationType,t.country].filter(Boolean).join(' · '))}</small>${opportunityDetail(t,journey,type)}</article>`).join('')+'</div>';}
 
 function basePlanView(plan,draft){
  const cs=plan.courses,done=completedIds(plan),checks=planIssues(plan),completed=creditsOf(cs.filter(c=>done.includes(c.id))),total=creditsOf(cs),first=plan.terms.find(t=>!['prior','pending'].includes(t.id)&&t.courses.some(id=>!done.includes(id)))?.id;

@@ -219,7 +219,7 @@ document.addEventListener('submit',async e=>{
   const j=newJourney(p);j.refinements={...j.refinements,targets:String(new FormData(form).get('request')||'')};
   const result=await requestAdvice('targets',j);if(JSON.stringify(active())!==targetBase)throw Error('Your plan changed. Request a fresh proposal.');
   if(result.kind==='answer'){output.innerHTML=`<p>${esc(result.answer)}</p><p class="small-note">Your plan has not changed.</p>`;return;}
-  acceptAdvice(j,'targets',result);targetPreview={journey:j,result};output.innerHTML=updateView(result.update)+researchView(result.research)+'<h3>Proposed companies</h3>'+experienceCards(result.internships)+'<h3>Proposed exchange institutions</h3>'+experienceCards(result.exchanges)+btn('apply-target-update','Save updated targets',true);
+  acceptAdvice(j,'targets',result);targetPreview={journey:j,result};output.innerHTML=updateView(result.update)+researchView(result.research)+'<h3>Proposed companies</h3>'+experienceCards(result.internships,j,'internships')+'<h3>Proposed exchange institutions</h3>'+experienceCards(result.exchanges,j,'exchanges')+btn('apply-target-update','Save updated targets',true);
  }catch(error){showSignInRecovery(output,error);}
  finally{targetBusy=false;form.querySelector('button[type="submit"]').disabled=false;}
 });
