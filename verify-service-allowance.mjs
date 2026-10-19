@@ -3,7 +3,7 @@ import {testSession} from './tests/session-fixture.mjs';
 import {emptyWorkspace} from './dist/guidance.js';
 import assert from 'node:assert/strict';
 import {localDatabase} from './server/local-db.mjs';
-import {serviceEntitlement,allowanceView,beginServiceAction,advanceService,reserveServiceCall} from './server/service-allowance.mjs';
+import {serviceEntitlement,allowanceView,beginServiceAction,advanceService,reserveServiceCall,recoverInitialTargets} from './server/service-allowance.mjs';
 import {SERVICE_STAGES,SERVICE_API_BUDGET,SERVICE_PRICE,AI_REQUEST_BUDGET} from './dist/service-policy.js';
 const db=localDatabase(':memory:'),uid='package-student',other='other-student';
 const begin=(kind,step,id=crypto.randomUUID())=>beginServiceAction(db,uid,{id,kind,step});
@@ -52,4 +52,16 @@ assert.equal((await api('/api/account','DELETE',{confirm:'DELETE MY GOPLAN DATA'
 assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM service_calls WHERE owner=?').bind(beforeDelete.id).first()).n,0);
 assert.equal((await serviceEntitlement(db,apiUser)).initial_mask,1,'Deleting profile data cannot restore a used initial request.');
 
+// A dead Worker cannot hold a receipt forever or restore spent AI credit.
+const staleUser='stale-receipt-user';
+const staleAction=await beginServiceAction(db,staleUser,{id:crypto.randomUUID(),kind:'initial',step:0});
+const staleCall=await reserveServiceCall(db,staleUser,staleAction.action,'direction','stale-hash');
+await db.prepare('UPDATE service_calls SET created_at=? WHERE id=?').bind(Date.now()-300000,staleCall.id).run();
+const interrupted=await reserveServiceCall(db,staleUser,staleAction.action,'direction','stale-hash');
+assert.equal(interrupted.status,409);assert.equal(interrupted.cached.code,'REQUEST_INTERRUPTED');
+await assert.rejects(()=>reserveServiceCall(db,staleUser,staleAction.action,'direction','another-hash'),e=>e.code==='SERVICE_ACTION_USED');
+assert.equal((await serviceEntitlement(db,staleUser)).initial_mask,1);
+await assert.rejects(()=>recoverInitialTargets(db,staleUser,staleAction.action,{source:'reviewed'}),e=>e.code==='SERVICE_ACTION_REQUIRED');
+await assert.rejects(()=>recoverInitialTargets(db,other,staleAction.action,{source:'reviewed'}),e=>e.code==='SERVICE_ACTION_REQUIRED');
+for(const action of global.filter(r=>r.status==='fulfilled'))await assert.rejects(()=>recoverInitialTargets(db,uid,action.value.action,{source:'reviewed'}),e=>e.code==='SERVICE_ACTION_REQUIRED');
 db.close();console.log('Passed atomic two-per-stage and five-global quotas, persistent account isolation, closed stages, replay without new billing, forty-request/$10 package ceiling and $12 price at 20% markup. No live calls.');

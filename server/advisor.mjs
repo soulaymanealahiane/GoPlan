@@ -1,4 +1,4 @@
-import {boundedRequest,adviceTokens,adviceEffort} from './request-policy.mjs';
+import {boundedRequest,adviceTokens,adviceEffort,INITIAL_TARGET_TIMEOUT_MS,REQUEST_TIMEOUT_MS} from './request-policy.mjs';
 import {fetchOpenAIResponse,reasoningEffort} from './openai-response.mjs';
 import {openaiServiceError} from './openai-transport.mjs';
 import {DATA,normalizeProfile,programFor,coursesFor,generatePlan,validatePlan} from '../dist/planner.js';
@@ -162,7 +162,7 @@ export function recoverDetails(result,request,checkTargets=true){
 }
 
 export async function advise(input,env,fetcher=fetch){
- if(!env.GOPLAN_REQUEST_SIGNAL){const policy=boundedRequest(env,fetcher);try{return await advise(input,policy.env,policy.fetcher);}finally{policy.dispose();}}
+ if(!env.GOPLAN_REQUEST_SIGNAL){const policy=boundedRequest(env,fetcher,{timeoutMs:input?.stage==='targets'&&env.GOPLAN_SERVICE_ACTION_KIND==='initial'?INITIAL_TARGET_TIMEOUT_MS:REQUEST_TIMEOUT_MS});try{return await policy.run(()=>advise(input,policy.env,policy.fetcher));}finally{policy.dispose();}}
  if(input?.flowVersion===5||['setup','courses','targets','pace','replan','question','change'].includes(input?.stage)){const {adviseJourney}=await import('./journey-agent.mjs');return adviseJourney(input,env,fetcher);}
  const request=sanitizeRequest(input),direction=request.stage==='direction';
  const context=direction?directionContext(request):detailsContext(request);

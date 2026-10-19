@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {boundedRequest,REQUEST_TIMEOUT_MS,REQUEST_BUDGET_USD} from './server/request-policy.mjs';
-import {acquireAdviserLease} from './server/adviser-lease.mjs';
+import {acquireAdviserLease,releaseAdviserActionLease} from './server/adviser-lease.mjs';
 import {localDatabase} from './server/local-db.mjs';
 const url='https://api.openai.com/v1/responses';
 const request={method:'POST',body:JSON.stringify({model:'gpt-6.1-sol',input:'Synthetic',max_output_tokens:6000,service_tier:'default'})};
@@ -22,10 +22,22 @@ const preflight=boundedRequest({},async(u,init)=>{const body=JSON.parse(init.bod
 try{await assert.rejects(()=>preflight.fetcher(url,request),e=>e.code==='REQUEST_TOO_LARGE'&&e.retryable===false);assert.ok(counted);assert.equal(generated,false);}finally{preflight.dispose();}
 const timed=boundedRequest({GOPLAN_TOKEN_COUNTER:async()=>100},async(_,init)=>new Promise((resolve,reject)=>init.signal.addEventListener('abort',()=>reject(init.signal.reason),{once:true})),{timeoutMs:10});
 try{await assert.rejects(()=>timed.fetcher(url,request),e=>e.name==='TimeoutError');}finally{timed.dispose();}
+// A deadline must cover transports, token counting and bodies that ignore abort.
+for(const stalled of ['transport','counter','body','whole-operation']){
+ const never=()=>new Promise(()=>{}),env={GOPLAN_TOKEN_COUNTER:stalled==='counter'?never:async()=>100};
+ const policy=boundedRequest(env,async()=>stalled==='transport'?never():stalled==='body'?new Response(new ReadableStream({start(){}})):Response.json({}),{timeoutMs:10});
+ try{await assert.rejects(()=>stalled==='whole-operation'?policy.run(never):policy.fetcher(url,request),e=>e.name==='TimeoutError');}finally{policy.dispose();}
+}
 const DB=localDatabase(':memory:');
 const first=await acquireAdviserLease(DB,'opaque-hash');assert.ok(first);assert.equal(await acquireAdviserLease(DB,'opaque-hash'),null);
 const lease=await DB.prepare('SELECT expires_at FROM adviser_leases WHERE id=?').bind('opaque-hash').first();
 assert.ok(lease.expires_at-Date.now()>REQUEST_TIMEOUT_MS,'The request lock must outlive the full server deadline.');
 await first.release();const second=await acquireAdviserLease(DB,'opaque-hash');assert.ok(second);await first.release();assert.equal(await acquireAdviserLease(DB,'opaque-hash'),null,'An old release cannot remove another request lock.');
-await second.release();DB.close();
+await second.release();
+const owner='a'.repeat(64),actionId=crypto.randomUUID();
+const linked=await acquireAdviserLease(DB,'linked-scope',{owner,actionId});
+await releaseAdviserActionLease(DB,'b'.repeat(64),actionId);assert.equal(await acquireAdviserLease(DB,'linked-scope'),null,'Another owner cannot release the lock.');
+await releaseAdviserActionLease(DB,owner,crypto.randomUUID());assert.equal(await acquireAdviserLease(DB,'linked-scope'),null,'Another action cannot release the lock.');
+await releaseAdviserActionLease(DB,owner,actionId);const next=await acquireAdviserLease(DB,'linked-scope',{owner,actionId:crypto.randomUUID()});assert.ok(next);
+await linked.release();assert.equal(await acquireAdviserLease(DB,'linked-scope'),null,'Late cleanup cannot remove the next action lock.');await next.release();DB.close();
 console.log('Passed exact token preflight, total spending reservations, timeout cancellation, cross-instance request exclusion and safe lease ownership. No live calls.');

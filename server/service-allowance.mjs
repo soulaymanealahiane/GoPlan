@@ -1,4 +1,5 @@
 import {SERVICE_STAGES,STAGE_CHANGES,GLOBAL_CHANGES,GLOBAL_REQUESTS,SERVICE_API_BUDGET} from '../dist/service-policy.js';
+import {releaseAdviserActionLease} from './adviser-lease.mjs';
 const ready=new WeakMap();
 const fail=(message,status=403,code='SERVICE_LIMIT')=>{throw Object.assign(Error(message),{status,code,retryable:status===429||status>=500});};
 export const serviceOwner=async uid=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('goplan-service-v1:'+uid))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -51,18 +52,48 @@ export async function reserveServiceCall(db,uid,actionId,stage,requestHash){
  if(!action)fail('Start this request from your GoPlan workspace.',403,'SERVICE_ACTION_REQUIRED');
  const allowed=action.kind==='global'?['change','question','direction','courses','targets','pace','replan']:[SERVICE_STAGES[action.step].agent];
  if(!allowed.includes(stage))fail('This AI request does not belong to the current stage.');
- const id=action.id+':'+requestHash,existing=await db.prepare('SELECT state,response,status FROM service_calls WHERE id=? AND owner=?').bind(id,row.id).first();
+ const recovered=await db.prepare('SELECT response,status FROM service_calls WHERE id=? AND owner=?').bind(action.id+':reviewed',row.id).first();
+ if(recovered?.response)return {cached:JSON.parse(recovered.response),status:recovered.status};
+ const id=action.id+':'+requestHash,existing=await db.prepare('SELECT state,response,status,created_at FROM service_calls WHERE id=? AND owner=?').bind(id,row.id).first();
  if(existing?.response)return {cached:JSON.parse(existing.response),status:existing.status};
  if(action.kind!=='global'&&(row.saved||row.step!==action.step))fail('This stage is complete. Use a global change from Your space.');
- if(existing)fail('This request is still finishing. Please wait.',429,'AGENT_BUSY');
+ if(existing){
+  // A killed Worker never reaches finally. Expire the receipt, never the spent
+  // allowance: an ambiguous paid attempt must not buy another generation.
+  if(Date.now()-existing.created_at>240000){const interrupted={error:'This request was interrupted. Your plan is saved.',code:'REQUEST_INTERRUPTED',retryable:false};await db.prepare("UPDATE service_calls SET state='finished',response=?,status=409 WHERE id=? AND owner=? AND state='running'").bind(JSON.stringify(interrupted),id,row.id).run();const settled=await db.prepare('SELECT response,status FROM service_calls WHERE id=? AND owner=?').bind(id,row.id).first();return {cached:JSON.parse(settled.response),status:settled.status};}
+  fail('This request is still finishing. Please wait.',429,'AGENT_BUSY');
+ }
  const results=await db.batch([
   db.prepare('UPDATE service_actions SET calls=calls+1 WHERE id=? AND owner=? AND calls<max_calls AND NOT EXISTS(SELECT 1 FROM service_calls WHERE id=?)').bind(action.id,row.id,id),
   db.prepare("INSERT INTO service_calls(id,action_id,owner,state,created_at) SELECT ?,?,?,'running',? WHERE changes()=1").bind(id,action.id,row.id,Date.now())
  ]);
  if(!results[0].meta?.changes)fail('This request is already used. Choose manually or send a new request if you have changes remaining.',403,'SERVICE_ACTION_USED');
  return {id,action,allowance:allowanceView(row),finish:async(body,status)=>{
-  await db.prepare("UPDATE service_calls SET state='finished',response=?,status=? WHERE id=? AND owner=?").bind(JSON.stringify(body),status,id,row.id).run();
+  await db.prepare("UPDATE service_calls SET state='finished',response=?,status=? WHERE id=? AND owner=? AND state='running' AND NOT EXISTS(SELECT 1 FROM service_calls WHERE id=?)").bind(JSON.stringify(body),status,id,row.id,action.id+':reviewed').run();
+  const winner=await db.prepare('SELECT response,status FROM service_calls WHERE owner=? AND (id=? OR id=?) ORDER BY CASE WHEN id=? THEN 0 ELSE 1 END LIMIT 1').bind(row.id,action.id+':reviewed',id,action.id+':reviewed').first();
+  return winner?.response?{body:JSON.parse(winner.response),status:winner.status}:{body,status};
  }};
+}
+
+// Settle only an INITIAL Companies/Exchanges action. No new action, model call,
+// quota refund or new allowance. A late provider response cannot replace this.
+export async function recoverInitialTargets(db,uid,actionId,value,{interruptedOnly=false}={}){
+ const row=await serviceEntitlement(db,uid),action=await db.prepare('SELECT * FROM service_actions WHERE id=? AND owner=?').bind(actionId||'',row.id).first();
+ if(!action||action.kind!=='initial'||![2,3].includes(action.step))fail('Open your current opportunity stage before retrying.',403,'SERVICE_ACTION_REQUIRED');
+ const completed=()=>db.prepare('SELECT response,status FROM service_calls WHERE action_id=? AND owner=? AND status=200 AND response IS NOT NULL ORDER BY CASE WHEN id=? THEN 0 ELSE 1 END,created_at DESC LIMIT 1').bind(action.id,row.id,action.id+':reviewed').first();
+ const release=async()=>{try{await releaseAdviserActionLease(db,row.id,action.id);}catch{console.warn('Recovered opportunity lease cleanup deferred to expiry.');}};
+ const ready=await completed();if(ready){await release();return JSON.parse(ready.response);}
+ if(row.saved||row.step!==action.step)fail('This stage is complete. Open your saved plan.',403,'SERVICE_LIMIT');
+ if(interruptedOnly){
+  const running=await db.prepare("SELECT created_at FROM service_calls WHERE action_id=? AND owner=? AND state='running' ORDER BY created_at DESC LIMIT 1").bind(action.id,row.id).first();
+  if(!action.calls||running&&Date.now()-running.created_at<60000)return null;
+ }
+ const body=JSON.stringify(typeof value==='function'?value():value),id=action.id+':reviewed';
+ await db.batch([
+  db.prepare("INSERT OR IGNORE INTO service_calls(id,action_id,owner,state,response,status,created_at) SELECT ?,?,?,'finished',?,200,? WHERE NOT EXISTS(SELECT 1 FROM service_calls WHERE action_id=? AND owner=? AND status=200 AND response IS NOT NULL)").bind(id,action.id,row.id,body,Date.now(),action.id,row.id),
+  db.prepare("UPDATE service_calls SET state='finished',response=?,status=200 WHERE action_id=? AND owner=? AND state='running' AND EXISTS(SELECT 1 FROM service_calls WHERE id=?)").bind(body,action.id,row.id,id)
+ ]);
+ const winner=await completed();await release();return JSON.parse(winner.response);
 }
 export async function serviceEndpoint(request,env,identity){
  const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});

@@ -18,10 +18,11 @@ export async function requestAdvice(stage,journey,extra={}){
  if(pendingAdvice.has(key))return pendingAdvice.get(key);
  const job=(async()=>{
  // Allow the server's three-minute deadline plus time to return its result.
- const signal=AbortSignal.timeout(195000),requestAccess=access;
+ const initialTargets=stage==='targets'&&['Choose company recommendations.','Choose exchange destinations and preserve the company recommendations.'].includes(journey.refinements?.targets);
+ const signal=AbortSignal.timeout(initialTargets?55000:195000),requestAccess=access;
  for(let attempt=0;attempt<2;attempt++){
- let response;try{response=await fetch(endpoint()+'/api/advice',{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':requestAccess,'X-GoPlan-Session':sessionId()},signal,body});}catch(e){throw Error(e.name==='TimeoutError'||signal.aborted?'The recommendation did not arrive within three minutes and 15 seconds. Your answers are saved. You do not need to restart your plan.':'The connection was interrupted. Your answers are saved; check your connection before retrying.');}
- let data;try{data=await response.json();}catch{throw Error('The AI service is unavailable. Your saved plan is unchanged.');}
+ let response;try{response=await fetch(endpoint()+'/api/advice',{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':requestAccess,'X-GoPlan-Session':sessionId()},signal,body});}catch(e){throw Object.assign(Error(e.name==='TimeoutError'||signal.aborted?'The recommendation took longer than expected. Your answers are saved.':'The connection was interrupted. Your answers are saved; check your connection before retrying.'),{code:'ADVICE_TRANSPORT',retryable:true});}
+ let data;try{data=await response.json();}catch{throw Object.assign(Error('The connection did not return a recommendation. Your answers are saved.'),{code:response.status===401?'SIGN_IN_REQUIRED':'ADVICE_TRANSPORT',status:response.status,retryable:true});}
  if(response.status===429&&data.code==='AGENT_BUSY'&&attempt<1){await new Promise(resolve=>setTimeout(resolve,Math.min(6000,Math.max(1000,Number(data.retryAfterSeconds)*1000||2000)*(1+attempt/2))));signal.throwIfAborted();continue;}
  if(response.status===401&&['ACCESS_REQUIRED','SIGN_IN_REQUIRED'].includes(data.code)){
   if(access===requestAccess){setAccessCode('');try{sessionStorage.removeItem(accessStorage);}catch{}}
@@ -51,9 +52,10 @@ export async function feedbackRequest(action,body){
  return data;
 }
 
-// Reviewed matching only: this endpoint cannot invoke a model or spend an allowance.
-export async function requestReviewedTargets(journey){
+// Reviewed matching only: settle an interrupted initial action without another
+// model call or consuming a guided/global change.
+export async function requestReviewedTargets(journey,{serviceAction}={}){
  const {program,track,secondTrack,minor,choices}=journey.profile;
- const response=await fetch(endpoint()+'/api/reviewed-targets',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({profile:{program,track,secondTrack,minor,choices},questionnaire:journey.questionnaire,goal:journey.goal}),signal:AbortSignal.timeout(20000)});
+ const response=await fetch(endpoint()+'/api/reviewed-targets',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({profile:{program,track,secondTrack,minor,choices},questionnaire:journey.questionnaire,goal:journey.goal,serviceAction}),signal:AbortSignal.timeout(20000)});
  const data=await response.json();if(!response.ok)throw Object.assign(Error(data.error||'Your matches could not load. Please try again.'),{retryable:true});return data;
 }

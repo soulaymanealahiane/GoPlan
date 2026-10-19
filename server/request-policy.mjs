@@ -1,11 +1,20 @@
 import {AI_REQUEST_BUDGET} from '../dist/service-policy.js';
 // One budget and deadline cover discovery, extraction, advice and repairs.
 export const REQUEST_TIMEOUT_MS=180000;
+// Initial opportunity discovery must finish before an edge/gateway disconnect.
+// Keep the full budget; use reviewed matching if live work exceeds this window.
+export const INITIAL_TARGET_TIMEOUT_MS=45000;
 export const REQUEST_BUDGET_USD=AI_REQUEST_BUDGET;
 const prices={'gpt-6.1-sol':[2,10],'gpt-6-luna':[0.1,0.5]};
 export function boundedRequest(env,fetcher=fetch,{timeoutMs=REQUEST_TIMEOUT_MS}={}){
  const controller=new AbortController(),started=Date.now();let spent=0;
  const timer=setTimeout(()=>controller.abort(new DOMException('GoPlan response deadline','TimeoutError')),timeoutMs);
+ const run=work=>new Promise((resolve,reject)=>{
+  const abort=()=>reject(controller.signal.reason);
+  if(controller.signal.aborted)return abort();
+  controller.signal.addEventListener('abort',abort,{once:true});
+  Promise.resolve().then(work).then(resolve,reject).finally(()=>controller.signal.removeEventListener('abort',abort));
+ });
  const budget=REQUEST_BUDGET_USD;
  const bounded=async(url,init={})=>{
   controller.signal.throwIfAborted();
@@ -23,6 +32,7 @@ export function boundedRequest(env,fetcher=fetch,{timeoutMs=REQUEST_TIMEOUT_MS}=
    if(!count.ok)return count;
    inputTokens=(await count.json()).input_tokens;
   }
+  signal.throwIfAborted();
   if(!Number.isInteger(inputTokens)||inputTokens<0)throw Object.assign(Error('The adviser could not verify the request cost. Your choices are saved.'),{status:503});
   const tools=body.tools?Math.min(body.max_tool_calls||4,4):0;
   if(inputTokens>65000||body.max_output_tokens>6000||body.max_tool_calls>4)throw Object.assign(Error('GoPlan could not finish this recommendation. Your answers and choices are saved; you can keep working manually.'),{status:422,code:'REQUEST_TOO_LARGE',retryable:false});
@@ -34,7 +44,9 @@ export function boundedRequest(env,fetcher=fetch,{timeoutMs=REQUEST_TIMEOUT_MS}=
   try{const p=await response.clone().json();if(p.usage){const actual=(p.usage.input_tokens*rates[0]+p.usage.output_tokens*rates[1])/1e6+tools*0.01;spent+=Math.max(0,actual)-reserve;}}catch{}
   return response;
  };
- return {env:{...env,GOPLAN_REQUEST_SIGNAL:controller.signal,GOPLAN_REQUEST_STARTED:started},fetcher:bounded,dispose:()=>clearTimeout(timer)};
+ // Race the entire operation, including token counting and response bodies.
+ // AbortSignal alone cannot bound a transport/body that ignores cancellation.
+ return {env:{...env,GOPLAN_REQUEST_SIGNAL:controller.signal,GOPLAN_REQUEST_STARTED:started},fetcher:(...args)=>run(()=>bounded(...args)),run,dispose:()=>clearTimeout(timer)};
 }
 export const adviceTokens=stage=>({setup:1800,question:1400,change:1400,pace:1400,direction:4000,courses:6000,targets:5000,replan:4000}[stage]||5000);
 export const adviceEffort=(stage,env)=>['setup','question','change','pace','targets'].includes(stage)?'low':env.OPENAI_REASONING_EFFORT||'medium';

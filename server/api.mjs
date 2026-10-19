@@ -1,5 +1,5 @@
 import {reviewedOpportunityShortlist} from './opportunity-recovery.mjs';
-import {serviceEndpoint,reserveServiceCall} from './service-allowance.mjs';
+import {serviceEndpoint,reserveServiceCall,recoverInitialTargets,serviceOwner} from './service-allowance.mjs';
 import {partnershipEndpoint} from './partnerships.mjs';
 import {rosterMode} from './university-access.mjs';
 import {authEndpoint,accountIdentity} from './auth.mjs';
@@ -37,7 +37,7 @@ export async function handleApi(request,env,options={}){
  const isEvent=path==='/api/usage',isReviewedTargets=path==='/api/reviewed-targets';
  if(path!=='/api/advice'&&!isFeedback&&!isEvent&&!isReviewedTargets)return reply({error:'Not found'},404,origin);
  if(request.method!=='POST')return reply({error:'Use POST.'},405,origin);
- if(!isFeedback&&!isReviewedTargets&&!env.OPENAI_API_KEY)return reply({error:'The adviser is temporarily unavailable. Your answers are saved.',code:'AI_NOT_CONFIGURED'},503,origin);
+ if(!isFeedback&&!isReviewedTargets&&!env.OPENAI_API_KEY&&!signedIn)return reply({error:'The adviser is temporarily unavailable. Your answers are saved.',code:'AI_NOT_CONFIGURED'},503,origin);
  if(!isFeedback&&!signedIn)return reply({error:'Sign in to continue with your adviser. No demo code is needed.',code:'SIGN_IN_REQUIRED'},401,origin);
  if(!request.headers.get('Content-Type')?.startsWith('application/json'))return reply({error:'Use JSON.'},415,origin);
  const bytes=Number(request.headers.get('Content-Length'));if(bytes>40000)return reply({error:'Request too large.'},413,origin);
@@ -48,7 +48,11 @@ export async function handleApi(request,env,options={}){
  let data;try{data=JSON.parse(new TextDecoder().decode(all));}catch{return reply({error:'Invalid request.'},400,origin);}
  if(isEvent){if(!data||!EVENTS.has(data.event)||Object.keys(data).some(k=>k!=='event'))return reply({error:'Unknown usage event.'},400,origin);await recordSafely(env,{kind:'event',stage:data.event,channel:channelFor(origin)});return reply({accepted:true},200,origin);}
  if(isFeedback){try{return reply(await feedbackEndpoint(path,data,request,env,signedIn),200,origin);}catch(e){return reply({error:e.status?e.message:'Mistake reporting is unavailable. Your report was not confirmed; keep your text and retry.',code:e.status===401?'ACCESS_REQUIRED':'FEEDBACK_ERROR'},e.status||503,origin);}}
- if(isReviewedTargets){try{return reply(reviewedOpportunityShortlist({...data,refinement:'',currentRecommendation:{}}),200,origin);}catch{return reply({error:'Choose a supported degree before exploring opportunities.'},400,origin);}}
+ if(isReviewedTargets){try{const value=reviewedOpportunityShortlist({...data,refinement:'',currentRecommendation:{}});return reply(data.serviceAction?await recoverInitialTargets(env.DB,signedIn.id,data.serviceAction,value):value,200,origin);}catch(e){return reply({error:e.status?e.message:'Choose a supported degree before exploring opportunities.',code:e.code},e.status||400,origin);}}
+ // Recover abandoned initial receipts before leases, provider configuration and
+ // instance-local busy maps. Old deployment/request hashes must not strand users.
+ if(data.stage==='targets'&&data.serviceAction){try{const value=await recoverInitialTargets(env.DB,signedIn.id,data.serviceAction,()=>reviewedOpportunityShortlist(data),{interruptedOnly:true});if(value)return reply(value,200,origin);}catch(e){if(e.code!=='SERVICE_ACTION_REQUIRED'&&e.code!=='SERVICE_LIMIT')return reply({error:'Your matches could not load. Your answers are saved.',code:'SERVICE_UNAVAILABLE'},503,origin);}}
+ if(!env.OPENAI_API_KEY)return reply({error:'The adviser is temporarily unavailable. Your answers are saved.',code:'AI_NOT_CONFIGURED'},503,origin);
  let corrections=[];try{corrections=await approvedCorrections(env);}catch{console.warn('Feedback library unavailable for this request.');}
  // Durable service receipts enforce package limits. These instance-local maps
  // coalesce duplicate clicks and bound simultaneous paid work.
@@ -70,15 +74,18 @@ export async function handleApi(request,env,options={}){
   let lease,serviceCall;
   job=Promise.resolve().then(async()=>{
    let blocked;
-   try{blocked=await adviserFailure(env.DB,key);if(!blocked)lease=await acquireAdviserLease(env.DB,scope);}catch{throw Object.assign(Error('The adviser could not safely start this request. Your answers are saved; please retry.'),{status:503});}
+   try{blocked=await adviserFailure(env.DB,key);if(!blocked)lease=await acquireAdviserLease(env.DB,scope,{owner:await serviceOwner(identity),actionId:data.serviceAction});}catch{throw Object.assign(Error('The adviser could not safely start this request. Your answers are saved; please retry.'),{status:503});}
    if(blocked)throw Object.assign(Error(blocked.code==='ADVISER_TIMEOUT'?timeoutMessage:'GoPlan could not finish this recommendation. Your answers and choices are saved; you can keep working manually.'),{status:blocked.code==='ADVISER_TIMEOUT'?504:422,code:blocked.code,retryable:false});
    if(!lease)throw Object.assign(Error('The adviser is finishing your previous request. Wait a moment before retrying.'),{status:429,code:'AGENT_BUSY'});
    serviceCall=await reserveServiceCall(env.DB,identity,data.serviceAction,data.stage,key);
    if(serviceCall.cached){if(serviceCall.status!==200)throw Object.assign(Error(serviceCall.cached.error),{status:serviceCall.status,code:serviceCall.cached.code,retryable:false});return serviceCall.cached;}
    const input={...data};delete input.serviceAction;
-   return advise(input,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections,GOPLAN_SERVICE_ACTION_KIND:serviceCall.action?.kind},measuredFetch);
+   try{return await advise(input,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections,GOPLAN_SERVICE_ACTION_KIND:serviceCall.action?.kind},measuredFetch);}catch(error){
+    if(data.stage==='targets'&&serviceCall.action?.kind==='initial'){const reasonCode=error.name==='TimeoutError'?'timeout':'provider';console.warn('GoPlan initial opportunity recovery',JSON.stringify({stage:'targets',reasonCode,durationMs:Date.now()-now}));return reviewedOpportunityShortlist(input,{reasonCode});}
+    throw error;
+   }
   }).then(async value=>{
-   if(serviceCall?.finish)await serviceCall.finish(value,200);
+   if(serviceCall?.finish){const settled=await serviceCall.finish(value,200);if(settled.status===200)value=settled.body;}
    metric.outcome='success';
    while(recent.size>=200)recent.delete(recent.keys().next().value);
    // A temporary research failure must not pin the next retry to old evidence.

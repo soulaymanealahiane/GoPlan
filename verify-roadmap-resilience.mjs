@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {localDatabase} from './server/local-db.mjs';
 import {handleApi} from './server/api.mjs';
-import {reserveServiceCall} from './server/service-allowance.mjs';
+import {acquireAdviserLease} from './server/adviser-lease.mjs';
+import {reserveServiceCall,serviceOwner} from './server/service-allowance.mjs';
 import {testSession} from './tests/session-fixture.mjs';
 import {openaiFixture} from './tests/openai-fixture.mjs';
 import {createDashboardController} from './dist/dashboard-controller.js';
@@ -37,10 +38,11 @@ async function harness(profile){
  const DB=localDatabase(':memory:'),uid='resilience-'+crypto.randomUUID(),session=await testSession(DB,uid);
  const env={DB,OPENAI_API_KEY:'synthetic-'+uid,OPENAI_WEB_RESEARCH:'off',OPENAI_DIRECTION_RESEARCH:'off',GOPLAN_TOKEN_COUNTER:async()=>1000};
  let state=newcomerWorkspace({year:2026,degree:profile.program}),runtime={},revision=0,exported=0,paid=0;
- let failure='',failureStage='targets',dropAdvice='',dropAction=false,gate=null,started=null,modal='',directionProfile={...profile};
+ let failure='',failureStage='targets',dropAdvice='',dropAction=false,httpFault='',gate=null,started=null,modal='',directionProfile={...profile};
  const workspaceId=crypto.randomUUID(),calls=[],requests=[],replies=[];
  state.journey.questionnaire={...state.journey.questionnaire,ambitions:profile.ambitions,activities:'Build practical projects, compare options and solve problems.',strengths:'Mathematics, programming and problem solving.'};
  const wire=(path,init={})=>new Request(BASE+path,{...init,headers:{Origin:BASE,...session,...init.headers}});
+ const scope=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([env.OPENAI_API_KEY,env.AI_ACCESS_CODE,env.OPENAI_MODEL,env.OPENAI_RESEARCH_MODEL,env.OPENAI_REASONING_EFFORT,env.OPENAI_RESEARCH_REASONING_EFFORT,env.OPENAI_WEB_RESEARCH,env.OPENAI_DIRECTION_RESEARCH,uid])))),b=>b.toString(16).padStart(2,'0')).join('');
  const api=async(path,init={})=>handleApi(wire(path,init),env,{fetcher:provider});
  const json=async(path,method,body)=>{const response=await api(path,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const value=await response.json();assert.ok(response.ok,path+': '+JSON.stringify(value));return value;};
  const provider=async(url,init)=>{
@@ -49,6 +51,7 @@ async function harness(profile){
   calls.push({stage,context,body});
   if(gate){const wait=gate;gate=null;started?.resolve();await wait.promise;}
   if(stage===failureStage&&failure){
+   if(failure==='hang')return new Promise(()=>{});
    if(failure==='transient'){failure='';return openaiFixture({error:{code:'server_error',message:'Synthetic temporary outage'}},{status:503});}
    if(failure==='incomplete')return openaiFixture({status:'incomplete',output:[],incomplete_details:{reason:'max_output_tokens'}});
    if(failure==='empty')return openaiFixture({status:'completed',output:[{content:[{type:'output_text',text:'{"summary":"","internships":[],"exchanges":[],"update":{"summary":"","changes":[],"limitations":[]}}'}]}]});
@@ -93,6 +96,15 @@ async function harness(profile){
  let controller=createDashboardController(hooks);
  globalThis.fetch=async(path,init={})=>{
   assert.ok(String(path).startsWith('/api/'),'No real network access is allowed.');const data=init.body?JSON.parse(init.body):{};requests.push({path,data});
+  if(path==='/api/advice'&&data.stage==='targets'&&httpFault){
+   const mode=httpFault;httpFault='';
+   if(mode==='unauthorized')return Response.json({error:'Sign in again.',code:'SIGN_IN_REQUIRED'},{status:401});
+   await acquireAdviserLease(DB,scope,{owner:await serviceOwner(uid),actionId:data.serviceAction});
+   await reserveServiceCall(DB,uid,data.serviceAction,'targets','abandoned-previous-deployment');
+   if(mode==='disconnect')throw TypeError('Synthetic interrupted gateway connection.');
+   if(mode==='timeout')throw new DOMException('Synthetic request timeout','TimeoutError');
+   return new Response(mode==='empty'?'':'<html>Gateway unavailable</html>',{status:mode==='empty'?200:502,headers:{'Content-Type':'text/html'}});
+  }
   const response=await api(path,init);
   if(path==='/api/advice')replies.push({stage:data.stage,status:response.status,body:await response.clone().json()});
   if(path==='/api/advice'&&data.stage===dropAdvice&&response.ok){dropAdvice='';throw TypeError('Synthetic response lost after durable completion.');}
@@ -101,6 +113,8 @@ async function harness(profile){
  };
  await json('/api/account/profile','POST',{firstName:'Synthetic',lastName:'Student',consentCloud:true});await controller.loadService();
  return {DB,uid,api,json,calls,requests,replies,apiWithoutAI:(path,init={})=>handleApi(wire(path,init),{DB},{fetcher:()=>assert.fail('Reviewed recovery must never contact a provider.')}),get state(){return state;},get runtime(){return runtime;},get controller(){return controller;},get paid(){return paid;},get exported(){return exported;},get modal(){return modal;},
+  oldLease:()=>acquireAdviserLease(DB,scope),
+  httpFault:mode=>{httpFault=mode;},
   fail:(value,stage='targets')=>{failure=value;failureStage=stage;},direction:changes=>{directionProfile={...directionProfile,...changes};},drop:stage=>{dropAdvice=stage;},dropReservation:()=>{dropAction=true;},hold:()=>{gate=deferred();started=deferred();return {started:started.promise,release:gate.resolve};},
   save:saveCloud,reload:async()=>{const saved=await json('/api/account/workspaces/'+workspaceId,'GET');state=validateSavedWorkspace(saved.state);revision=saved.revision;runtime={};hooks.runtime=runtime;controller=createDashboardController(hooks);resetAdviserSession();await controller.loadService();},
   async close(){DB.close();resetAdviserSession();}
@@ -196,10 +210,85 @@ try{
    const action=await h.json('/api/service/action','POST',{id:crypto.randomUUID(),kind:'initial',step:2});
    const receipt=await reserveServiceCall(h.DB,h.uid,action.action,'targets','legacy-failed-request');await receipt.finish({error:'Synthetic old target failure',code:'INVALID_TARGET_RESPONSE',retryable:false},422);
    const before=h.paid;await stageStart(h);await checkTargets(h,'internships');assert.equal(h.paid,before);assert.equal(h.runtime.service.stageChanges[2],2);assert.equal(h.runtime.service.globalRemaining,5);
-   assert.ok(h.requests.some(r=>r.path==='/api/reviewed-targets'));await finish(h);
+   assert.equal((await h.DB.prepare("SELECT COUNT(*) AS n FROM service_calls WHERE state='running'").first()).n,0);await finish(h);
   }finally{await h.close();}
  });
 
+
+ for(const mode of ['html','empty','disconnect','timeout'])await group('Gateway '+mode+': abandoned initial Companies request recovers immediately, saves and completes all stages',async()=>{
+  const h=await harness(profiles[0]);try{
+   await stageStart(h);await advance(h);const paid=h.paid;h.httpFault(mode);await advance(h);
+   await checkTargets(h,'internships');assert.equal(h.paid,paid,'Transport recovery must never reissue a paid request.');
+   const marker=await h.DB.prepare("SELECT response FROM service_calls WHERE id LIKE '%:reviewed'").first();assert.equal(JSON.parse(marker.response).source,'reviewed');
+   assert.equal((await h.DB.prepare("SELECT COUNT(*) AS n FROM service_calls WHERE state='running'").first()).n,0);
+   assert.deepEqual(h.runtime.service.stageChanges,[2,2,2,2,2]);
+   assert.equal((await h.DB.prepare('SELECT COUNT(*) AS n FROM adviser_leases').first()).n,0,'Recovery must retire only the abandoned initial action lease.');
+   const chosen=structuredClone(h.state.journey.details.internships);await h.save();await h.reload();assert.deepEqual(h.state.journey.details.internships,chosen);
+   // Retry with a different deployment hash must replay the settled result.
+   const action=h.requests.filter(r=>r.path==='/api/service/action'&&r.data.step===2).at(-1).data.id;
+   const replay=await reserveServiceCall(h.DB,h.uid,action,'targets','new-deployment-hash');assert.equal(replay.status,200);assert.deepEqual(replay.cached.internships,chosen);
+   h.httpFault(mode);await advance(h);await checkTargets(h,'exchanges');assert.deepEqual(h.state.journey.details.internships,chosen);assert.equal(h.paid,paid);
+   await finish(h);assert.equal(h.state.phase,'saved');assert.equal(h.runtime.service.globalRemaining,5);
+  }finally{await h.close();}
+ });
+
+ await group('A killed Worker receipt from the previous deployment recovers without a provider retry, at unchanged allowance',async()=>{
+  const h=await harness(profiles[1]);try{
+   await stageStart(h);await advance(h);await h.json('/api/service/advance','POST',{step:1});await h.controller.loadService();
+   const action=await h.json('/api/service/action','POST',{id:crypto.randomUUID(),kind:'initial',step:2});
+   const receipt=await reserveServiceCall(h.DB,h.uid,action.action,'targets','old-worker-hash');
+   await h.DB.prepare('UPDATE service_calls SET created_at=? WHERE id=?').bind(Date.now()-300000,receipt.id).run();
+   const before=h.paid;await stageStart(h);await checkTargets(h,'internships');assert.equal(h.paid,before);
+   const recovered=structuredClone(h.state.journey.details.internships);
+   // A late completion from the abandoned Worker must not overwrite recovery.
+   const late=await receipt.finish({source:'late',internships:[]},200);assert.equal(late.body.source,'reviewed');
+   const replay=await reserveServiceCall(h.DB,h.uid,action.action,'targets','new-worker-hash');assert.deepEqual(replay.cached.internships,recovered);
+   assert.equal((await h.DB.prepare("SELECT COUNT(*) AS n FROM service_calls WHERE state='running'").first()).n,0);
+   await finish(h);
+  }finally{await h.close();}
+ });
+
+ await group('Recovery during an in-flight response wins atomically and the late provider cannot replace it',async()=>{
+  const h=await harness(profiles[0]);try{
+   await stageStart(h);await advance(h);const held=h.hold(),pending=h.controller.click(button('dashboard-stage-next'));
+   await held.started;const action=h.requests.filter(r=>r.path==='/api/service/action'&&r.data.step===2).at(-1).data.id;
+   const response=await h.apiWithoutAI('/api/reviewed-targets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile:h.state.journey.profile,questionnaire:h.state.journey.questionnaire,serviceAction:action})});
+   assert.equal(response.status,200);const recovered=await response.json();assert.equal(recovered.source,'reviewed');
+   held.release();await pending;assert.equal(h.runtime.aiError,'');assert.deepEqual(h.state.journey.details.internships,recovered.internships);
+   assert.equal(h.runtime.service.stageChanges[2],2);await finish(h);
+  }finally{await h.close();}
+ });
+
+ await group('A previous-version orphan lock cannot halt Companies, Exchanges or Semesters',async()=>{
+  const h=await harness(profiles[1]);let orphan;
+  try{
+   await stageStart(h);await advance(h);orphan=await h.oldLease();assert.ok(orphan);const paid=h.paid;
+   await advance(h);await checkTargets(h,'internships');await advance(h);await checkTargets(h,'exchanges');await advance(h);
+   assert.ok(h.state.draftPlan?.terms.length);assert.equal(h.paid,paid);await finish(h);assert.equal(h.runtime.service.globalRemaining,5);
+   assert.deepEqual(h.runtime.service.stageChanges,[2,2,2,2,2]);
+  }finally{await orphan?.release();await h.close();}
+ });
+
+ await group('Initial target hard deadline bounds an unresponsive provider, releases the lease and continues the roadmap',async()=>{
+  const h=await harness(profiles[2]),timer=globalThis.setTimeout;
+  try{
+   await stageStart(h);await advance(h);h.fail('hang');
+   globalThis.setTimeout=(fn,ms,...args)=>timer(fn,ms===45000?25:ms,...args);
+   await advance(h);await checkTargets(h,'internships');
+   assert.equal(h.replies.at(-1).body.recoveryReason,'timeout');
+   assert.equal((await h.DB.prepare('SELECT COUNT(*) AS n FROM adviser_leases').first()).n,0);
+   assert.equal((await h.DB.prepare("SELECT COUNT(*) AS n FROM service_calls WHERE state='running'").first()).n,0);
+   assert.equal(h.runtime.service.stageChanges[2],2);h.fail('');await finish(h);
+  }finally{globalThis.setTimeout=timer;await h.close();}
+ });
+
+ await group('Expired sign-in does not become a successful recovery or bypass authentication',async()=>{
+  const h=await harness(profiles[0]);try{
+   await stageStart(h);await advance(h);h.httpFault('unauthorized');await h.controller.click(button('dashboard-stage-next'));
+   assert.ok(h.runtime.aiError);assert.ok(!h.state.journey.details?.internships?.length);
+   assert.equal(h.requests.filter(r=>r.path==='/api/reviewed-targets').length,0);
+  }finally{await h.close();}
+ });
  await group('A saved legacy plan with missing exchanges recovers its cards at zero global quota',async()=>{
   const h=await harness(profiles[2]);try{
    await stageStart(h);await finish(h);await h.DB.prepare('UPDATE service_entitlements SET global_used=5').run();await h.controller.loadService();
@@ -212,7 +301,7 @@ try{
 
  await group('Lost Companies result and lost Exchanges reservation replay the same durable actions',async()=>{
   const h=await harness(profiles[0]);try{
-   await stageStart(h);await advance(h);h.drop('targets');await h.controller.click(button('dashboard-stage-next'));assert.ok(h.runtime.aiError);const paid=h.paid;
+   await stageStart(h);await advance(h);h.drop('targets');await h.controller.click(button('dashboard-stage-next'));assert.equal(h.runtime.aiError,'','A lost successful initial response must recover immediately.');const paid=h.paid;
    await h.controller.click(button('dashboard-retry'));assert.equal(h.runtime.aiError,'');assert.equal(h.paid,paid,'Lost-result replay must not pay twice.');assert.equal(h.runtime.service.step,2);await checkTargets(h,'internships');
    h.dropReservation();await h.controller.click(button('dashboard-stage-next'));assert.ok(h.runtime.aiError);const before=h.paid;
    await h.controller.click(button('dashboard-retry'));assert.equal(h.runtime.aiError,'');assert.ok(h.paid-before<=1);assert.equal(h.runtime.service.step,3);await checkTargets(h,'exchanges');
