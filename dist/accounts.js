@@ -3,7 +3,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const signIn='/signin.html';
 const $=id=>document.getElementById(id);
 export function createAccountWorkspace(hooks){
- let phase=globalThis.GoPlanAndroid?'guest':'loading',identity=null,profile=null,id=null,revision=0,pending=null,inflight=null,timer,status='',fault='',cloudList=[],deviceState=null,disposed=false,navigation=0;
+ let phase=globalThis.GoPlanAndroid?'guest':'loading',identity=null,profile=null,id=null,revision=0,pending=null,inflight=null,timer,status='',fault='',cloudList=[],deviceState=null,disposed=false,navigation=0,preparing=false;
  const prefix=()=>`goplan-cloud:${identity.id}:`,cacheKey=()=>prefix()+id,pointer=()=>`goplan-cloud-current:${identity.id}`;
  const readCache=key=>{try{return JSON.parse(localStorage.getItem(key)||'null');}catch{return null;}};
  const cache=()=>{if(!identity||!id)return;try{localStorage.setItem(cacheKey(),JSON.stringify({id,revision,state:pending||hooks.read(),pending:!!pending}));localStorage.setItem(pointer(),id);}catch{fault='Local recovery is unavailable. Keep this page open until cloud saving finishes.';}};
@@ -32,8 +32,26 @@ export function createAccountWorkspace(hooks){
  async function flush(){clearTimeout(timer);if(inflight){await inflight;return phase==='ready'&&!fault&&!pending;}if(!pending)return phase!=='conflict'&&phase!=='error';if(phase!=='ready')return false;
   inflight=(async()=>{while(pending&&phase==='ready'){const saving=pending,workspaceId=id,expected=revision;try{const result=await api('/workspaces/'+workspaceId,{method:'PUT',body:{revision:expected,state:saving}});revision=result.revision;if(pending===saving)pending=null;fault='';status=pending?'Saving to your account…':'Saved to your account';cache();updateStatus();}catch(e){fault=e.message;if(e.code==='SYNC_CONFLICT')phase='conflict';status='Changes kept on this device';cache();updateStatus();break;}}})();await inflight;inflight=null;return phase==='ready'&&!fault&&!pending;
  }
- async function newPlan(state=emptyWorkspace()){if(id){hooks.notify('Continue your existing roadmap.');return false;}if(hooks.busy()){hooks.notify('Wait for your adviser to finish first.');return false;}if(phase==='guest'){location.assign(signIn);return false;}const seed=validateSavedWorkspace(structuredClone(state)),request=++navigation;if(phase!=='choose'&&!await flush()){hooks.notify('Your changes are still on this device. Retry saving before switching plans.');return false;}if(request!==navigation)return false;id=crypto.randomUUID();revision=0;pending=null;phase='ready';fault='';hooks.open(seed,cacheKey(),true);schedule(hooks.read());refresh();return true;}
- async function prepareNew(state=emptyWorkspace()){if(globalThis.GoPlanAndroid||phase==='guest')return globalThis.GoPlanAndroid?true:(location.assign(signIn),false);return newPlan(state);}
+ function pristine(state){const j=state?.journey;return state?.phase==='journey'&&!state.plan&&!state.draftPlan&&!state.history?.length&&j&&!j.studentContext&&!j.programChosen&&!j.step&&!j.background?.trim()&&!j.advice&&!j.details&&!j.setup&&!j.paceAdvice&&!j.goal?.trim()&&!j.answers?.trim()&&!Object.keys(j.profile?.choices||{}).length&&!j.interests?.length&&!Object.values(j.questionnaire||{}).some(v=>String(v||'').trim());}
+ async function newPlan(state=emptyWorkspace()){
+  if(hooks.busy()){hooks.notify('Wait for your adviser to finish first.');return false;}
+  if(phase==='guest'){location.assign(signIn);return false;}
+  const seed=validateSavedWorkspace(structuredClone(state));
+  if(id){
+   if(phase!=='ready'||!pristine(hooks.read())){hooks.notify('Continue your existing roadmap.');return false;}
+   if(!await flush()){hooks.notify('Your changes are still on this device. Retry saving before continuing.');return false;}
+   const workspaceId=id,before=JSON.stringify(hooks.read()),response=await fetch('/api/service',{credentials:'same-origin',signal:AbortSignal.timeout(25000)}),data=await response.json(),allowance=data.allowance;
+   if(!response.ok)throw Error(data.error||'Could not open your workspace. Please try again.');
+   if(!allowance||allowance.saved||allowance.step!==0||allowance.initialMask!==0||allowance.globalRemaining!==5||!allowance.stageChanges?.every(n=>n===2)||allowance.stageChanges.length!==5||allowance.workspaceId!==id){hooks.notify('Continue your existing roadmap.');return false;}
+   if(workspaceId!==id||before!==JSON.stringify(hooks.read()))return false;
+   // An owner reset already created the one permitted workspace. Begin inside
+   // that empty workspace; never create another plan or reset service counters.
+   hooks.open(seed,cacheKey(),true);fault='';schedule(hooks.read());refresh();return true;
+  }
+  const request=++navigation;if(phase!=='choose'&&!await flush()){hooks.notify('Your changes are still on this device. Retry saving before switching plans.');return false;}
+  if(request!==navigation)return false;id=crypto.randomUUID();revision=0;pending=null;phase='ready';fault='';hooks.open(seed,cacheKey(),true);schedule(hooks.read());refresh();return true;
+ }
+ async function prepareNew(state=emptyWorkspace()){if(globalThis.GoPlanAndroid||phase==='guest')return globalThis.GoPlanAndroid?true:(location.assign(signIn),false);if(preparing)return false;preparing=true;try{return await newPlan(state);}catch(e){hooks.notify(e.message||'Could not open your workspace. Please try again.');return false;}finally{preparing=false;}}
  function showPlans(){hooks.startNew?.();}
 
  function accountModal(){if(phase==='guest'){hooks.modal(hooks.head('Your plan, wherever you are')+'<p>Sign in with your email to save your roadmap and pick up where you left off.</p><a class="button primary" target="_top" href="'+signIn+'">Continue with email</a>');return;}if(!profile){void boot();return;}const conflicts=phase==='conflict'?`<div class="warning"><h3>Two versions of your plan</h3><p>Your edits are still on this device. Load the saved version, or keep this page open while you resolve your edits.</p><div class="card-actions"><button class="button secondary" data-account="load-cloud">Load the cloud version</button></div></div>`:'';

@@ -2,6 +2,9 @@ import {testSession} from './tests/session-fixture.mjs';
 import assert from 'node:assert/strict';
 import {createAccountWorkspace} from './dist/accounts.js';
 import {resetStudentTest} from './server/test-reset.mjs';
+import {newcomerWorkspace} from './dist/dashboard-flow.js';
+import {createDashboardController} from './dist/dashboard-controller.js';
+import {dashboardView} from './dist/dashboard-view.js';
 import {emptyWorkspace} from './dist/guidance.js';
 import {handleApi} from './server/api.mjs';
 import {localDatabase} from './server/local-db.mjs';
@@ -26,6 +29,14 @@ offline=true;await events.click({target:{closest:()=>({dataset:{account:'load-cl
 await events.click({target:{closest:()=>({dataset:{account:'load-cloud'}})},preventDefault(){}});assert.equal(account.phase,'ready');assert.equal(state.journey.questionnaire.activities,'Design and experiment');
 // An owner-authorized reset must open the fresh cloud workspace instead of an old pending device copy.
 offline=true;state.journey.questionnaire.ambitions='Old unsynced test';account.schedule(state);assert.equal(await account.flush(),false);const resetEmail=(await DB.prepare('SELECT email FROM student_profiles WHERE id=?').bind('first').first()).email;await resetStudentTest(env,'owner@example.invalid',{requestId:crypto.randomUUID(),email:resetEmail,confirm:resetEmail});offline=false;account=setup();await account.boot();assert.equal(account.phase,'ready');assert.equal(state.journey.questionnaire.ambitions,'');assert.notEqual(key,firstKey);
+// Exercise the actual Let's go controller action, not just the reset database state.
+const resetKey=key,runtime={};
+const dashboard=createDashboardController({runtime,read:()=>state,render(){},persist(){account.schedule(state);},changed(){account.schedule(state);},account:()=>account.profile,showPlan(){},startWorkspace:seed=>account.prepareNew(seed)});
+await dashboard.loadService();assert.ok(dashboardView(state,runtime,account.profile).includes('Let’s go'));
+await dashboard.click({dataset:{action:'dashboard-start'}});assert.equal(state.journey.studentContext.route,'admitted');assert.equal(begin,true);assert.equal(key,resetKey);assert.ok(dashboardView(state,runtime,account.profile).includes('question-card'));assert.ok(!dashboardView(state,runtime,account.profile).includes('Let’s go'));assert.equal(await account.flush(),true);assert.equal((await (await fetch('/api/account/workspaces')).json()).workspaces.length,1);const allowance=(await (await fetch('/api/service')).json()).allowance;assert.equal(allowance.initialMask,0);assert.deepEqual(allowance.stageChanges,[2,2,2,2,2]);assert.equal(allowance.globalRemaining,5);
+const started=JSON.stringify(state);assert.equal(await account.prepareNew(newcomerWorkspace()),false);assert.equal(JSON.stringify(state),started,'Starting again must not overwrite the questionnaire.');
+// If allowance was used on another device, an empty local state cannot restart it.
+await resetStudentTest(env,'owner@example.invalid',{requestId:crypto.randomUUID(),email:resetEmail,confirm:resetEmail});account=setup();await account.boot();const emptyBefore=JSON.stringify(state);await DB.prepare('UPDATE service_entitlements SET initial_mask=1 WHERE workspace_id=?').bind(key.split(':').at(-1)).run();assert.equal(await account.prepareNew(newcomerWorkspace()),false);assert.equal(JSON.stringify(state),emptyBefore);
 // A different login in another tab cannot receive this student's next save.
 user='second';await fetch('/api/account/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:'Omar',lastName:'Tester',consentCloud:true})});state.journey.questionnaire.ambitions='Private first-user change';account.schedule(state);assert.equal(await account.flush(),false);assert.equal((await (await fetch('/api/account/workspaces')).json()).workspaces.length,0);
-DB.close();console.log('Browser account controller: initial plan, cloud restore, offline recovery, revision conflict, failed reload preservation and account-switch isolation passed.');
+DB.close();console.log('Browser account controller: initial plan, cloud restore, offline recovery, revision conflict, failed reload preservation and account-switch isolation, reset-account Let’s go, in-place questionnaire initialization and consumed-allowance protection passed.');

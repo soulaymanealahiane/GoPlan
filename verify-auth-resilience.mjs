@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {authEndpoint} from './server/auth.mjs';
+import {localDatabase} from './server/local-db.mjs';
+const DB=localDatabase(':memory:'),base='https://planwithgoplan.com',env={DB,SUPABASE_URL:'https://synthetic.supabase.co',SUPABASE_PUBLISHABLE_KEY:'fixture'};
+const request=(path,body)=>new Request(base+'/api/auth/'+path,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify(body)});
+const user=email=>({id:email,email,email_confirmed_at:new Date().toISOString()});
+let count=0,email='recovered@example.invalid';
+let r=await authEndpoint(request('login',{email,password:'synthetic password'}),env,{authFetcher:async()=>{if(++count===1)throw new DOMException('Synthetic timeout','TimeoutError');return Response.json({user:user(email)});}});assert.equal(r.status,200);assert.equal(count,2);assert.ok(r.headers.get('Set-Cookie'));
+email='http-recovered@example.invalid';count=0;r=await authEndpoint(request('login',{email,password:'synthetic password'}),env,{authFetcher:async()=>++count===1?new Response('Unavailable',{status:503}):Response.json({user:user(email)})});assert.equal(r.status,200);assert.equal(count,2);
+email='wrong@example.invalid';count=0;r=await authEndpoint(request('login',{email,password:'wrong'}),env,{authFetcher:async()=>{count++;return Response.json({error:'bad password'},{status:400});}});assert.equal(r.status,400);assert.equal(count,1);assert.equal(r.headers.get('Set-Cookie'),null);
+email='outage@example.invalid';count=0;r=await authEndpoint(request('login',{email,password:'synthetic password'}),env,{authFetcher:async()=>{count++;return Response.json({error:'provider down'},{status:503});}});assert.equal(r.status,503);assert.equal(count,2);assert.ok(!(await r.json()).error.includes('incorrect'));assert.equal(r.headers.get('Set-Cookie'),null);
+email='rate-limited@example.invalid';count=0;r=await authEndpoint(request('login',{email,password:'synthetic password'}),env,{authFetcher:async()=>{count++;return Response.json({error:'slow down'},{status:429});}});assert.equal(r.status,429);assert.equal(count,1);
+email='delivery@example.invalid';count=0;r=await authEndpoint(request('send',{email}),env,{authFetcher:async()=>{count++;throw new DOMException('Synthetic timeout','TimeoutError');}});assert.equal(r.status,202);assert.deepEqual(await r.json(),{sent:false,delivery:'unconfirmed',retryAfterSeconds:60});assert.equal(count,1);assert.equal(r.headers.get('Set-Cookie'),null);assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM auth_sessions WHERE email=?').bind(email).first()).n,0);
+email='malformed-delivery@example.invalid';count=0;r=await authEndpoint(request('send',{email}),env,{authFetcher:async()=>{count++;return new Response('not-json',{status:200});}});assert.equal(r.status,202);assert.equal((await r.json()).delivery,'unconfirmed');assert.equal(count,1);assert.equal(r.headers.get('Set-Cookie'),null);
+// The uncertain email response opens code entry with honest delivery wording;
+// it never signs in, changes the password or sends the OTP a second time.
+const ids=[...fs.readFileSync(new URL('./dist/signin.html',import.meta.url),'utf8').matchAll(/id="([^"]+)"/g)].map(m=>m[1]),nodes=Object.fromEntries(ids.map(id=>[id,{value:'',hidden:false,textContent:'',focus(){}}]));
+const document={getElementById:id=>{assert.ok(nodes[id],id);return nodes[id];}},calls=[];let navigation='';
+const context=vm.createContext({document,location:{search:'',replace:path=>{navigation=path;}},URLSearchParams,AbortSignal,fetch:async(path,options)=>{calls.push({path,body:JSON.parse(options.body)});return Response.json({sent:false,delivery:'unconfirmed',retryAfterSeconds:60},{status:202});}});
+vm.runInContext(fs.readFileSync(new URL('./dist/signin.js',import.meta.url),'utf8'),context);nodes.email.value='delivery@example.invalid';const button={disabled:false};await nodes['email-form'].onsubmit({preventDefault(){},target:{querySelector:()=>button}});assert.equal(nodes['code-form'].hidden,false);assert.match(nodes['auth-intro'].textContent,/Delivery is taking longer/);assert.ok(!nodes['auth-intro'].textContent.includes('we sent'));assert.equal(calls.length,1);assert.equal(navigation,'');assert.equal(button.disabled,false);
+DB.close();console.log('Auth resilience: bounded password retry, HTTP outage recovery, no invalid-credential/rate-limit retry, honest uncertain OTP delivery, no duplicate OTP or granted session, and real sign-in code-entry UI passed.');

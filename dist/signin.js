@@ -4,7 +4,7 @@ const forms=['login','email','code','password'];
 
 function show(form,title,intro){for(const name of forms)$(name+'-form').hidden=name!==form;$('auth-title').textContent=title;$('auth-intro').textContent=intro;$('auth-status').textContent='';}
 
-async function call(path,body){const r=await fetch('/api/auth/'+path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});const d=await r.json();if(!r.ok)throw Error(d.error||'Please try again.');return d;}
+async function call(path,body){const r=await fetch('/api/auth/'+path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(35000)});const d=await r.json();if(!r.ok)throw Error(d.error||'Please try again.');return d;}
 
 async function submit(event,action){event.preventDefault();const button=event.target.querySelector('button');button.disabled=true;$('auth-status').textContent='One moment…';try{await action();}catch(e){$('auth-status').textContent=e.name==='TimeoutError'?'This is taking longer than expected. Please try again.':e.message;}finally{button.disabled=false;}}
 
@@ -18,7 +18,7 @@ $('create-account').onclick=()=>begin('signup');$('reset-password').onclick=()=>
 
 $('back-login').onclick=()=>{show('login','Welcome back.','Sign in to your personal roadmap.');$('login-email').focus();};
 
-$('email-form').onsubmit=e=>submit(e,async()=>{email=$('email').value.trim();await call('send',{email,mode});show('code','Check your inbox.','Enter the verification code we sent you.');$('code').focus();});
+$('email-form').onsubmit=e=>submit(e,async()=>{email=$('email').value.trim();const result=await call('send',{email,mode});show('code','Check your inbox.',result.delivery==='unconfirmed'?'Delivery is taking longer. Enter the code if it arrives, or request a new one in a minute.':'Enter the verification code we sent you.');$('code').focus();});
 
 $('code-form').onsubmit=e=>submit(e,async()=>{await call('verify',{email,code:$('code').value.trim()});$('code').value='';show('password','Email verified.','Choose a password for future sign-ins.');$('new-password').focus();});
 

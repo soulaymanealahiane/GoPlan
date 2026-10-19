@@ -6,7 +6,7 @@ const secure=request=>new URL(request.url).protocol==='https:';
 const cookieName=request=>secure(request)?'__Host-goplan-session':'goplan-local-session';
 const headers={'Cache-Control':'private, no-store','Content-Type':'application/json','X-Content-Type-Options':'nosniff'};
 const json=(data,status=200,extra={})=>new Response(JSON.stringify(data),{status,headers:{...headers,...extra}});
-const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
+const fail=(message,status=400,code)=>{throw Object.assign(Error(message),{status,...(code?{code}:{})});};
 const cache=new WeakMap();
 const setupName=request=>secure(request)?'__Secure-goplan-password':'goplan-local-password';
 const setupCookie=(request,value,seconds)=>`${setupName(request)}=${value}; Path=/api/auth; HttpOnly; SameSite=Strict; Max-Age=${seconds}${secure(request)?'; Secure':''}`;
@@ -19,7 +19,25 @@ export async function accountIdentity(request,env){
 function sessionCookie(request,value,seconds=SESSION_MS/1000){return `${cookieName(request)}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${secure(request)?'; Secure':''}`;}
 async function readBody(request){if(!request.headers.get('Content-Type')?.startsWith('application/json'))fail('Use JSON.',415);const reader=request.body?.getReader();if(!reader)fail('Missing request.');let n=0,parts=[];while(true){const {value,done}=await reader.read();if(done)break;n+=value.length;if(n>2048){await reader.cancel();fail('Request too large.',413);}parts.push(value);}const all=new Uint8Array(n);let i=0;for(const p of parts){all.set(p,i);i+=p.length;}try{return JSON.parse(new TextDecoder().decode(all));}catch{fail('Invalid request.');}}
 async function limit(db,key,max,windowMs){const bucket=Math.floor(Date.now()/windowMs),id=await hash(key+':'+bucket);const row=await db.prepare('INSERT INTO auth_limits(id,count,expires_at) VALUES(?,1,?) ON CONFLICT(id) DO UPDATE SET count=count+1 RETURNING count').bind(id,(bucket+1)*windowMs).first();if(row.count>max)fail('Too many sign-in attempts. Please wait a few minutes and try again.',429);}
-async function provider(env,path,data,fetcher,token=''){const base=new URL(env.SUPABASE_URL);if(base.protocol!=='https:'||!base.hostname.endsWith('.supabase.co'))fail('Sign-in configuration needs attention.',503);let r;try{r=await fetcher(base.origin+'/auth/v1/'+path,{method:token?'PUT':'POST',headers:{'Content-Type':'application/json',apikey:env.SUPABASE_PUBLISHABLE_KEY,...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(data),signal:AbortSignal.timeout(15000)});}catch{fail('Sign-in is temporarily unavailable. Please try again.',503);}let result;try{result=await r.json();}catch{fail('Sign-in is temporarily unavailable.',503);}if(!r.ok)fail(r.status===429?'Please wait a minute before requesting another code.':path==='verify'?'That code is invalid or expired. Request another code.':path.startsWith('token')?'Email or password is incorrect.':path==='user'?'Could not save this password. Try a different password or request a new code.':'We could not send a code. Please try again shortly.',r.status===429?429:400);return result;}
+async function provider(env,path,data,fetcher,token=''){
+ const base=new URL(env.SUPABASE_URL);if(base.protocol!=='https:'||!base.hostname.endsWith('.supabase.co'))fail('Sign-in configuration needs attention.',503);
+ const attempts=path==='otp'?1:2;
+ for(let attempt=0;attempt<attempts;attempt++){
+  let response,result;
+  try{response=await fetcher(base.origin+'/auth/v1/'+path,{method:token?'PUT':'POST',headers:{'Content-Type':'application/json',apikey:env.SUPABASE_PUBLISHABLE_KEY,...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(data),signal:AbortSignal.timeout(12000)});}
+  catch(error){
+   console.warn('Authentication provider unavailable',{operation:path.split('?')[0],reason:['TimeoutError','AbortError'].includes(error.name)?'timeout':'network'});
+   // Sending another OTP after a lost response can invalidate the first code.
+   // Offer code entry without asserting delivery or granting a login session.
+   if(path==='otp')fail('Email delivery could not be confirmed.',503,'AUTH_DELIVERY_UNCONFIRMED');
+   if(attempt+1<attempts)continue;fail('Sign-in is temporarily unavailable. Please try again.',503);
+  }
+  if(response.status>=500){console.warn('Authentication provider unavailable',{operation:path.split('?')[0],status:response.status});if(attempt+1<attempts)continue;fail('Sign-in is temporarily unavailable. Please try again.',503);}
+  try{result=await response.json();}catch{if(path==='otp'&&response.ok)fail('Email delivery could not be confirmed.',503,'AUTH_DELIVERY_UNCONFIRMED');if(attempt+1<attempts)continue;fail('Sign-in is temporarily unavailable. Please try again.',503);}
+  if(!response.ok)fail(response.status===429?(path==='otp'?'Please wait a minute before requesting another code.':'Please wait a minute before trying to sign in again.'):path==='verify'?'That code is invalid or expired. Request another code.':path.startsWith('token')?'Email or password is incorrect.':path==='user'?'Could not save this password. Try a different password or request a new code.':'We could not send a code. Please try again shortly.',response.status===429?429:400);
+  return result;
+ }
+}
 export async function authEndpoint(request,env,options={}){
  const url=new URL(request.url);
  if(url.pathname==='/api/auth/status'&&request.method==='GET')return json({configured:authConfigured(env),accessMode:rosterMode(env)?'roster':'demo'});
@@ -37,7 +55,7 @@ export async function authEndpoint(request,env,options={}){
   await limit(env.DB,'ip:'+ip,40,10*60000);
   if(!await emailAllowed(email,env))fail('This email does not have access to this university’s GoPlan. Contact your university to confirm eligibility.',403);
   const fetcher=options.authFetcher||fetch;
-  if(url.pathname.endsWith('/send')){await limit(env.DB,'send:'+email,1,60000);await limit(env.DB,'send-hour:'+email,12,3600000);await provider(env,'otp',{email,create_user:true},fetcher);return json({sent:true});}
+  if(url.pathname.endsWith('/send')){await limit(env.DB,'send:'+email,1,60000);await limit(env.DB,'send-hour:'+email,12,3600000);try{await provider(env,'otp',{email,create_user:true},fetcher);}catch(error){if(error.code==='AUTH_DELIVERY_UNCONFIRMED')return json({sent:false,delivery:'unconfirmed',retryAfterSeconds:60},202);throw error;}return json({sent:true});}
   let result;
   if(url.pathname.endsWith('/login')){
    if(typeof data.password!=='string'||!data.password||data.password.length>128)fail('Enter your password.');
