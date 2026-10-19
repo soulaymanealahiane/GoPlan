@@ -1,4 +1,5 @@
 import {manualCatalogue,addManualSemester,addManualCourse,removeManualCourse,noteManualSemester,removeManualSemester} from './manual-plan.js';
+import {manualChangeMessage} from './manual-checks.js';
 import {SERVICE_STAGES} from './service-policy.js';
 import {loadAllowance,beginAction,advanceStage} from './service-client.js';
 import {dashboardReady,short} from './dashboard-view.js';
@@ -179,13 +180,13 @@ export function createDashboardController(h){
    try{const season=String(data.get('season')),year=Number(data.get('year')),id=season+'-'+year,candidate=addManualSemester(current(),{season,year});replacePlan(candidate);r.selectedTerm=id;r.dashboardPanel='semesters';h.close();r.manualUndo=null;commit('Semester added. Add a course when ready.');}catch(e){form.querySelector('#dashboard-add-term-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-add-course-form'){
-   try{const selected=String(data.get('course')||'');if(!selected)throw Error('Choose a course from the list.');const candidate=addManualCourse(current(),{courseCode:selected,termId:form.dataset.term,anotherAttempt:data.get('anotherAttempt')==='on'});r.selectedTerm=form.dataset.term;h.close();applyManual(candidate,'Course added.');}catch(e){form.querySelector('#dashboard-add-course-error').textContent=e.message;}return true;
+   try{const selected=String(data.get('course')||'');if(!selected)throw Error('Choose a course from the list.');const before=current(),change={courseCode:selected,termId:form.dataset.term,anotherAttempt:data.get('anotherAttempt')==='on'},candidate=addManualCourse(before,change);r.selectedTerm=form.dataset.term;h.close();applyManual(candidate,manualChangeMessage(before,candidate,change));}catch(e){form.querySelector('#dashboard-add-course-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-term-note-form'){
    try{const candidate=noteManualSemester(current(),form.dataset.term,String(data.get('note')||''));h.close();applyManual(candidate,'Semester note saved.');}catch(e){form.querySelector('#dashboard-term-note-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-course-form') {
-   try{const p=current(),result=manualCoursePlan(p,{id:form.dataset.courseId,courseCode:String(data.get('course')||''),termId:String(data.get('term')||''),status:String(data.get('status')||'planned')});if(r.dashboardPanel==='semesters'&&data.get('term'))r.selectedTerm=String(data.get('term'));h.close();applyManual(result.candidate,'Course updated.');}catch(e){form.querySelector('#dashboard-course-error').textContent=e.message;}return true;
+   try{const p=current(),change={id:form.dataset.courseId,courseCode:String(data.get('course')||''),termId:String(data.get('term')||''),status:String(data.get('status')||'planned')},result=manualCoursePlan(p,change);if(r.dashboardPanel==='semesters'&&data.get('term'))r.selectedTerm=String(data.get('term'));h.close();applyManual(result.candidate,manualChangeMessage(p,result.candidate,change));}catch(e){form.querySelector('#dashboard-course-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-degree-form'){
    try{const p=current(),old=p?.profile||state().journey.profile,profile=normalizeProfile({...old,program:String(data.get('program')),track:String(data.get('track')||''),secondTrack:String(data.get('secondTrack')||''),minor:String(data.get('minor')||''),choices:String(data.get('program'))===old.program?old.choices:{}});

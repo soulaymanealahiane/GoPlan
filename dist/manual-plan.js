@@ -1,5 +1,6 @@
 import {DATA,coursesFor,termOrder} from './planner.js';
 import {courseOptions} from './course-options.js';
+import {manualRule,checkManualPlacement} from './manual-checks.js';
 
 const statuses=new Set(['planned','in-progress','completed','retake']);
 const text=(value,max)=>String(value??'').trim().slice(0,max);
@@ -9,7 +10,7 @@ export function manualCatalogue(profile,{scope='degree',search=''}={}){
  for(const row of degree){
   if(row.code)records.set(row.code,{...DATA.courses[row.code],code:row.code,title:row.title,credits:row.credits});
   else records.set('slot:'+row.id,{code:'slot:'+row.id,title:row.title,credits:row.credits,requirementId:row.id});
-  for(const entry of courseOptions(row,profile))if(!entry.topic&&entry.code)records.set(entry.code,{...DATA.courses[entry.code],...entry});
+  if(row.choice)for(const entry of courseOptions(row,profile))if(!entry.topic&&entry.code)records.set(entry.code,{...DATA.courses[entry.code],...entry});
  }
  if(scope==='all')for(const [code,entry]of Object.entries(DATA.courses))if(!records.has(code)&&entry.title)records.set(code,{...entry,code});
  const words=text(search,160).toLowerCase().split(/\s+/).filter(Boolean);
@@ -24,19 +25,25 @@ function forgetRecord(p,course){
  for(const owner of [p.studentContext,p.decisions?.studentContext])if(owner?.records)owner.records=owner.records.filter(r=>r.courseCode!==course.code);
 }
 function sourceCourse(profile,key){
- if(key.startsWith('slot:')){const row=coursesFor(profile).find(c=>c.id===key.slice(5));if(!row)throw Error('Choose a course or requirement from the list.');return {...row};}
+ if(key.startsWith('slot:')){const row=coursesFor(profile).find(c=>c.id===key.slice(5));if(!row)throw Error('Choose a course or requirement from the list.');return {...row,manualRequirementId:row.id};}
  const entry=DATA.courses[key]||coursesFor(profile).find(c=>c.code===key);
  if(!entry)throw Error('Choose a course from the AUI list.');
  const credits=Number(entry.credits)||0;
- return {...entry,code:key,title:entry.title||key,credits,loadCredits:credits,kind:'core',category:'Added courses',unresolved:!!entry.creditsProvisional,rule:{all:[],any:[],coreq:[],minCredits:0,review:true,...entry.rule}};
+ return {...entry,code:key,title:entry.title||key,credits,loadCredits:credits,kind:'core',category:'Added courses',unresolved:!!entry.creditsProvisional,rule:manualRule(profile,{...entry,code:key})};
 }
 export function editManualCourse(plan,{id,courseCode,termId,status}){
  const original=plan.courses.find(c=>c.id===id);if(!original)throw Error('This course is no longer in your plan.');
  if(status&&!statuses.has(status))throw Error('Choose a valid course status.');
  if(termId&&!validTerm(plan,termId))throw Error('Choose a semester in your plan.');
- const p=edited(plan);let course=p.courses.find(c=>c.id===id);forgetRecord(p,original);
+ let p=edited(plan);const originalTerm=plan.terms.find(t=>t.courses.includes(id));let course=p.courses.find(c=>c.id===id);forgetRecord(p,original);
  if(courseCode&&courseCode!==course.code){
   const replacement=sourceCourse(p.profile,courseCode);
+  const duplicate=p.courses.find(c=>c.id!==id&&replacement.code&&c.code===replacement.code);
+  if(duplicate){
+   const from=p.terms.find(t=>t.courses.includes(duplicate.id)),to=validTerm(p,termId||originalTerm?.id);
+   if(from?.id!=='pending'&&(from?.id==='prior'||to?.id==='pending'||termOrder(from)<=termOrder(to)))throw Error(replacement.code+' is already in '+(from?.id==='prior'?'your completed courses':from.season+' '+from.year)+'. Open that course to move it. Your plan has not changed.');
+   p=removeManualCourse(p,duplicate.id);course=p.courses.find(c=>c.id===id);
+  }
   Object.assign(course,replacement,{id,category:original.category,kind:original.kind,manualOverride:true});
   // A manually selected catalogue course is a personal assignment, not an AI-approved replacement.
   delete course.prerequisiteFor;delete course.supportingPrerequisite;delete course.replacementFor;
@@ -47,16 +54,18 @@ export function editManualCourse(plan,{id,courseCode,termId,status}){
  if(nextStatus==='completed'&&course.code)p.profile.priorCodes=[...new Set([...p.profile.priorCodes,course.code])];
  // Uncoded language/placement requirements can be self-reported as complete.
  // No course code, equivalency or official credit is invented to do so.
+ if(course.code!==original.code||termId&&termId!==originalTerm?.id)checkManualPlacement(plan,p,id);
  return finish(p);
 }
 export function addManualCourse(plan,{courseCode,termId,anotherAttempt=false}){
  if(!validTerm(plan,termId))throw Error('Choose a semester in your plan.');
  const selected=sourceCourse(plan.profile,String(courseCode||''));
- const existing=plan.courses.find(c=>selected.code?c.code===selected.code:c.id===selected.id);
+ const existing=plan.courses.find(c=>selected.code?c.code===selected.code:(c.manualRequirementId||c.id)===selected.id);
  if(existing&&!anotherAttempt)return editManualCourse(plan,{id:existing.id,termId});
  if(plan.courses.length>=300)throw Error('Your plan has reached 300 courses. Remove a course before adding another.');
  const p=edited(plan),id='manual-'+crypto.randomUUID(),course={...selected,id,manualAddition:true,category:'Added courses'};
  p.courses.push(course);validTerm(p,termId).courses.push(id);p.tracking[id]={status:'planned',grade:'',note:''};p.manualEdits.placements[id]=termId;
+ checkManualPlacement(plan,p,id);
  return finish(p);
 }
 export function removeManualCourse(plan,id){
