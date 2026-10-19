@@ -1,7 +1,7 @@
 export const QUESTIONS=[
  {id:'ambitions',label:'What problems would you like to solve?',hint:'Describe an impact, a possible career, or something you want to build. Being undecided is fine.',required:true},
  {id:'activities',label:'What work would you enjoy doing each day?',hint:'For example: building technology, investigating data, designing, writing, negotiating, or leading people.',required:true},
- {id:'strengths',label:'What do you enjoy learning, and what feels difficult?',hint:'Mention subjects, projects and skills. You do not need to share grades.',required:true},
+ {id:'strengths',label:'Which subjects interest you?',hint:'Tell us what you enjoy learning or would like to explore. No grades needed.',required:true},
  {id:'industries',label:'Which industries or communities interest you?',hint:'Explain why. Include industries you would prefer to avoid.'},
  {id:'priorities',label:'What matters most in your future work?',hint:'Rank or describe income, stability, impact, creativity, international work and flexibility.'},
  {id:'entrepreneurship',label:'Would you like to start a business?',hint:'Describe an idea, the customers you want to serve, or whether you prefer employment or research.'},

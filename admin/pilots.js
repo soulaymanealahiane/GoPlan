@@ -1,7 +1,46 @@
 const $=id=>document.getElementById(id);
-async function loadPilots(){const status=$('pilot-status');status.textContent='Loading pilot information…';try{const response=await fetch('/api/admin/roster',{credentials:'same-origin'}),data=await response.json();if(!response.ok)throw Error(data.error);status.textContent='Access mode: '+data.mode+' · University: '+(data.universityId||'Not configured')+' · '+data.count+' approved emails'+(data.updatedAt?' · Updated '+new Date(data.updatedAt).toLocaleString():'');}catch(e){status.textContent=e.message;}}
-async function loadPartnerships(){const status=$('partnership-status'),list=$('partnership-list');status.textContent='Loading inquiries…';try{const response=await fetch('/api/admin/partnerships',{credentials:'same-origin'}),data=await response.json();if(!response.ok)throw Error(data.error);list.replaceChildren();for(const inquiry of data.inquiries){const article=document.createElement('article');article.className='panel';for(const [tag,value] of [['h3',inquiry.university],['p',inquiry.name+' · '+inquiry.email],['p',inquiry.message],['small',new Date(inquiry.created_at).toLocaleString()]]){const node=document.createElement(tag);node.textContent=value;article.append(node);}const link=document.createElement('a');link.href='mailto:'+encodeURIComponent(inquiry.email)+'?subject='+encodeURIComponent('GoPlan university pilot');link.textContent='Reply by email ↗';article.append(link);list.append(article);}status.textContent=data.inquiries.length+' inquiry / inquiries · Last 180 days, newest 200 shown.';}catch(e){status.textContent=e.message;}}
-document.querySelector('[data-tab="pilots"]').addEventListener('click',()=>{loadPilots();loadPartnerships();});
-function rosterMode(){const replacing=$('roster-mode').value==='replace';$('roster-replace-confirm').hidden=!replacing;$('roster-confirm').required=replacing;$('roster-confirm').checked=false;$('roster-submit').textContent=replacing?'Replace approved list':'Add students';$('roster-help').textContent=replacing?'Replaces everyone on the list. Omitted students lose access.':'Adds new students. Earlier students keep access and their remaining allowance.';}
+function message(node,text,error=false){node.textContent=text;node.classList.toggle('error',error);node.setAttribute('role',error?'alert':'status');}
+async function read(response){let data;try{data=await response.json();}catch{throw Error('Unexpected server response. Refresh and try again.');}if(!response.ok)throw Error(data.error||'The request could not be completed.');return data;}
+async function loadPilots(){
+ const status=$('pilot-status');message(status,'Loading access…');$('roster-fields').disabled=true;$('roster-form').hidden=true;
+ try{
+  const data=await read(await fetch('/api/admin/roster',{credentials:'same-origin',signal:AbortSignal.timeout(25000)}));
+  message(status,data.mode==='roster'?(data.universityId||'University')+' · '+data.count+' approved students':'Open demo · Anyone with an account can plan.');
+  $('pilot-setup').hidden=!!data.universityId;$('roster-fields').disabled=!data.universityId;$('roster-form').hidden=!data.universityId;
+  $('pilot-detail').textContent='Access: '+(data.mode==='roster'?'approved email list':'open demo')+' · University: '+(data.universityId||'not configured')+' · '+data.count+' emails on the list'+(data.updatedAt?' · Updated '+new Date(data.updatedAt).toLocaleString():'');
+ }catch(e){message(status,e.message,true);}
+}
+async function loadPartnerships(){
+ const status=$('partnership-status'),list=$('partnership-list');message(status,'Loading inquiries…');
+ try{
+  const data=await read(await fetch('/api/admin/partnerships',{credentials:'same-origin',signal:AbortSignal.timeout(25000)}));
+  list.replaceChildren();
+  for(const inquiry of data.inquiries){
+   const article=document.createElement('article');article.className='panel';
+   for(const [tag,value] of [['h3',inquiry.university],['p',inquiry.name+' · '+inquiry.email],['p',inquiry.message],['small',new Date(inquiry.created_at).toLocaleString()]]){const node=document.createElement(tag);node.textContent=value;article.append(node);}
+   const link=document.createElement('a');link.href='mailto:'+encodeURIComponent(inquiry.email)+'?subject='+encodeURIComponent('GoPlan university pilot');link.textContent='Reply by email ↗';article.append(link);list.append(article);
+  }
+  message(status,data.inquiries.length?data.inquiries.length+(data.inquiries.length===1?' inquiry':' inquiries'):'No university inquiries.');
+ }catch(e){message(status,e.message,true);}
+}
+export async function refreshPilots(){await Promise.all([loadPilots(),loadPartnerships()]);}
+function rosterMode(){
+ const replacing=$('roster-mode').value==='replace';
+ $('roster-replace-confirm').hidden=!replacing;$('roster-confirm').required=replacing;$('roster-confirm').checked=false;
+ $('roster-submit').textContent=replacing?'Replace approved list':'Add students';
+ $('roster-help').textContent=replacing?'Omitted students lose access.':'Earlier students keep access and their remaining allowance.';
+}
 $('roster-mode').addEventListener('change',rosterMode);
-$('roster-form').addEventListener('submit',async e=>{e.preventDefault();const file=$('roster-file').files[0],status=$('roster-status'),button=e.target.querySelector('button');if(!file||file.size>500000){status.textContent='Choose a plain email list smaller than 500 KB.';return;}const mode=$('roster-mode').value;if(mode==='replace'&&!$('roster-confirm').checked){status.textContent='Confirm that this replaces the approved list for the configured university.';return;}button.disabled=true;status.textContent=mode==='append'?'Adding students…':'Validating and replacing the list…';try{const response=await fetch('/api/admin/roster?mode='+mode,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'text/plain'},body:await file.text()}),data=await response.json();if(!response.ok)throw Error(data.error);status.textContent=mode==='append'?data.added+' new students added · '+data.count+' approved in total. Existing allowances stay unchanged.':data.count+' approved emails imported. Removed students lose access on their next request.';e.target.reset();rosterMode();loadPilots();}catch(err){status.textContent=err.message;}finally{button.disabled=false;}});
+$('roster-form').addEventListener('submit',async e=>{
+ e.preventDefault();const file=$('roster-file').files[0],status=$('roster-status'),button=$('roster-submit');
+ if($('roster-fields').disabled)return;
+ if(!file||file.size>500000){message(status,'Choose an email list smaller than 500 KB.',true);return;}
+ const mode=$('roster-mode').value;
+ if(mode==='replace'&&!$('roster-confirm').checked){message(status,'Confirm that omitted students will lose access.',true);return;}
+ button.disabled=true;message(status,mode==='append'?'Adding students…':'Replacing the list…');
+ try{
+  const data=await read(await fetch('/api/admin/roster?mode='+mode,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'text/plain'},body:await file.text(),signal:AbortSignal.timeout(25000)}));
+  message(status,mode==='append'?data.added+' added · '+data.count+' approved. Existing allowances stay unchanged.':data.count+' approved students. Omitted students lose access on their next request.');
+  e.target.reset();rosterMode();await loadPilots();
+ }catch(err){message(status,err.message,true);}finally{button.disabled=false;}
+});

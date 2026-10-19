@@ -38,10 +38,10 @@ export function manualCoursePlan(plan,{id,courseCode,termId,status}){
  let candidate=structuredClone(plan);
  if(courseCode&&courseCode!==original.code){
   if(['completed','in-progress'].includes(plan.tracking?.[id]?.status))throw Error('Undo its recorded progress before changing this course.');
-  if(!original.choice)throw Error('This is a required degree course. Ask GoPlan to revise its timing instead.');
+  if(!original.choice)throw Error('This is a required degree course. Move it to another semester instead.');
   const current=plan.terms.find(t=>!['prior','pending'].includes(t.id))?.id;
   const revised=proposeReplan(plan,{choices:[{requirementId:id,courseCode}]},current);
-  if(!revised.assessment.canApply)throw Error('This swap needs a different course sequence. Ask GoPlan to find a feasible alternative.');
+  if(!revised.assessment.canApply)throw Error('This swap needs a different course sequence. Choose another course or adjust the semester sequence first.');
   candidate=revised.candidate;
  }
  if(termId){if(!candidate.terms.some(t=>t.id===termId&&(t.id!=='prior'||plan.terms.find(t=>t.id==='prior')?.courses.includes(id))))throw Error('Choose a semester in your roadmap.');if(!candidate.terms.find(t=>t.id===termId)?.courses.includes(id))candidate.terms=moveCourse(candidate.terms,id,termId);}

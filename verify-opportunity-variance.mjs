@@ -8,7 +8,7 @@ import {newJourney,makePlan,validateSavedWorkspace,emptyWorkspace} from './dist/
 import {acceptAdvice} from './dist/journey-state.js';
 import {agentContext} from './dist/agent-context.js';
 import {openaiFixture} from './tests/openai-fixture.mjs';
-assert.equal(OPPORTUNITIES.internships.length,39);assert.equal(OPPORTUNITIES.exchanges.length,33);
+assert.equal(OPPORTUNITIES.internships.length,40);assert.equal(OPPORTUNITIES.exchanges.length,38);
 const original=JSON.parse(fs.readFileSync('data/guidance/exchanges-v4.json','utf8')),expansion=JSON.parse(fs.readFileSync('data/guidance/opportunities-expansion-v12.json','utf8'));
 for(const patch of expansion.exchangePatches){const old=original.exchanges.find(t=>t.id===patch.id),record=OPPORTUNITIES.exchanges.find(t=>t.id===patch.id);assert.ok(old);assert.equal(record.scheme,old.scheme);assert.equal(record.term,old.term);assert.equal(record.availabilityConfirmed,false);assert.ok(old.constraints.every(x=>record.constraints.includes(x)));assert.ok(record.sources.some(s=>s.primary&&s.checkedAt==='2026-10-17'));assert.ok(!record.graduateAccessVerified);}
 const profile=(program,track,text)=>({profile:{program,track},questionnaire:{ambitions:text,activities:text,strengths:text}});
@@ -30,4 +30,4 @@ const second=await advise(input(),env,fetcher);assert.equal(overlap(first.intern
 const third=await advise(input(),env,fetcher);assert.equal(overlap([...first.internships,...second.internships],third.internships),0,'Repeated alternatives must not cycle back to earlier names.');acceptAdvice(j,'targets',third);
 const restored=validateSavedWorkspace(JSON.parse(JSON.stringify({...emptyWorkspace(),phase:'saved',plan:makePlan(j),journey:j})));assert.ok(newJourney(restored.plan).seenTargetIds.internships.includes(first.internships[0].id));
 assert.equal(bodies.length,3,'Diversity must not require extra model requests or retries.');
-console.log('Passed 39 sourced hosts, 33 AUI-listed institutions, inherited route restrictions, profile-dependent priorities, deterministic ordering, bounded model pools, alternatives without repeated/cycled names, preserved exchange lists and saved history. No live calls.');
+console.log('Passed 40 sourced hosts, 38 AUI-listed institutions, inherited route restrictions, profile-dependent priorities, deterministic ordering, bounded model pools, alternatives without repeated/cycled names, preserved exchange lists and saved history. No live calls.');

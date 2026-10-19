@@ -1,3 +1,4 @@
+import {reviewedOpportunityShortlist} from './opportunity-recovery.mjs';
 import {serviceEndpoint,reserveServiceCall} from './service-allowance.mjs';
 import {partnershipEndpoint} from './partnerships.mjs';
 import {rosterMode} from './university-access.mjs';
@@ -33,10 +34,10 @@ export async function handleApi(request,env,options={}){
  if(path==='/api/service'||path.startsWith('/api/service/'))return serviceEndpoint(request,env,signedIn);
  if(path==='/api/status'&&request.method==='GET')return reply({available:!!env.OPENAI_API_KEY,provider:'openai',model:env.OPENAI_MODEL||'gpt-6.1-sol',requiresAccess:false,requiresSignIn:!signedIn,authenticated:!!signedIn,feedbackAvailable:!!env.DB},200,origin);
  const isFeedback=path==='/api/feedback'||path.startsWith('/api/feedback/')||path.startsWith('/api/review/');
- const isEvent=path==='/api/usage';
- if(path!=='/api/advice'&&!isFeedback&&!isEvent)return reply({error:'Not found'},404,origin);
+ const isEvent=path==='/api/usage',isReviewedTargets=path==='/api/reviewed-targets';
+ if(path!=='/api/advice'&&!isFeedback&&!isEvent&&!isReviewedTargets)return reply({error:'Not found'},404,origin);
  if(request.method!=='POST')return reply({error:'Use POST.'},405,origin);
- if(!isFeedback&&!env.OPENAI_API_KEY)return reply({error:'The adviser is temporarily unavailable. Your answers are saved.',code:'AI_NOT_CONFIGURED'},503,origin);
+ if(!isFeedback&&!isReviewedTargets&&!env.OPENAI_API_KEY)return reply({error:'The adviser is temporarily unavailable. Your answers are saved.',code:'AI_NOT_CONFIGURED'},503,origin);
  if(!isFeedback&&!signedIn)return reply({error:'Sign in to continue with your adviser. No demo code is needed.',code:'SIGN_IN_REQUIRED'},401,origin);
  if(!request.headers.get('Content-Type')?.startsWith('application/json'))return reply({error:'Use JSON.'},415,origin);
  const bytes=Number(request.headers.get('Content-Length'));if(bytes>40000)return reply({error:'Request too large.'},413,origin);
@@ -47,6 +48,7 @@ export async function handleApi(request,env,options={}){
  let data;try{data=JSON.parse(new TextDecoder().decode(all));}catch{return reply({error:'Invalid request.'},400,origin);}
  if(isEvent){if(!data||!EVENTS.has(data.event)||Object.keys(data).some(k=>k!=='event'))return reply({error:'Unknown usage event.'},400,origin);await recordSafely(env,{kind:'event',stage:data.event,channel:channelFor(origin)});return reply({accepted:true},200,origin);}
  if(isFeedback){try{return reply(await feedbackEndpoint(path,data,request,env,signedIn),200,origin);}catch(e){return reply({error:e.status?e.message:'Mistake reporting is unavailable. Your report was not confirmed; keep your text and retry.',code:e.status===401?'ACCESS_REQUIRED':'FEEDBACK_ERROR'},e.status||503,origin);}}
+ if(isReviewedTargets){try{return reply(reviewedOpportunityShortlist({...data,refinement:'',currentRecommendation:{}}),200,origin);}catch{return reply({error:'Choose a supported degree before exploring opportunities.'},400,origin);}}
  let corrections=[];try{corrections=await approvedCorrections(env);}catch{console.warn('Feedback library unavailable for this request.');}
  // Durable service receipts enforce package limits. These instance-local maps
  // coalesce duplicate clicks and bound simultaneous paid work.
@@ -54,7 +56,7 @@ export async function handleApi(request,env,options={}){
  const identity=signedIn?.id||(session&&/^[a-zA-Z0-9-]{16,80}$/.test(session)?session:request.headers.get('CF-Connecting-IP')||options.clientAddress||'demo');
  const scope=await digest(JSON.stringify([env.OPENAI_API_KEY,env.AI_ACCESS_CODE,env.OPENAI_MODEL,env.OPENAI_RESEARCH_MODEL,env.OPENAI_REASONING_EFFORT,env.OPENAI_RESEARCH_REASONING_EFFORT,env.OPENAI_WEB_RESEARCH,env.OPENAI_DIRECTION_RESEARCH,identity]));
  // Earlier budget/timeout failures must not block work under revised limits.
- const key=await digest('service-v1:'+scope+JSON.stringify([data,corrections,REQUEST_BUDGET_USD,REQUEST_TIMEOUT_MS,RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS])),now=Date.now();
+ const key=await digest('roadmap-resilience-v2:'+scope+JSON.stringify([data,corrections,REQUEST_BUDGET_USD,REQUEST_TIMEOUT_MS,RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS])),now=Date.now();
  for(const [id,item] of recent)if(item.expires<=now)recent.delete(id);
  for(const [id,item] of failures)if(item.expires<=now)failures.delete(id);
  if(failures.has(key)){const failure=failures.get(key);return reply(failure.value,failure.status,origin);}
@@ -74,7 +76,7 @@ export async function handleApi(request,env,options={}){
    serviceCall=await reserveServiceCall(env.DB,identity,data.serviceAction,data.stage,key);
    if(serviceCall.cached){if(serviceCall.status!==200)throw Object.assign(Error(serviceCall.cached.error),{status:serviceCall.status,code:serviceCall.cached.code,retryable:false});return serviceCall.cached;}
    const input={...data};delete input.serviceAction;
-   return advise(input,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections},measuredFetch);
+   return advise(input,{...env,GOPLAN_REVIEWED_CORRECTIONS:corrections,GOPLAN_SERVICE_ACTION_KIND:serviceCall.action?.kind},measuredFetch);
   }).then(async value=>{
    if(serviceCall?.finish)await serviceCall.finish(value,200);
    metric.outcome='success';
@@ -83,6 +85,7 @@ export async function handleApi(request,env,options={}){
    if(!data.researchOnly&&!['unavailable','partial'].includes(value.research?.status))recent.set(key,{value,expires:Date.now()+600000});return value;
   }).catch(async error=>{
    if(error.name==='TimeoutError')error=Object.assign(Error(timeoutMessage),{name:'TimeoutError',status:504,code:'ADVISER_TIMEOUT',retryable:false});
+   console.warn('GoPlan adviser request failed',JSON.stringify({stage:data.stage,code:error.code||'PROPOSAL_INVALID',status:error.status||422}));
    // A finished paid attempt can be replayed, but cannot be sent to the provider again.
    if(serviceCall?.finish){error.retryable=false;await serviceCall.finish({error:error.message||'This request could not finish.',code:error.code,retryable:false},error.status||(error.name==='TimeoutError'?504:422));}
    if(['REQUEST_BUDGET','REQUEST_TOO_LARGE','RESPONSE_INCOMPLETE','ADVISER_TIMEOUT'].includes(error.code)){

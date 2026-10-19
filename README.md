@@ -17,14 +17,16 @@ GoPlan helps students turn their interests into an editable degree plan: academi
 - University-scoped email roster imports, hashed roster entries, access checks during authentication and eligibility rechecks on authenticated requests.
 - Private roster and inquiry administration. Contact submissions are stored for up to 180 days with validation, origin checks and rate limits.
 
+Explanations open on demand. The saved dashboard names both selected specializations and the minor. Manual editing and Excel export remain available after AI changes are exhausted.
+
 See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster modes, imports and deployment checks.
 
 ## Engineering highlights
 
 - **Constrained AI recommendations:** server-side OpenAI Responses API calls produce structured proposals that are validated against reviewed program data before they can change a plan.
 - **Deterministic academic scheduling:** prerequisite and corequisite checks, credit limits, independent regular/summer loads, minor requirements and preserved completed courses.
-- **Progress-aware replanning:** unavailable courses and changed goals produce a preview; delayed graduation is surfaced before acceptance.
-- **Evidence-aware research:** profile-based ranking across 39 reviewed Moroccan internship targets and 33 institutions from the supplied AUI exchange list, plus bounded web discovery. Alternative requests avoid previously suggested targets; current openings and exchange access still require confirmation.
+- **Saved manual degree plan:** move courses, record progress, add semesters and swap eligible electives without AI calls. Global AI prompts create a preview; graduation delays are shown before saving.
+- **Evidence-aware research:** profile-based ranking across 40 reviewed Moroccan internship targets and 38 institutions from the supplied AUI exchange list, plus bounded web discovery. Alternative requests avoid previously suggested targets; current openings and exchange access still require confirmation.
 - **Bounded one-time service:** five guided stages, two structural AI prompts per stage and five global prompts after saving. Atomic server-side counters and persistent response receipts enforce the allowance across devices and avoid duplicate paid work.
 - **Private cloud workspaces:** per-account ownership checks, optimistic revision control, recovery of interrupted saves and deliberate resolution of conflicting edits.
 - **Independent email authentication:** Supabase verifies email during account creation and recovery, and authenticates email/password sign-ins; GoPlan issues revocable, hashed sessions in HttpOnly cookies. Admin access uses a server-configured email allowlist.
@@ -38,7 +40,7 @@ The proposed university offer is one payment of US$12 per student for one roadma
 
 Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; OpenAI GPT-6.1 Sol for advice and GPT-6 Luna for focused live web research. Production email delivery requires a configured SMTP service.
 
-OpenAI is the inference provider. GPT-6.1 Sol handles academic advice and feedback, using medium reasoning for academic choices and low reasoning for short answers, routing and target selection. GPT-6 Luna performs focused search and strict evidence extraction. One request-wide 180-second deadline and a $0.25 conservative spending guard cover discovery, advice and repairs; browser requests stop at 195 seconds. Actual input tokens are counted before generation; target ranking uses Fast mode, whose premium is included in the guard. Completed search receipts and primary pages support extracted findings. Academic validators remain authoritative. The UI shows concise recommendations and clickable sources; search transcripts and page bodies stay on the server.
+OpenAI is the inference provider. GPT-6.1 Sol handles academic advice and feedback, using medium reasoning for academic choices and low reasoning for short answers, routing and target selection. GPT-6 Luna performs focused search and strict evidence extraction. One request-wide 180-second deadline and a $0.25 conservative spending guard cover discovery, advice and repairs; browser requests stop at 195 seconds. Actual input tokens are counted before generation; target ranking uses the standard tier to leave room for research and response validation. Completed search receipts and primary pages support extracted findings. Academic validators remain authoritative. The UI shows concise recommendations and clickable sources; search transcripts and page bodies stay on the server.
 
 ## Run locally
 
@@ -50,14 +52,14 @@ cp .env.example .env
 pnpm start
 ```
 
-Open `http://127.0.0.1:4317`. Academic planning data and offline tests do not need provider credentials. Live AI and email sign-in require the corresponding environment settings; there is no pretend AI fallback. Never commit `.env`.
+Open `http://127.0.0.1:4317`. Academic planning data and offline tests do not need provider credentials. Live AI and email sign-in require the corresponding environment settings; provider failures never produce fabricated model output. Initial course and pace requests can recover using deterministic degree rules, and initial opportunities can recover from the reviewed eligible pool. Never commit `.env`.
 
 ```sh
 pnpm test
 pnpm build
 ```
 
-Tests cover degree/minor combinations, prerequisite ordering, independent course loads, AI schema validation, progress preservation, feedback consent, account isolation, CSRF checks, session revocation and sync conflicts. Provider calls in the automated suite are fixtures, not live model evaluations. No unmeasured accuracy or performance claim is implied.
+Tests cover degree/minor combinations, prerequisite ordering, independent course loads, AI schema validation, progress preservation, feedback consent, account isolation, CSRF checks, session revocation and sync conflicts. The 37-script suite includes 19 integrated roadmap resilience groups and 96 opportunity-selection checks. Provider calls are fixtures, not live model evaluations. See [verification](docs/MVP-VALIDATION.md). No unmeasured accuracy or performance claim is implied.
 
 ## Repository map
 

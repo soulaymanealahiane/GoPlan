@@ -8,5 +8,12 @@ for(const patch of read('exchange-graduate-additions.json').patches){
 }
 const expansion=read('opportunities-expansion-v12.json');
 for(const patch of expansion.exchangePatches){const target=exchanges.exchanges.find(t=>t.id===patch.id);if(!target)throw Error('Unknown AUI-listed institution: '+patch.id);const {sourcesToAdd,...fields}=patch;Object.assign(target,fields,{curated:true,academicFitReviewedAt:expansion.reviewedAt});target.sources=[...target.sources,...sourcesToAdd];target.constraints=[...target.constraints,patch.reason];}
-const data={reviewedAt:expansion.reviewedAt,internships:[...companies.internships.map(t=>({...t,organizationType:t.organizationType||'established'})),...read('startups-v6.json').internships,...expansion.internships],exchanges:exchanges.exchanges.filter(x=>x.curated),exchangeSource:{term:exchanges.sourceTerm,window:exchanges.sourceWindow,counts:exchanges.counts},isep:exchanges.isep};
+const variety=read('opportunities-variety-v13.json');
+for(const patch of variety.exchangePatches){
+ const target=exchanges.exchanges.find(t=>t.id===patch.id);if(!target)throw Error('Unknown AUI-listed institution: '+patch.id);
+ if(target.businessOnly&&patch.programs.some(program=>program!=='BBA'))throw Error('Business-only AUI route cannot be broadened: '+patch.id);
+ const {sourcesToAdd,eligibilityToAdd,constraintsToAdd,...fields}=patch;
+ Object.assign(target,fields,{curated:true,academicFitReviewedAt:variety.reviewedAt});target.sources=[...target.sources,...sourcesToAdd];target.eligibility=[...target.eligibility,...(eligibilityToAdd||[])];target.constraints=[...target.constraints,...(constraintsToAdd||[]),patch.reason];
+}
+const data={reviewedAt:variety.reviewedAt,internships:[...companies.internships.map(t=>({...t,organizationType:t.organizationType||'established'})),...read('startups-v6.json').internships,...expansion.internships,...variety.internships],exchanges:exchanges.exchanges.filter(x=>x.curated),exchangeSource:{term:exchanges.sourceTerm,window:exchanges.sourceWindow,counts:exchanges.counts},isep:exchanges.isep};
 fs.writeFileSync(new URL('dist/opportunities.js',root),'// Reviewed primary-source evidence. Rebuild with node scripts/build-opportunities.mjs\nexport default '+JSON.stringify(data)+';\n');

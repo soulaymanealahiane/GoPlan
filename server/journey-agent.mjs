@@ -5,6 +5,7 @@ import {researchFor,publicUrl} from './research.mjs';
 import {compactCourseContext} from './course-context.mjs';
 import {mergeScheduling,analyzeCourseAvailability} from '../dist/course-availability.js';
 import {openaiServiceError} from './openai-transport.mjs';
+import {reviewedOpportunityShortlist,isInitialOpportunityRequest} from './opportunity-recovery.mjs';
 import {sanitizeRequest,directionContext,detailsContext,directionSchema,validateDirection,validateDetails,recoverDetails,availableTargets,mergeResearchTargets,opportunityRefinementPolicy,validateOpportunitySelection,canonicalTargetKeys} from './advisor.mjs';
 import {publicStudentContext} from '../dist/student-context.js';
 import {minorSummary} from '../dist/minor-summary.js';
@@ -159,7 +160,17 @@ export async function adviseJourney(input,env,fetcher=fetch){
  }else if(stage==='targets'){
   const targets={};for(const type of ['internships','exchanges']){
    const pool=mergeResearchTargets(availableTargets(type,request.profile),research,type),priorKeys=new Set([...(currentRecommendation[type]||[]),...pool.filter(t=>request.seenTargetIds[type].includes(t.id))].flatMap(t=>canonicalTargetKeys(t,type))),fresh=pool.filter(t=>!canonicalTargetKeys(t,type).some(k=>priorKeys.has(k)));
-   const alternatives=opportunityPolicy.preferNovel&&opportunityPolicy.changeTypes.includes(type)&&fresh.length>=5?fresh:pool;
+   let alternatives=pool;
+   if(opportunityPolicy.preferNovel&&opportunityPolicy.changeTypes.includes(type)){
+    const currentKeys=new Set((currentRecommendation[type]||[]).flatMap(t=>canonicalTargetKeys(t,type))),notCurrent=pool.filter(t=>!canonicalTargetKeys(t,type).some(key=>currentKeys.has(key)));
+    if(fresh.length>=5)alternatives=fresh;
+    else if(fresh.length){
+     // A nearly explored pool still contains useful new choices. Restrict the
+     // final five candidates so the model cannot skip them for familiar names.
+     const freshIds=new Set(fresh.map(t=>t.id)),fill=rankOpportunityTargets(notCurrent.filter(t=>!freshIds.has(t.id)),request,type,{limit:5-fresh.length}),selectedIds=new Set([...fresh,...fill].map(t=>t.id));
+     alternatives=[...fresh,...fill,...rankOpportunityTargets(pool.filter(t=>!selectedIds.has(t.id)),request,type,{limit:Math.max(0,5-fresh.length-fill.length)})];
+    }else if(notCurrent.length>=5)alternatives=notCurrent;
+   }
    targets[type]=rankOpportunityTargets(alternatives,request,type,{limit:type==='internships'?24:20});
    if(opportunityPolicy.preserveTypes.includes(type)){
     const prior=currentRecommendation[type];
@@ -226,11 +237,21 @@ export async function adviseJourney(input,env,fetcher=fetch){
  context.questionnairePolicy='Only allowedAnswerIds may be referenced. Blank optional answers are unknown, not negative preferences. Do not infer entrepreneurship, AI exposure preferences, priorities or constraints from blank fields. All six assessment axes still need an evidence-based explanation, but answerIds may be empty when no supplied answer supports that factor. An undecided answer is valid uncertainty; use the other supplied answers for a provisional, editable recommendation. Do not require optional answers to proceed.';
  context.task+=' First understand the requested change and past feedback. Use currentRecommendation to compare before and after; preserve unaffected decisions and respect negative preferences. Consider alternatives and check the complete combination, not each field in isolation. Return update.summary explaining your response to this request, update.changes listing only changes actually made, and update.limitations naming any request not met and why. If keeping a result unchanged, explain the specific reason in limitations. Do not say a change was made when only wording changed. Ground reasons in the supplied evidence, and qualify unsupported market assumptions instead of agreeing with them.';
  const outputBudget=adviceTokens(stage);
+ const recoverTargets=error=>{
+  if(stage!=='targets'||!isInitialOpportunityRequest(input,env))return null;
+  const reasonCode=error.code==='REQUEST_BUDGET'?'budget':error.code==='RESPONSE_INCOMPLETE'?'incomplete':error.name==='TimeoutError'?'timeout':error.code==='INVALID_TARGET_RESPONSE'?'invalid':'provider';
+  try{
+   const result=reviewedOpportunityShortlist(input,{reasonCode});
+   console.warn('GoPlan reviewed opportunity recovery',JSON.stringify({stage,reasonCode}));
+   return result;
+  }catch{return null;}
+ };
  let previousCourseProposal;
  for(let attempt=0;attempt<2;attempt++){
   let response;
-  try{response=await fetchOpenAIResponse({method:'POST',signal:env.GOPLAN_REQUEST_SIGNAL,headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-6.1-sol',store:false,service_tier:stage==='targets'?'fast':'default',reasoning:{effort:reasoningEffort(adviceEffort(stage,env))},instructions:system,input:JSON.stringify(context),max_output_tokens:outputBudget,text:{verbosity:'low',format:{type:'json_schema',name:'goplan_'+stage,strict:true,schema}}})},fetcher);}
+  try{response=await fetchOpenAIResponse({method:'POST',signal:env.GOPLAN_REQUEST_SIGNAL,headers:{'Content-Type':'application/json',Authorization:'Bearer '+env.OPENAI_API_KEY},body:JSON.stringify({model:env.OPENAI_MODEL||'gpt-6.1-sol',store:false,service_tier:'default',reasoning:{effort:reasoningEffort(adviceEffort(stage,env))},instructions:system,input:JSON.stringify(context),max_output_tokens:outputBudget,text:{verbosity:'low',format:{type:'json_schema',name:'goplan_'+stage,strict:true,schema}}})},fetcher);}
   catch(error){
+   const recovered=recoverTargets(error);if(recovered)return recovered;
    // A paid, completed course proposal already exists. When its repair cannot
    // safely start, retain only independently validated choices and show gaps.
    if(stage==='courses'&&previousCourseProposal&&(error.code==='REQUEST_BUDGET'||error.name==='TimeoutError')){
@@ -240,8 +261,20 @@ export async function adviseJourney(input,env,fetcher=fetch){
    }
    throw error;
   }
-  if(!response.ok){let error;try{error=(await response.json()).error;}catch{}throw openaiServiceError(response,error);}
-  const payload=await response.json();const content=(payload.output||[]).flatMap(x=>x.content||[]);if(payload.status!=='completed'||content.some(c=>c.type==='refusal'))throw Object.assign(Error('GoPlan could not finish this recommendation. Your answers and choices are saved; you can keep working manually.'),{code:'RESPONSE_INCOMPLETE',retryable:false});
+  if(!response.ok){let error;try{error=(await response.json()).error;}catch{}const failure=openaiServiceError(response,error),recovered=recoverTargets(failure);if(recovered)return recovered;throw failure;}
+  let payload;try{payload=await response.json();}catch(error){
+   const recovered=recoverTargets(Object.assign(Error('The adviser returned an unreadable result.'),{code:'INVALID_TARGET_RESPONSE'}));if(recovered)return recovered;throw error;
+  }
+  const content=(Array.isArray(payload?.output)?payload.output:[]).flatMap(x=>Array.isArray(x?.content)?x.content:[]).filter(c=>c&&typeof c==='object');
+  if(payload?.status!=='completed'||content.some(c=>c.type==='refusal')){
+   const error=Object.assign(Error('GoPlan could not finish this recommendation. Your answers and choices are saved; you can keep working manually.'),{code:'RESPONSE_INCOMPLETE',retryable:false});
+   // An acknowledged truncated result can be repaired within this SAME request
+   // and spending ceiling. Never retry an ambiguous transport failure.
+   if(stage==='targets'&&attempt===0&&payload?.status==='incomplete'&&payload.incomplete_details?.reason==='max_output_tokens'){
+    context.repair={reason:'The preceding output exceeded its token allowance. Return the complete required JSON, with each reason at most eight words and no extra prose.'};continue;
+   }
+   const recovered=recoverTargets(error);if(recovered)return recovered;throw error;
+  }
   let parsed;try{parsed=JSON.parse(content.filter(c=>c.type==='output_text').map(c=>c.text).join(''));if(request.refinement&&parsed.intent==='answer'){
     if(typeof parsed.answer!=='string'||!parsed.answer.trim())throw Error('Provide the explanation requested.');
     return {source:'openai',kind:'answer',answer:cleanUserProse({answer:parsed.answer}).answer,minorChecklist:questionFacts.minorChecklist||null};
@@ -254,10 +287,10 @@ export async function adviseJourney(input,env,fetcher=fetch){
    if(stage==='targets'){
     update.added=[];update.removed=[];
     for(const type of ['internships','exchanges']){const before=currentRecommendation[type]||[],after=checked[type];update.added.push(...after.filter(t=>!before.some(p=>p.id===t.id)).map(t=>t.name));update.removed.push(...before.filter(t=>!after.some(p=>p.id===t.id)).map(t=>t.name));}
-    if(request.refinement&&(currentRecommendation.internships?.length||currentRecommendation.exchanges?.length)&&!update.added.length&&!update.removed.length){if(!update.limitations.length)throw Error('No destinations changed. Either satisfy the requested change or explain the concrete evidence limitation.');update.changes=[];}
+    if(request.refinement&&!isInitialOpportunityRequest(input,env)&&(currentRecommendation.internships?.length||currentRecommendation.exchanges?.length)&&!update.added.length&&!update.removed.length){if(!update.limitations.length)throw Error('No destinations changed. Either satisfy the requested change or explain the concrete evidence limitation.');update.changes=[];}
    }
    if(stage==='courses'&&request.refinement){const changed=Object.keys(checked.choices).some(id=>checked.choices[id]!==currentRecommendation.choices[id]);if(!changed&&!update.limitations.length)throw Error('No courses changed. Explain the constraint or replace eligible AI suggestions.');}
    return {source:'openai',model:payload.model||env.OPENAI_MODEL||'gpt-6.1-sol',generatedAt:new Date().toISOString(),evidenceReviewed:EVIDENCE_REVIEWED,...cleanUserProse(checked),update:cleanUserProse(update),research:{...research,companies:undefined}};}
-  catch(e){if(attempt===1)throw Error('The adviser could not verify this proposal: '+e.message+' Your saved plan is unchanged.');if(stage==='courses')previousCourseProposal=parsed;context.repair={reason:e.message,previousProposal:parsed||null};context.task+=' Correct the previous proposal using repair. Do not repeat the rejected selection. Leave an unverifiable course open rather than guessing.';}
+  catch(e){if(attempt===1){const error=Object.assign(Error('The adviser could not verify this proposal: '+e.message+' Your saved plan is unchanged.'),{code:stage==='targets'?'INVALID_TARGET_RESPONSE':undefined}),recovered=recoverTargets(error);if(recovered)return recovered;throw error;}if(stage==='courses')previousCourseProposal=parsed;context.repair={reason:e.message,previousProposal:parsed||null};context.task+=' Correct the previous proposal using repair. Do not repeat the rejected selection. Leave an unverifiable course open rather than guessing.';}
  }
 }

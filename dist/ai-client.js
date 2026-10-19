@@ -50,3 +50,10 @@ export async function feedbackRequest(action,body){
  if(access)try{sessionStorage.setItem(accessStorage,access);}catch{}
  return data;
 }
+
+// Reviewed matching only: this endpoint cannot invoke a model or spend an allowance.
+export async function requestReviewedTargets(journey){
+ const {program,track,secondTrack,minor,choices}=journey.profile;
+ const response=await fetch(endpoint()+'/api/reviewed-targets',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({profile:{program,track,secondTrack,minor,choices},questionnaire:journey.questionnaire,goal:journey.goal}),signal:AbortSignal.timeout(20000)});
+ const data=await response.json();if(!response.ok)throw Object.assign(Error(data.error||'Your matches could not load. Please try again.'),{retryable:true});return data;
+}

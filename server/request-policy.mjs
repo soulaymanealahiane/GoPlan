@@ -36,5 +36,5 @@ export function boundedRequest(env,fetcher=fetch,{timeoutMs=REQUEST_TIMEOUT_MS}=
  };
  return {env:{...env,GOPLAN_REQUEST_SIGNAL:controller.signal,GOPLAN_REQUEST_STARTED:started},fetcher:bounded,dispose:()=>clearTimeout(timer)};
 }
-export const adviceTokens=stage=>({setup:1800,question:1400,change:1400,pace:1400,direction:4000,courses:6000,targets:3000,replan:4000}[stage]||5000);
+export const adviceTokens=stage=>({setup:1800,question:1400,change:1400,pace:1400,direction:4000,courses:6000,targets:5000,replan:4000}[stage]||5000);
 export const adviceEffort=(stage,env)=>['setup','question','change','pace','targets'].includes(stage)?'low':env.OPENAI_REASONING_EFFORT||'medium';

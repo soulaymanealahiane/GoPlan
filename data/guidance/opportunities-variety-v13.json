@@ -1,0 +1,107 @@
+{
+  "reviewedAt": "2026-10-19",
+  "scope": "One additional Moroccan internship research target and academic-fit review of five institutions already in the supplied AUI Spring 2027 list. Subject fit is inference. No current opening, exchange place, credit equivalence or admission is confirmed.",
+  "internships": [
+    {
+      "id": "onee-electricity",
+      "name": "ONEE — Electricity Branch",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": ["Morocco"],
+      "industries": ["energy", "electricity", "infrastructure"],
+      "tags": ["energy", "renewable", "engineering", "electrical", "power systems", "environment"],
+      "fields": ["energy", "renewable", "engineering", "electrical", "power systems", "environment"],
+      "programs": ["BSRESE", "BSGE", "BSEMS", "BSESS"],
+      "reason": "Moroccan public electricity utility working on power production, transmission and renewable integration.",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "checkedAt": "2026-10-19",
+      "sourceUrl": "https://www.one.org.ma/fr/pdf/Rapport%20d%27activit%C3%A9-2024.pdf",
+      "sources": [
+        {
+          "title": "ONEE official 2024 activity report — electricity production and transmission",
+          "url": "https://www.one.org.ma/fr/pdf/Rapport%20d%27activit%C3%A9-2024.pdf",
+          "checkedAt": "2026-10-19",
+          "primary": true
+        }
+      ],
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Ask the utility through its official contact or recruitment channels about student internships.",
+      "selectionProbabilityKnown": false
+    }
+  ],
+  "exchangePatches": [
+    {
+      "id": "memorial-university-of-newfoundland-bilateral",
+      "programs": ["BSRESE", "BSGE", "BSEMS"],
+      "tags": ["energy", "engineering", "electrical", "environment", "sustainable processing"],
+      "disciplines": ["energy", "engineering", "electrical", "environment", "sustainable processing"],
+      "reason": "Undergraduate electrical, mechanical and process engineering offer energy-related subjects to explore.",
+      "sourceUrl": "https://mun.ca/undergrad/programs/engineering/process-engineering/",
+      "eligibilityToAdd": ["Inbound exchange requires home-university nomination and normally at least one university year completed."],
+      "constraintsToAdd": ["Engineering course access depends on prerequisites, capacity and departmental approval. Current offerings and transfer approval must be checked."],
+      "sourcesToAdd": [
+        {"title": "Memorial undergraduate process engineering", "url": "https://mun.ca/undergrad/programs/engineering/process-engineering/", "checkedAt": "2026-10-19", "primary": true},
+        {"title": "Memorial undergraduate engineering subjects", "url": "https://www.mun.ca/undergrad/programs/engineering/", "checkedAt": "2026-10-19", "primary": true},
+        {"title": "Memorial inbound exchange eligibility and course access", "url": "https://mun.ca/goabroad/visiting-students-inbound/", "checkedAt": "2026-10-19", "primary": true}
+      ]
+    },
+    {
+      "id": "hm-hochschule-munchen-university-of-applied-sciences-bilateral",
+      "programs": ["BSRESE", "BSGE"],
+      "tags": ["energy", "renewable", "engineering", "environment", "building systems"],
+      "disciplines": ["energy", "renewable", "engineering", "environment", "building systems"],
+      "reason": "Energy and building engineering covers renewable systems, energy efficiency and environmental technology.",
+      "sourceUrl": "https://fk05.hm.edu/studiengange_de/studiengang_detail_58.de.html",
+      "eligibilityToAdd": ["Home-university nomination and host acceptance are required."],
+      "constraintsToAdd": ["The energy degree is mainly taught in German. Check the intended term's English course list, faculty restrictions, language requirements and capacity before choosing it."],
+      "sourcesToAdd": [
+        {"title": "HM bachelor energy and building engineering", "url": "https://fk05.hm.edu/studiengange_de/studiengang_detail_58.de.html", "checkedAt": "2026-10-19", "primary": true},
+        {"title": "HM English exchange course lists and faculty access restrictions", "url": "https://hm.edu/internationales/wege_an_die_hm/courses_in_english_1/courses_in_english_kursprogramm.de.html", "checkedAt": "2026-10-19", "primary": true},
+        {"title": "HM incoming exchange nomination", "url": "https://hm.edu/internationales/wege_an_die_hm/exchange/index.en.html", "checkedAt": "2026-10-19", "primary": true}
+      ]
+    },
+    {
+      "id": "university-of-texas-at-dallas-bilateral",
+      "programs": ["BSRESE", "BSGE", "BSEMS"],
+      "tags": ["energy", "engineering", "mechanical", "thermodynamics", "heat transfer", "control systems"],
+      "disciplines": ["energy", "engineering", "mechanical", "thermodynamics", "heat transfer", "control systems"],
+      "reason": "Mechanical engineering includes thermodynamics, fluid mechanics, heat transfer and controls relevant to energy systems.",
+      "sourceUrl": "https://catalog.utdallas.edu/2026-undergraduate/programs/ecs/mechanical-engineering/",
+      "constraintsToAdd": ["Subject fit is inferred from the undergraduate catalogue; exchange-specific access to engineering courses, prerequisites and capacity must be confirmed through the AUI route."],
+      "sourcesToAdd": [
+        {"title": "UT Dallas 2026 undergraduate mechanical engineering catalogue", "url": "https://catalog.utdallas.edu/2026-undergraduate/programs/ecs/mechanical-engineering/", "checkedAt": "2026-10-19", "primary": true}
+      ]
+    },
+    {
+      "id": "king-mongkut-s-institute-of-technology-ladkrabang-bilateral",
+      "programs": ["BSRESE", "BSGE"],
+      "tags": ["energy", "renewable", "engineering", "electrical", "power systems", "smart grids"],
+      "disciplines": ["energy", "renewable", "engineering", "electrical", "power systems", "smart grids"],
+      "reason": "The international electrical engineering curriculum includes renewable energy, power electronics and power systems.",
+      "sourceUrl": "https://power.kmitl.ac.th/international-program/",
+      "eligibilityToAdd": ["Engineering inbound exchange requires partner-university nomination, a GPA of at least 2.5/4 or equivalent, and ability to communicate in English."],
+      "constraintsToAdd": ["Confirm the current exchange course list, semester dates, prerequisites and AUI credit approval; the degree curriculum does not guarantee a course place."],
+      "sourcesToAdd": [
+        {"title": "KMITL international undergraduate electrical engineering curriculum", "url": "https://power.kmitl.ac.th/international-program/", "checkedAt": "2026-10-19", "primary": true},
+        {"title": "KMITL School of Engineering inbound exchange requirements", "url": "https://sites.google.com/kmitl.ac.th/internationalengineeringkmitl/international-affairs/internships-and-co-ops", "checkedAt": "2026-10-19", "primary": true}
+      ]
+    },
+    {
+      "id": "baylor-university-bilateral",
+      "programs": ["BSRESE", "BSGE", "BSEMS"],
+      "tags": ["energy", "engineering", "mechanical", "thermodynamics", "heat transfer", "materials"],
+      "disciplines": ["energy", "engineering", "mechanical", "thermodynamics", "heat transfer", "materials"],
+      "reason": "Undergraduate mechanical engineering covers thermal systems, fluids, materials and control systems.",
+      "sourceUrl": "https://www.ecs.baylor.edu/programs-departments/mechanical-engineering/about-us",
+      "eligibilityToAdd": ["Participation requires nomination through a partner institution and host acceptance."],
+      "constraintsToAdd": ["Verify engineering course access, prerequisites, term availability and AUI transfer approval. Funding follows the specific institutional agreement."],
+      "sourcesToAdd": [
+        {"title": "Baylor undergraduate mechanical engineering subjects", "url": "https://www.ecs.baylor.edu/programs-departments/mechanical-engineering/about-us", "checkedAt": "2026-10-19", "primary": true},
+        {"title": "Baylor official exchange overview", "url": "https://globalengagement.web.baylor.edu/international-student-and-scholar-services/international-students/j-1-student-processes/exchange", "checkedAt": "2026-10-19", "primary": true}
+      ]
+    }
+  ]
+}
