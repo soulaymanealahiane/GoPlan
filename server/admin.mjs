@@ -4,6 +4,7 @@ import {isAnalyticsAdmin,analyticsSnapshot} from './analytics.mjs';
 import {listFeedback,reviewFeedback} from './feedback.mjs';
 import {analyticsExport} from './analytics-export.mjs';
 import {studentDirectory} from './accounts.mjs';
+import {resetStudentTest,undoStudentTestReset} from './test-reset.mjs';
 export async function adminEndpoint(request,env){
  const url=new URL(request.url),origin=request.headers.get('Origin');
  const json=(body,status=200)=>Response.json(body,{status,headers:privateHeaders});
@@ -12,6 +13,17 @@ export async function adminEndpoint(request,env){
  if(!owner&&!service)return json({error:'Owner sign-in required.',code:'OWNER_REQUIRED'},401);
  if(!['/api/admin/analytics','/api/admin/export'].includes(url.pathname)&&!owner&&(!env.FEEDBACK_REVIEW_KEY||request.headers.get('Authorization')!=='Bearer '+env.FEEDBACK_REVIEW_KEY))return json({error:'Report reviewer access required.'},403);
  try{
+  if(['/api/admin/students/reset-test','/api/admin/students/undo-reset'].includes(url.pathname)){
+   if(!owner)return json({error:'Owner sign-in required.'},403);
+   if(request.method!=='POST'||origin!==url.origin||request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'Open this action from GoPlan.'},403);
+   if(!request.headers.get('Content-Type')?.startsWith('application/json'))return json({error:'Use JSON.'},415);
+   const reader=request.body?.getReader();if(!reader)return json({error:'Missing request.'},400);let chunks=[],size=0;
+   while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>1024){await reader.cancel();return json({error:'Request too large.'},413);}chunks.push(value);}
+   const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
+   let data;try{data=JSON.parse(new TextDecoder().decode(bytes));}catch{return json({error:'Invalid request.'},400);}
+   if(!data||typeof data!=='object'||Array.isArray(data))return json({error:'Invalid request.'},400);
+   return json(await (url.pathname.endsWith('/undo-reset')?undoStudentTestReset:resetStudentTest)(env,owner,data));
+  }
   if(['/api/admin/roster','/api/admin/partnerships'].includes(url.pathname)){
    if(!owner)return json({error:'Owner sign-in required.'},403);
    if(url.pathname.endsWith('/partnerships')&&request.method==='GET'){await env.DB.prepare('DELETE FROM partnership_inquiries WHERE created_at<?').bind(Date.now()-180*86400000).run();return json({inquiries:(await env.DB.prepare('SELECT id,name,email,university,message,created_at FROM partnership_inquiries ORDER BY created_at DESC LIMIT 200').all()).results});}

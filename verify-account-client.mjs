@@ -1,6 +1,7 @@
 import {testSession} from './tests/session-fixture.mjs';
 import assert from 'node:assert/strict';
 import {createAccountWorkspace} from './dist/accounts.js';
+import {resetStudentTest} from './server/test-reset.mjs';
 import {emptyWorkspace} from './dist/guidance.js';
 import {handleApi} from './server/api.mjs';
 import {localDatabase} from './server/local-db.mjs';
@@ -23,6 +24,8 @@ const saved=JSON.parse(storage.get(key));await fetch('/api/account/workspaces/'+
 // Failed cloud loading must not discard the pending copy or conflict state.
 offline=true;await events.click({target:{closest:()=>({dataset:{account:'load-cloud'}})},preventDefault(){}});assert.equal(account.phase,'conflict');assert.equal(JSON.parse(storage.get(key)).state.journey.questionnaire.activities,'My newer local edit');offline=false;
 await events.click({target:{closest:()=>({dataset:{account:'load-cloud'}})},preventDefault(){}});assert.equal(account.phase,'ready');assert.equal(state.journey.questionnaire.activities,'Design and experiment');
+// An owner-authorized reset must open the fresh cloud workspace instead of an old pending device copy.
+offline=true;state.journey.questionnaire.ambitions='Old unsynced test';account.schedule(state);assert.equal(await account.flush(),false);const resetEmail=(await DB.prepare('SELECT email FROM student_profiles WHERE id=?').bind('first').first()).email;await resetStudentTest(env,'owner@example.invalid',{requestId:crypto.randomUUID(),email:resetEmail,confirm:resetEmail});offline=false;account=setup();await account.boot();assert.equal(account.phase,'ready');assert.equal(state.journey.questionnaire.ambitions,'');assert.notEqual(key,firstKey);
 // A different login in another tab cannot receive this student's next save.
 user='second';await fetch('/api/account/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:'Omar',lastName:'Tester',consentCloud:true})});state.journey.questionnaire.ambitions='Private first-user change';account.schedule(state);assert.equal(await account.flush(),false);assert.equal((await (await fetch('/api/account/workspaces')).json()).workspaces.length,0);
 DB.close();console.log('Browser account controller: initial plan, cloud restore, offline recovery, revision conflict, failed reload preservation and account-switch isolation passed.');

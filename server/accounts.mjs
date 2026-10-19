@@ -3,6 +3,7 @@ import {accountIdentity} from './auth.mjs';
 import {validateSavedWorkspace} from '../dist/guidance.js';
 import {hash} from './feedback.mjs';
 import {privateHeaders} from './admin-auth.mjs';
+import {purgeTestArchives,resetArchiveSchema} from './test-reset.mjs';
 const uuid=s=>typeof s==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(s);
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
 export const studentIdentity=accountIdentity;
@@ -80,6 +81,7 @@ export async function accountEndpoint(request,env){
   }
   if(url.pathname==='/api/account'&&request.method==='DELETE'){
    const data=await body(request);if(data.confirm!=='DELETE MY GOPLAN DATA')fail('Confirm account deletion.');
+   await purgeTestArchives(db,uid);
    await serviceEntitlement(db,uid);await db.prepare('DELETE FROM service_calls WHERE owner=?').bind(await serviceOwner(uid)).run();
    await db.batch([db.prepare('DELETE FROM student_workspaces WHERE user_id=?').bind(uid),db.prepare('DELETE FROM student_profiles WHERE id=?').bind(uid),db.prepare('DELETE FROM auth_sessions WHERE user_id=?').bind(uid)]);return json({deleted:true});
   }
@@ -87,7 +89,8 @@ export async function accountEndpoint(request,env){
  }catch(e){return json({error:e.status?e.message:'Account storage is temporarily unavailable. Keep your device copy and retry.'},e.status||503);}
 }
 export async function studentDirectory(env){
- const rows=(await env.DB.prepare('SELECT id,first_name,last_name,email,created_at,last_seen_at FROM student_profiles ORDER BY last_seen_at DESC LIMIT 200').all()).results;
+ await resetArchiveSchema(env.DB);
+ const rows=(await env.DB.prepare('SELECT p.id,p.first_name,p.last_name,p.email,p.created_at,p.last_seen_at,(SELECT a.id FROM test_reset_archives a WHERE a.user_id=p.id AND a.restored_at IS NULL ORDER BY a.created_at DESC LIMIT 1) AS reset_id FROM student_profiles p ORDER BY p.last_seen_at DESC LIMIT 200').all()).results;
  const total=(await env.DB.prepare('SELECT COUNT(*) AS count FROM student_profiles').first()).count;
- return {students:rows.map(r=>({id:r.id,firstName:r.first_name,lastName:r.last_name,email:r.email,createdAt:r.created_at,lastSeenAt:r.last_seen_at})),total,limit:200};
+ return {students:rows.map(r=>({id:r.id,firstName:r.first_name,lastName:r.last_name,email:r.email,createdAt:r.created_at,lastSeenAt:r.last_seen_at,lastResetId:r.reset_id||null})),total,limit:200};
 }
