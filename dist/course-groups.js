@@ -3,6 +3,7 @@ import {programFor,creditsOf,label,termOrder} from './planner.js';
 // A choice is an input mechanism, not an academic category. Classify the
 // requirement slot, so selecting a different course cannot move its credits.
 export function courseGroupKey(course,profile){
+ if(course.manualAddition)return 'added';
  const category=String(course.category||''),program=programFor(profile),track=program.tracks.find(t=>t.id===profile.track);
  if(/^General education$/i.test(category))return 'general';
  if(course.focusRole==='secondary'||course.secondTrack||/^Second (specialization|concentration)/i.test(category))return 'second';
@@ -26,6 +27,7 @@ export function courseGroups(courses,profile){
   ['second',`Second ${focus}`,second?.name||`Second ${focus}`,'Courses for your second focus.'],
   ['open','Open electives','Your open electives','Choose within your degree’s approved options.'],
   ['free','Free electives','Your free electives','Room to explore beyond your main field.'],
+  ['added','Added courses','Courses you added','Personal additions to your plan.'],
   ['experience','Experience','Your experience courses','Internship and fieldwork requirements.']
  ];
  const rows=new Map(definitions.map(([id])=>[id,[]]));

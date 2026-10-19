@@ -20,7 +20,7 @@ const direction=dashboardView(directionState,{dashboardPanel:'direction',service
 assert.ok(direction.includes('Why this match?'));assert.ok(!direction.includes('An explanation available on request.'),'Direction explanations should open on demand rather than crowd every card.');
 assert.ok(overview.includes('Computer Systems + Artificial Intelligence + Business Administration minor'));
 assert.ok(overview.includes('Edit my plan'));assert.ok(overview.includes('Edit courses'));assert.ok(overview.includes('Export Excel'));
-assert.ok(overview.includes('You can still edit your plan manually'));
+assert.ok(overview.includes('unlimited manual changes'));
 // Saved-plan profile is authoritative even if an old journey snapshot lacks
 // the second specialization.
 const stale=structuredClone(state);stale.journey.profile.secondTrack='';
@@ -40,7 +40,7 @@ for(const remaining of [0,5])for(const panel of ['overview','direction','courses
  const html=dashboardView(state,{dashboardPanel:panel,service:{...service,globalRemaining:remaining}});
  assert.ok(!html.includes('dashboard-unavailable'),'Removed course-unavailable feature remains on '+panel);
  assert.ok(!html.includes('A course isn’t offered'));
- if(['courses','semesters'].includes(panel)){assert.ok(html.includes('No AI changes used.'));assert.ok(html.includes('aria-label="Edit '));}
+ if(['courses','semesters'].includes(panel)){assert.ok(html.includes(panel==='semesters'?'Your changes save here.':'No AI changes used.'));assert.ok(html.includes('aria-label="Edit '));}
  if(panel==='semesters'){
   assert.match(html,/<button[^>]+data-action="dashboard-add-term"[^>]*>\+ Add semester<\/button>/);
   assert.ok(!html.match(/<button[^>]+data-action="dashboard-add-term"[^>]*>/)[0].includes('disabled'),'Adding a semester remains manual at zero allowance.');

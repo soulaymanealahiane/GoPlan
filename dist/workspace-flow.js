@@ -1,3 +1,4 @@
+import {retainManualEdits} from './manual-plan.js';
 import {emptyWorkspace,newJourney,makePlan} from './guidance.js';
 import {proposeReplan} from './replanning.js';
 import {buildStudentPlan,normalizeStudentContext,recordedStudy} from './student-context.js';
@@ -11,7 +12,8 @@ export function editJourney(plan,request,startStep,currentTerm){
  for(const stage of affected)j.refinements[stage]=request;
  return j;
 }
-export function buildProposal(j,previous){
+export function buildProposal(j,previous){return retainManualEdits(buildCoreProposal(j,previous),previous);}
+function buildCoreProposal(j,previous){
  if(!previous)return j.studentContext?buildStudentPlan(j):makePlan(j);
  // Destination-only edits must not reschedule even one course.
  if(j.editStartStep===4&&['program','track','secondTrack','minor','pace','regularCourses','summerCourses','summers','startYear','lc'].every(k=>j.profile[k]===previous.profile[k])&&JSON.stringify(j.profile.choices)===JSON.stringify(previous.profile.choices)){const plan=structuredClone(previous);plan.decisions=structuredClone(j);plan.targets.internships=structuredClone(j.details?.internships||[]);plan.targets.exchanges=structuredClone(j.details?.exchanges||[]);return plan;}

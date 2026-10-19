@@ -10,13 +10,14 @@ Run `pnpm test` and `pnpm build`. Provider responses are synthetic, so the suite
 - `verify-target-resilience.mjs`: initial Exchanges accepting an unchanged valid list, bounded repair, provider/budget/output failures and reviewed recovery without fabricated sources. Explicit revisions still fail honestly.
 - `verify-opportunity-coverage.mjs`: all eight undergraduate degrees, three distinct shortlists, source-route preservation, profile matching, near-exhausted history and 96 strict synthetic selections. Unaffected lists stay unchanged.
 - `verify-dashboard-clarity.mjs`: complete degree names, clear quick questions, explanations on demand, accessible loading, unavailable-feature removal and manual access.
+- `verify-manual-workspace.mjs`: 22 post-AI groups across all eight undergraduate degrees, 765 catalogue/requirement selections and 40 validated HTTP saves. Covers all progress statuses including uncoded languages, arbitrary course add/replace/move/remove, retakes, duplicate additions, undo from both panels, semester notes and privacy, empty-plan export/recovery, save/reload, concurrent revision conflicts, preview cancellation and settings changes. No provider calls occur.
 - `verify-admin-simplicity.mjs`: all six admin sections, scoped filters/refresh, truthful counts, optional detail, university imports and feedback evidence checks.
 
 The remaining suite checks academic combinations and prerequisites, protected study, credit budgets, authentication, owner permissions, account isolation, concurrent allowances, sync conflicts, feedback consent and Excel generation.
 
 ## Browser walkthrough
 
-Use a disposable account and synthetic provider responses. Walk through all five stages, including failed initial Companies/Exchanges responses. Save and reload the plan; check both specializations and the minor are named. Add a Language Center buffer and semester, edit course progress, and export Excel. Review Overview, Adviser health, Students, Feedback, University access and Data & exports with a synthetic owner session.
+Use a disposable account and synthetic provider responses. Walk through all five stages, including failed initial Companies/Exchanges responses. Save and reload the plan; check both specializations and the minor are named. Add a Language Center buffer and semester, search the complete AUI course list, add/move/remove a course and undo removal, complete an uncoded French requirement, save a semester note, reload and export Excel at zero AI allowance. Review Overview, Adviser health, Students, Feedback, University access and Data & exports with a synthetic owner session.
 
 ## Limits
 

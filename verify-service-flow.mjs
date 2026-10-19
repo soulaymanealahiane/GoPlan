@@ -49,7 +49,7 @@ try{
   assert.equal(state.phase,'draft');await controller.click({dataset:{action:'dashboard-save'}});
  }
  const before=paid;await controller.submit({id:'dashboard-command-form',values:{request:'A sixth global change is forbidden.'}});assert.equal(paid,before);
- await controller.loadService();const html=dashboardView(state,{...runtime,dashboardPanel:'overview'});assert.ok(html.includes('Your five global AI changes are used'));assert.ok(html.includes('Export Excel'));assert.ok(!html.includes('id="dashboard-request"'));assert.ok(html.includes('Change your degree'));
+ await controller.loadService();const html=dashboardView(state,{...runtime,dashboardPanel:'overview'});assert.ok(html.includes('AI planning is complete'));assert.ok(html.includes('Export Excel'));assert.ok(!html.includes('id="dashboard-request"'));assert.ok(html.includes('Change your degree'));
  const saved=JSON.stringify(state);await controller.click({dataset:{action:'dashboard-confirm-restart'}});assert.equal(JSON.stringify(state),saved);
  console.log('Passed five sequential card stages, two stage prompts each, saved-dashboard transition, five global revisions including a full cross-panel rebuild, persistent manual-only state and removed restart. No live calls.');
 }finally{globalThis.fetch=originalFetch;globalThis.FormData=originalForm;DB.close();}
