@@ -5,6 +5,7 @@ import {DATA,normalizeProfile,programFor,coursesFor,generatePlan,validatePlan} f
 import {eligibleMinors,allowedChoices} from '../dist/guidance.js';
 import OPPORTUNITIES from '../dist/opportunities.js';
 import {needsPersonalConfirmation} from '../dist/course-options.js';
+import {eligibleCourseOptions,selectionEligibility,prerequisiteCoverage} from '../dist/course-eligibility.js';
 import {businessRule} from '../dist/program-rules.js';
 import {minorSummary} from '../dist/minor-summary.js';
 import {selectedMinor} from '../dist/minors.js';
@@ -78,14 +79,14 @@ export function validateOpportunitySelection(items,records,type,{current=[],poli
  if(policy.preserveTypes?.includes(type)&&(items.length!==current.length||items.some((t,i)=>t.id!==current[i]?.id)))throw Error('Preserve the unaffected '+type+' recommendations and their order.');
  return items;
 }
-export function detailsContext(request){
- const p=normalizeProfile(request.profile),cs=coursesFor(p),catalog=new Map();
+export function detailsContext(request,{unlockChoices=false}={}){
+ const eligibility=selectionEligibility(request.profile),p=eligibility.profile,cs=eligibility.courses,catalog=new Map();
  const reservedCodes=cs.filter(c=>c.code&&!c.supportingPrerequisite);
  const requirements=cs.filter(c=>c.choice).map(c=>{
   // Send only options the server could accept. Provisional codes and human-only
   // requirements remain visible as open requirements, never as AI selections.
   const humanOnly=c.approvalOnly||needsPersonalConfirmation(c);
-  const options=humanOnly?[]:allowedChoices(c,p).filter(o=>!o.topic&&!o.creditsProvisional&&!reservedCodes.some(r=>r.id!==c.id&&r.code===o.code)&&(!c.code||o.code===c.code));
+  const options=humanOnly?[]:eligibleCourseOptions(c,p,eligibility).filter(o=>!reservedCodes.some(r=>r.id!==c.id&&r.code===o.code)&&(unlockChoices||!c.code||o.code===c.code));
   for(const o of options)catalog.set(o.code,{...o,rule:{...DATA.courses[o.code]?.rule,...businessRule(p.program,o.code)}});
   return {id:c.id,title:c.title,credits:c.credits,category:c.category,minorId:c.minorId||'',options:options.map(o=>o.code),selectedCourse:c.code||null,conditionalRules:c.conditionalRules||null,offeredTerms:c.offeredTerms||null,approvalOnly:!!c.approvalOnly,placementDependent:needsPersonalConfirmation(c)};
  });
@@ -120,6 +121,8 @@ export function validateDetails(result,request,checkTargets=true){
  }
  const selectedProfile=normalizeProfile({...profile,choices});
  const checkCourses=coursesFor(selectedProfile),terms=generatePlan(selectedProfile),check=validatePlan(terms,checkCourses,selectedProfile);
+ const coverage=prerequisiteCoverage(checkCourses,selectedProfile.priorCodes),invalid=coverage.issues.filter(issue=>result.choices.some(x=>x.requirementId===issue.id));
+ if(invalid.length)throw selectionError(invalid.map(issue=>issue.message).join(' '),invalid.map(issue=>issue.id));
  const pending=new Set(terms.find(t=>t.id==='pending')?.courses||[]);
  const blocked=result.choices.filter(x=>pending.has(x.requirementId));
  if(blocked.length)throw selectionError('These proposed electives have unmet prerequisites or cannot be scheduled: '+blocked.map(x=>x.courseCode).join(', '),blocked.map(x=>x.requirementId));

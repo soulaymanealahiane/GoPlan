@@ -1,6 +1,7 @@
 import {DATA,normalizeProfile,coursesFor,generatePlan,validatePlan,programFor,termOrder,label} from './planner.js';
 import {selectedMinor} from './minors.js';
 import {courseOptions,needsPersonalConfirmation} from './course-options.js';
+import {prerequisiteCoverage} from './course-eligibility.js';
 import {normalizeScheduling,mergeScheduling,courseAvailability,analyzeCourseAvailability,prerequisiteDependants} from './course-availability.js';
 
 export function parseTerm(id){const m=/^(Fall|Spring|Summer)-(20\d\d)$/.exec(id||'');if(!m)throw Error('Choose a valid semester.');return {id,season:m[1],year:Number(m[2])};}
@@ -27,6 +28,9 @@ export function proposeReplan(plan,change,currentTerm){
  const options=coursesFor(profile),choices={...profile.choices};
  for(const item of change.choices||[]){const c=options.find(c=>c.id===item.requirementId);if(!c?.choice||c.approvalOnly||needsPersonalConfirmation(c)||!courseOptions(c,profile).some(o=>o.code===item.courseCode&&!o.topic&&!o.creditsProvisional))throw Error('This requested course needs a verified equivalent or placement approval.');if(protectedCourses.some(p=>p.id===c.id&&p.code!==item.courseCode))throw Error('Completed and current courses cannot be replaced.');choices[c.id]=item.courseCode;}
  profile.choices=choices;const courses=coursesFor(profile);
+ const beforeCoverage=prerequisiteCoverage(plan.courses,old.priorCodes),coverage=prerequisiteCoverage(courses,profile.priorCodes);
+ const broken=coverage.issues.find(issue=>(change.choices||[]).some(c=>c.requirementId===issue.id)||beforeCoverage.covered.has(issue.courseCode));
+ if(broken)throw Error(broken.message+' Choose a different supported elective. Your saved plan is unchanged.');
  for(const c of protectedCourses)if(!courses.some(n=>n.id===c.id&&n.code===c.code))throw Error('This academic change would remove completed or current work. Keep this roadmap and use Update life decisions for a separate degree review.');
  const frozenIds=new Set(protectedCourses.map(c=>c.id));
  const fixedTerms=plan.terms.filter(t=>!['prior','pending'].includes(t.id)).map(t=>({...t,courses:t.courses.filter(id=>frozenIds.has(id))})).filter(t=>t.courses.length);

@@ -2,6 +2,7 @@ import {DATA,DEFAULT_PROFILE,normalizeProfile,coursesFor,generatePlan,validatePl
 import GUIDED from './guided-data.js';
 import {selectedMinor} from './minors.js';
 import {courseOptions} from './course-options.js';
+import {eligibleCourseOptions,releaseIneligibleChoices} from './course-eligibility.js';
 import {normalizeScheduling} from './course-availability.js';
 import {emptyQuestionnaire,cleanQuestionnaire} from './questionnaire.js';
 import {normalizeStudentContext,recordedStudy} from './student-context.js';
@@ -30,10 +31,10 @@ export function suggestMinors(j){return eligibleMinors(j.profile).map(m=>({minor
 export function recommendTargets(type,j){return (GUIDED[type]||[]).map(x=>{const hit=matches(x.tags||[],j.interests),related=(x.programs||[]).includes(j.profile.program);return {...x,hit,related};}).sort((a,b)=>b.hit.length-a.hit.length||Number(b.related)-Number(a.related));}
 export const allowedChoices=courseOptions;
 export function suggestChoices(j){
- const p=normalizeProfile(j.profile),cs=coursesFor(p),used=new Set(cs.filter(c=>c.code).map(c=>c.code)),minor=selectedMinor(p);let filled=0;
+ const protectedIds=Object.keys(j.protectedChoices||{}),p=releaseIneligibleChoices(j.profile,{protectedIds}).profile,cs=coursesFor(p),used=new Set(cs.filter(c=>c.code).map(c=>c.code)),minor=selectedMinor(p);let filled=0;
  for(const c of cs){
   if(!c.choice||c.code||c.replacementFor||!c.options?.length||/arabic|french|language|civic|placement/i.test(c.title))continue;
-  const candidates=allowedChoices(c,p).filter(x=>!used.has(x.code)&&!x.creditsProvisional&&x.credits===c.credits&&!(minor?.overlapRules||[]).some(r=>r.action==='mutually-exclusive'&&r.courses.includes(x.code)&&r.courses.some(id=>used.has(id)))).map(x=>({...x,hit:matches(tagsForText(x.title),j.interests)})).sort((a,b)=>b.hit.length-a.hit.length);
+  const candidates=eligibleCourseOptions(c,p).filter(x=>!used.has(x.code)&&!x.creditsProvisional&&x.credits===c.credits&&!(minor?.overlapRules||[]).some(r=>r.action==='mutually-exclusive'&&r.courses.includes(x.code)&&r.courses.some(id=>used.has(id)))).map(x=>({...x,hit:matches(tagsForText(x.title),j.interests)})).sort((a,b)=>b.hit.length-a.hit.length);
   if(!candidates.length)continue;p.choices={...p.choices,[c.id]:candidates[0].code};used.add(candidates[0].code);filled++;
  }
  return {profile:p,filled};

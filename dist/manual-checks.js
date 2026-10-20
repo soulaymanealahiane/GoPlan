@@ -21,7 +21,7 @@ export function manualRule(profile,course,resolved){
 // A few catalogue descriptions contain course-code expressions that were not
 // translated by the data importer. Preserve AND/OR grouping instead of treating
 // every mentioned course as compulsory. Non-course permissions are not inferred.
-function cataloguePaths(course,rule){
+export function cataloguePaths(course,rule){
  if(rule.all?.length||rule.any?.length||rule.coreq?.length||rule.review===false)return null;
  let raw=DATA.courses[course.code]?.prerequisiteText||'';
  raw=raw.split(/\b(?:corequisites?|recommended)\s*:/i)[0].replace(/([A-Z]{3})\s+(\d{4})/g,'$1$2');

@@ -1,5 +1,6 @@
 import {DATA,coursesFor,limits,termOrder,label,isFieldwork} from './planner.js';
-import {courseOptions,needsPersonalConfirmation} from './course-options.js';
+import {needsPersonalConfirmation} from './course-options.js';
+import {eligibleCourseOptions} from './course-eligibility.js';
 
 const termPattern=/^(Fall|Spring|Summer)-(20\d\d)$/;
 const courseCode=value=>String(value||'').replace(/\s/g,'').toUpperCase();
@@ -66,7 +67,7 @@ export function analyzeCourseAvailability(plan,currentTerm,supplied=plan.schedul
  const internshipOnly=term.season==='Summer'&&(plan.terms.find(t=>t.id===currentTerm)?.internshipOnly||current.some(isFieldwork)||term.year===plan.profile.startYear+3&&courses.some(c=>isFieldwork(c)&&!done.has(c.code)));
  const affected=courses.filter(c=>currentIds.includes(c.id)&&!courseAvailability(c.code,currentTerm,scheduling).allowed).map(c=>{
   const protectedWork=protectedCourse(plan,c),selectable=c.choice&&!c.approvalOnly&&!needsPersonalConfirmation(c),kind=protectedWork?'protected':selectable?'selectable':'required';
-  const alternatives=selectable&&!protectedWork?courseOptions(c,plan.profile).filter(o=>o.code!==c.code&&!o.topic&&!o.creditsProvisional).map(o=>{
+  const alternatives=selectable&&!protectedWork?eligibleCourseOptions(c,plan.profile).filter(o=>o.code!==c.code).map(o=>{
    const availability=courseAvailability(o.code,currentTerm,scheduling);
    if(!availability.allowed)return {courseCode:o.code,title:o.title,availability:availability.status,blockedBy:[availability.reason],eligible:false};
    if(courses.some(x=>x.id!==c.id&&x.code===o.code)||plan.profile.priorCodes?.includes(o.code))return {courseCode:o.code,title:o.title,availability:availability.status,blockedBy:['Already counted toward another requirement or prior credit'],eligible:false};
