@@ -4,6 +4,9 @@ import {normalizeProfile,label,limits} from './planner.js';
 export function sequenceKey(raw){const p=normalizeProfile(raw);return JSON.stringify(['program','track','secondTrack','minor','choices','regularCourses','summerCourses','summers','startYear','lc','priorCodes','exchange'].map(k=>p[k]));}
 export function semesterUpdate(before,after,assessment,change){
  const changes=[],limitations=[];
+ if(before.profile.startYear!==after.profile.startYear)changes.push(`Set the degree start to Fall ${after.profile.startYear}.`);
+ if(before.profile.lc!==after.profile.lc)changes.push(after.profile.lc?`Reserved ${after.profile.lc} Language Center semester${after.profile.lc===1?'':'s'} before degree study.`:'Removed the Language Center buffer.');
+ for(const id of change.clearChoices||[]){const old=before.courses.find(c=>c.id===id),next=after.courses.find(c=>c.id===id);if(old?.code&&!next?.code)changes.push(`Left the existing ${old.category.toLowerCase()} slot open instead of ${old.code}.`);}
  for(const r of assessment.replacements)changes.push(r.from?`Replaced ${r.from} with ${r.to} in the same ${r.requirement.toLowerCase()} slot.`:`Filled the existing ${r.requirement.toLowerCase()} slot with ${r.to}.`);
  if(before.profile.regularCourses!==after.profile.regularCourses||before.profile.summerCourses!==after.profile.summerCourses||before.profile.summers!==after.profile.summers)changes.push(`Set regular semesters to up to ${after.profile.regularCourses} courses; ${after.profile.summers?'summers to up to '+after.profile.summerCourses:'summer classroom study is off'}.`);
  for(const x of change.termLoads||[]){const old=before.scheduling?.termLoads?.find(t=>t.termId===x.termId);if((old?.courseCount??-1)!==x.courseCount)changes.push(x.courseCount===-1?`Restored the usual workload in ${x.termId.replace('-',' ')}.`:`Set ${x.termId.replace('-',' ')} to up to ${x.courseCount} courses.`);}

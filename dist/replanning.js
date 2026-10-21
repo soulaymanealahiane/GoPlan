@@ -17,19 +17,21 @@ export function restoreSnapshot(raw){
  return {profile,courses,terms,tracking,program:programFor(profile),reports:[],scheduling,decisions:{},targets:{internships:[],exchanges:[],auiMasters:[],globalMasters:[]}};
 }
 export function proposeReplan(plan,change,currentTerm){
- const boundary=parseTerm(currentTerm),old=normalizeProfile(plan.profile),program=programFor(old);
+ let boundary=parseTerm(currentTerm);const old=normalizeProfile(plan.profile),program=programFor(old);
  const track=change.track??old.track,secondTrack=change.secondTrack??old.secondTrack,minor=change.minor??old.minor;
  if(program.tracks.length&&!program.tracks.some(t=>t.id===track))throw Error('This focus is not offered in the selected degree.');
  if(secondTrack&&(!['BBA','BSCSC'].includes(old.program)||secondTrack===track||!program.tracks.some(t=>t.id===secondTrack)))throw Error('This second focus is not supported.');
  if(minor&&!selectedMinor({...old,minor}))throw Error('This minor is not supported for your degree.');
- const profile=normalizeProfile({...old,track,secondTrack,minor,regularCourses:change.regularCourses??(change.pace&&change.pace!==old.pace?(change.pace==='accelerated'?6:5):old.regularCourses),summerCourses:change.summerCourses??old.summerCourses,summers:change.summers??old.summers});
+ const profile=normalizeProfile({...old,track,secondTrack,minor,startYear:change.startYear??old.startYear,lc:change.lc??old.lc,regularCourses:change.regularCourses??(change.pace&&change.pace!==old.pace?(change.pace==='accelerated'?6:5):old.regularCourses),summerCourses:change.summerCourses??old.summerCourses,summers:change.summers??old.summers});
  if((profile.regularCourses>old.regularCourses||profile.summers&&profile.summerCourses===3&&(!old.summers||old.summerCourses<3))&&(old.gpa===''?!change.allowConditionalLoad:old.gpa<3))throw Error('Confirm CGPA 3.0 and good standing before increasing to six regular courses or three summer courses.');
  const protectedCourses=plan.courses.filter(c=>['completed','in-progress'].includes(plan.tracking?.[c.id]?.status)||old.priorCodes.includes(c.code));
+ if(profile.startYear!==old.startYear){if(protectedCourses.length)throw Error('Keep the study start year attached to recorded university work. Move future courses instead.');if(profile.startYear<boundary.year)throw Error('A rebuilt plan cannot start in a past academic year.');boundary=parseTerm('Fall-'+profile.startYear);}
  const options=coursesFor(profile),choices={...profile.choices};
+ for(const id of change.clearChoices||[]){const c=options.find(c=>c.id===id);if(!c?.choice||c.approvalOnly||needsPersonalConfirmation(c))throw Error('Only an editable elective assignment can be left open.');if(protectedCourses.some(x=>x.id===id))throw Error('Completed and current courses cannot be cleared.');delete choices[id];}
  for(const item of change.choices||[]){const c=options.find(c=>c.id===item.requirementId);if(!c?.choice||c.approvalOnly||needsPersonalConfirmation(c)||!courseOptions(c,profile).some(o=>o.code===item.courseCode&&!o.topic&&!o.creditsProvisional))throw Error('This requested course needs a verified equivalent or placement approval.');if(protectedCourses.some(p=>p.id===c.id&&p.code!==item.courseCode))throw Error('Completed and current courses cannot be replaced.');choices[c.id]=item.courseCode;}
  profile.choices=choices;const courses=coursesFor(profile);
  const beforeCoverage=prerequisiteCoverage(plan.courses,old.priorCodes),coverage=prerequisiteCoverage(courses,profile.priorCodes);
- const broken=coverage.issues.find(issue=>(change.choices||[]).some(c=>c.requirementId===issue.id)||beforeCoverage.covered.has(issue.courseCode));
+ const broken=coverage.issues.find(issue=>(change.choices||[]).some(c=>c.requirementId===issue.id)||(change.clearChoices||[]).includes(issue.id)||beforeCoverage.covered.has(issue.courseCode));
  if(broken)throw Error(broken.message+' Choose a different supported elective. Your saved plan is unchanged.');
  for(const c of protectedCourses)if(!courses.some(n=>n.id===c.id&&n.code===c.code))throw Error('This academic change would remove completed or current work. Keep this roadmap and use Update life decisions for a separate degree review.');
  const frozenIds=new Set(protectedCourses.map(c=>c.id));

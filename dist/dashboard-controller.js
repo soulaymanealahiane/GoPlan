@@ -1,3 +1,4 @@
+import {editRoadmap} from './roadmap-edit.js';
 import {opportunityLabel} from './opportunity-labels.js';
 import {manualCatalogue,addManualSemester,addManualCourse,removeManualCourse,noteManualSemester,removeManualSemester} from './manual-plan.js';
 import {manualChangeMessage} from './manual-checks.js';
@@ -85,7 +86,7 @@ export function createDashboardController(h){
 
  async function command(text){
   if(!text?.trim())return;
-  if(guided()){if(operation)operation.atomic=true;const def=SERVICE_STAGES[r.service.step],token=await reserveAction('stage');activeAction=token;const j=state().journey;j.refinements||={};j.refinements[def.agent]=(def.target==='internships'?'Change companies only. Preserve exchange destinations. ':def.target==='exchanges'?'Change exchange destinations only. Preserve companies. ':'')+text;if(def.agent==='courses')j.agentChoices={...j.profile.choices};await advice(def.agent);if(def.id==='semesters'){state().draftPlan=buildProposal(j,state().plan);state().phase='draft';}r.dashboardNotice=r.dashboardNotice||j.lastUpdates?.[def.agent]?.summary;h.persist();return;}
+  if(guided()){if(operation)operation.atomic=true;const def=SERVICE_STAGES[r.service.step],token=await reserveAction('stage');activeAction=token;const j=state().journey;const pending=j.pendingEdits?.[def.agent];if(pending)text=pending.request.slice(0,1100)+' Follow-up: '+text.slice(0,1300);j.refinements||={};j.refinements[def.agent]=(def.target==='internships'?'Change companies only. Preserve exchange destinations. ':def.target==='exchanges'?'Change exchange destinations only. Preserve companies. ':'')+text;if(def.agent==='courses')j.agentChoices={...j.profile.choices};await advice(def.agent);if(def.id==='semesters'){state().draftPlan=buildProposal(j,state().plan);state().phase='draft';}r.dashboardNotice=r.dashboardNotice||j.lastUpdates?.[def.agent]?.summary;h.persist();return;}
   if(operation)operation.atomic=true;activeAction=await reserveAction('global',4);
   const before=JSON.stringify([state().journey.profile,current()?.id,current()?.updatedAt]),j=structuredClone(state().phase==='journey'?state().journey:newJourney(current()));
   r.busy=true;r.dashboardWork='Understanding your change…';display();
@@ -95,6 +96,16 @@ export function createDashboardController(h){
   if(route.kind==='answer'){r.dashboardNotice=route.summary;r.dashboardAnswer=route.summary;return;}
   if(route.kind==='clarify'){r.pendingDashboardRequest=request;r.dashboardNotice=route.questions?.[0]||route.summary;return;}
   r.pendingDashboardRequest='';
+  if(route.sections){
+   const previous=current(),guard=JSON.stringify(previous);r.busy=true;
+   const edited=await editRoadmap(previous,route,request,async(stage,journey,plan,term)=>{
+    r.dashboardWork=stages[stage];display();
+    const result=await requestAdvice(stage,journey,{serviceAction:activeAction,...(plan?{plan:replanSnapshot(plan),currentTerm:term}:{})});
+    if(guard!==JSON.stringify(current()))throw Error('Your plan changed while this edit was being prepared. Send the request again.');return result;
+   });r.busy=false;
+   if(edited.kind!=='updated'){r.dashboardNotice=edited.summary;if(edited.kind==='clarify')r.pendingDashboardRequest=request;return;}
+   state().draftPlan=edited.candidate;state().journey=edited.journey;state().phase='draft';r.dashboardPanel='overview';r.dashboardNotice=edited.update.summary;h.persist();return;
+  }
   if(route.kind==='schedule'){
    const plan=current();if(!plan)throw Error('Save your degree plan before changing individual semesters.');
    r.busy=true;r.dashboardWork='Updating your semester map…';display();const term=studyBoundary(plan).currentTerm;
