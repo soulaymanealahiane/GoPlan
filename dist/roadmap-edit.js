@@ -5,6 +5,7 @@ import {buildProposal} from './workspace-flow.js';
 import {normalizeStudentContext,recordedStudy} from './student-context.js';
 import {coursesFor,termOrder,fitDegreePrerequisites} from './planner.js';
 import {roadmapUpdate} from './edit-updates.js';
+import {checkedMinorPlan} from './minor-plan.js';
 
 export const EDIT_SECTIONS=['direction','courses','companies','exchanges','semesters'];
 export function validateEditRoute(route){
@@ -28,18 +29,23 @@ export async function editRoadmap(previous,route,request,call){
  j.studentContext=normalizeStudentContext({...j.studentContext,route:records.length?'continuing':j.studentContext?.route||'admitted',degreeIntent:wanted.has('direction')?'explore':j.studentContext?.degreeIntent||'keep',currentDegree:j.studentContext?.currentDegree||previous.profile.program,currentTerm,studyStartYear:j.studentContext?.studyStartYear||previous.profile.startYear,records});
  if(route.rebuild){j.agentChoices={...j.profile.choices};j.semesterSequence=null;j.scheduling={...j.scheduling,moves:[],termLoads:[]};}
  const feedback=section=>route.instructions[section]||request;
- let draft=previous;
+ let draft=previous,coursePlan=null,verifiedCourses=false;
  async function stage(name,text,plan){
   j.refinements[name]=text;const result=await call(name,j,plan,currentTerm);
   if(result.kind==='answer'||result.kind==='clarify')return {kind:result.kind,summary:result.answer||result.questions?.[0]||result.summary,questions:result.questions};
-  acceptAdvice(j,name,result,{plan,currentTerm});if(result.update)updates.push(result.update);return null;
+  acceptAdvice(j,name,result,{plan,currentTerm});if(name==='direction'&&result.coursePlan)coursePlan=result.coursePlan;if(result.update)updates.push(result.update);return null;
  }
- if(wanted.has('direction')){const stop=await stage('direction',feedback('direction'));if(stop)return stop;}
+ if(wanted.has('direction')){const stop=await stage('direction',feedback('direction'),previous);if(stop)return stop;}
  const combinationChanged=['program','track','secondTrack','minor'].some(k=>j.profile[k]!==previous.profile[k]),degreeChanged=j.profile.program!==previous.profile.program;
  if(combinationChanged){const protectedCodes=new Set(records.filter(r=>['completed','in-progress'].includes(r.status)).map(r=>r.courseCode)),protectedIds=coursesFor(j.profile).filter(c=>protectedCodes.has(c.code)).map(c=>c.id);j.profile=fitDegreePrerequisites(j.profile,{protectedIds}).profile;}
+ if(coursePlan){
+  const checked=checkedMinorPlan(j.profile,coursePlan,{protectedCodes:records.filter(r=>['completed','in-progress'].includes(r.status)).map(r=>r.courseCode)});
+  acceptAdvice(j,'courses',{summary:`Selected ${checked.summary.requiredCourses} ${checked.summary.name} courses within the existing degree requirements.`,choices:checked.profile.choices,agentChoices:checked.profile.choices,choiceReasons:Object.fromEntries(Object.keys(checked.profile.choices).map(id=>[id,'Part of the validated minor recommendation within existing degree slots.'])),openItems:[],update:{summary:'Applied the course selection that established the minor recommendation.',changes:[],limitations:[]}});verifiedCourses=true;
+ }
  const known=new Set(coursesFor(j.profile).map(c=>c.id));j.scheduling={...j.scheduling,moves:(j.scheduling?.moves||[]).filter(m=>known.has(m.requirementId))};
  const needCourses=wanted.has('courses')||combinationChanged||route.rebuild;
- if(needCourses){
+ const independentCourseEdit=/\b(?:swap|replace|clear|redistribute|reassign|change)\b[^.;\n]{0,70}\b(?:electives?|[A-Z]{3}\s*\d{4})\b/i.test(request);
+ if(needCourses&&(!verifiedCourses||wanted.has('courses')&&independentCourseEdit)){
   if(wanted.has('courses')){draft=buildProposal(j,previous);const stop=await stage('courses',feedback('courses'),draft);if(stop)return stop;}
   else {const stop=await stage('courses',route.rebuild?'Rebuild the uncompleted selectable course choices for this roadmap. Preserve protected study and source requirements; recommend a fresh coherent selection.':'');if(stop)return stop;}
  }
@@ -50,6 +56,7 @@ export async function editRoadmap(previous,route,request,call){
  }
  draft=buildProposal(j,previous);
  if(wanted.has('semesters')){const stop=await stage('pace',feedback('semesters'),draft);if(stop)return stop;draft=buildProposal(j,previous);}
+ if(verifiedCourses){checkedMinorPlan(draft.profile,{academic:Object.fromEntries(['program','track','secondTrack','minor'].map(k=>[k,draft.profile[k]||''])),choices:draft.profile.choices});const rows=draft.courses.filter(c=>c.minorId===draft.profile.minor),pending=new Set(draft.terms.find(t=>t.id==='pending')?.courses||[]);if(rows.some(c=>!c.code||pending.has(c.id)||!independentCourseEdit&&c.choice&&coursePlan.choices[c.id]!==c.code))throw Error('A placement or later edit prevents the recommended minor courses from fitting. Your saved plan is unchanged.');}
  if(!j.paceAdvice)j.paceAdvice={summary:'Your revised semester map.',pace:j.profile.pace,regularCourses:j.profile.regularCourses,summerCourses:j.profile.summerCourses,summers:j.profile.summers,reason:'Rebuilt from the revised academic choices.',actions:[]};
  const update=roadmapUpdate(previous,draft,updates);if(goalsChanged){update.changes.unshift('Updated your stated planning goals.');update.summary='Updated your stated planning goals.'+(update.summary==='Your roadmap is unchanged.'?'':' '+update.summary);}j.lastUpdates={...j.lastUpdates,global:update};draft.decisions=structuredClone(j);draft.updatedAt=new Date().toISOString();
  return {kind:'updated',candidate:draft,journey:j,update};
