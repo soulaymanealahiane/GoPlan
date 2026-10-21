@@ -27,5 +27,6 @@ export function roadmapUpdate(before,after,sectionUpdates=[]){
  if(after.revisionAssessment?.delayed)limitations.unshift(`Graduation moves from ${after.revisionAssessment.before} to ${after.revisionAssessment.after}.`);
  if(after.revisionAssessment?.unmatchedRecords)limitations.unshift('Past study is retained; courses outside the new degree need an adviser’s credit review.');
  const parts=[academic.length?'academic direction':'',courses.length?'course choices':'',targets.length?'opportunities':'',loads?'workload':'',sequence?'semester sequence':''].filter(Boolean);
- return {summary:parts.length?'Updated your '+parts.join(', ')+'.':'Your roadmap is unchanged.',changes:changes.slice(0,6),limitations:limitations.slice(0,4)};
+ const summary=academic.length?academic.slice(0,2).join(' ')+(courses.length||sequence?' Updated the dependent course plan.':''):parts.length?'Updated your '+parts.join(', ')+'.':'Your roadmap is unchanged.';
+ return {summary,changes:changes.slice(0,6),limitations:limitations.slice(0,4)};
 }

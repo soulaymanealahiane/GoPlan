@@ -104,7 +104,7 @@ export function createDashboardController(h){
     if(guard!==JSON.stringify(current()))throw Error('Your plan changed while this edit was being prepared. Send the request again.');return result;
    });r.busy=false;
    if(edited.kind!=='updated'){r.dashboardNotice=edited.summary;if(edited.kind==='clarify')r.pendingDashboardRequest=request;return;}
-   state().draftPlan=edited.candidate;state().journey=edited.journey;state().phase='draft';r.dashboardPanel='overview';r.dashboardNotice=edited.update.summary;h.persist();return;
+   state().draftPlan=edited.candidate;state().journey=edited.journey;state().phase='draft';r.dashboardPanel=route.sections.length===1?({courses:'courses',companies:'opportunities',exchanges:'opportunities',semesters:'semesters'}[route.sections[0]]||'overview'):'overview';if(route.sections.length===1&&['companies','exchanges'].includes(route.sections[0]))r.targetGroup=route.sections[0]==='companies'?'internships':'exchanges';r.dashboardNotice=edited.update.summary;h.persist();return;
   }
   if(route.kind==='schedule'){
    const plan=current();if(!plan)throw Error('Save your degree plan before changing individual semesters.');

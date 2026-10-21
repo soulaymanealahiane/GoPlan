@@ -3,7 +3,7 @@ import {newJourney} from './guidance.js';
 import {acceptAdvice} from './journey-state.js';
 import {buildProposal} from './workspace-flow.js';
 import {normalizeStudentContext,recordedStudy} from './student-context.js';
-import {coursesFor,termOrder} from './planner.js';
+import {coursesFor,termOrder,fitDegreePrerequisites} from './planner.js';
 import {roadmapUpdate} from './edit-updates.js';
 
 export const EDIT_SECTIONS=['direction','courses','companies','exchanges','semesters'];
@@ -36,6 +36,7 @@ export async function editRoadmap(previous,route,request,call){
  }
  if(wanted.has('direction')){const stop=await stage('direction',feedback('direction'));if(stop)return stop;}
  const combinationChanged=['program','track','secondTrack','minor'].some(k=>j.profile[k]!==previous.profile[k]),degreeChanged=j.profile.program!==previous.profile.program;
+ if(combinationChanged){const protectedCodes=new Set(records.filter(r=>['completed','in-progress'].includes(r.status)).map(r=>r.courseCode)),protectedIds=coursesFor(j.profile).filter(c=>protectedCodes.has(c.code)).map(c=>c.id);j.profile=fitDegreePrerequisites(j.profile,{protectedIds}).profile;}
  const known=new Set(coursesFor(j.profile).map(c=>c.id));j.scheduling={...j.scheduling,moves:(j.scheduling?.moves||[]).filter(m=>known.has(m.requirementId))};
  const needCourses=wanted.has('courses')||combinationChanged||route.rebuild;
  if(needCourses){
