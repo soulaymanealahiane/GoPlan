@@ -3,7 +3,7 @@ import {newJourney} from './guidance.js';
 import {acceptAdvice} from './journey-state.js';
 import {buildProposal} from './workspace-flow.js';
 import {normalizeStudentContext,recordedStudy} from './student-context.js';
-import {coursesFor} from './planner.js';
+import {coursesFor,termOrder} from './planner.js';
 import {roadmapUpdate} from './edit-updates.js';
 
 export const EDIT_SECTIONS=['direction','courses','companies','exchanges','semesters'];
@@ -18,10 +18,14 @@ export function validateEditRoute(route){
 // follow its router call. No partial journey or draft is committed on failure.
 export async function editRoadmap(previous,route,request,call){
  validateEditRoute(route);if(!previous)throw Error('Build your roadmap before applying a global edit.');
- const j=newJourney(previous),wanted=new Set(route.sections),updates=[],currentTerm=previous.studentContext?.currentTerm||previous.terms.find(t=>!['prior','pending'].includes(t.id))?.id||'Fall-2026';
+ const j=newJourney(previous),wanted=new Set(route.sections),updates=[],records=recordedStudy(previous);
+ // Manual progress can advance beyond the original onboarding date. Current
+ // registration is authoritative; otherwise retain the latest known study term.
+ const dated=[j.studentContext?.currentTerm,...records.map(r=>r.termId)].filter(id=>/^(Fall|Spring|Summer)-20\d\d$/.test(id||'')).map(id=>({id,season:id.split('-')[0],year:Number(id.split('-')[1])})).sort((a,b)=>termOrder(a)-termOrder(b));
+ const currentTerm=records.find(r=>r.status==='in-progress')?.termId||dated.at(-1)?.id||previous.terms.find(t=>!['prior','pending'].includes(t.id))?.id||'Fall-2026';
  const goalsChanged=(route.questionnaireChanges||[]).some(x=>j.questionnaire[x.answerId]!==x.value);for(const x of route.questionnaireChanges||[])j.questionnaire[x.answerId]=x.value;if(goalsChanged){j.goal=questionnaireGoal(j.questionnaire);wanted.add('direction');}
  j.refinements={};j.changeRequest=request;j.editStartStep=wanted.has('direction')?2:wanted.has('courses')?3:wanted.has('companies')||wanted.has('exchanges')?4:5;j.editFromTerm=currentTerm;
- const records=recordedStudy(previous);j.studentContext=normalizeStudentContext({...j.studentContext,route:records.length?'continuing':j.studentContext?.route||'admitted',degreeIntent:wanted.has('direction')?'explore':j.studentContext?.degreeIntent||'keep',currentDegree:j.studentContext?.currentDegree||previous.profile.program,currentTerm,studyStartYear:j.studentContext?.studyStartYear||previous.profile.startYear,records});
+ j.studentContext=normalizeStudentContext({...j.studentContext,route:records.length?'continuing':j.studentContext?.route||'admitted',degreeIntent:wanted.has('direction')?'explore':j.studentContext?.degreeIntent||'keep',currentDegree:j.studentContext?.currentDegree||previous.profile.program,currentTerm,studyStartYear:j.studentContext?.studyStartYear||previous.profile.startYear,records});
  if(route.rebuild){j.agentChoices={...j.profile.choices};j.semesterSequence=null;j.scheduling={...j.scheduling,moves:[],termLoads:[]};}
  const feedback=section=>route.instructions[section]||request;
  let draft=previous;
