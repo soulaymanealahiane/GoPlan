@@ -25,14 +25,19 @@ export function normalizeScheduling(raw={}){
   return [id+'@'+termId,{courseCode:id,termId}];
  })).values()].filter(item=>!offerings.some(t=>t.termId===item.termId&&t.offeredCourseCodes.includes(item.courseCode)));
  const registrationCodes=new Set(),currentRegistrations=(raw.currentRegistrations||[]).map(item=>{if(!item||typeof item!=='object')throw Error('Invalid current registration.');const id=courseCode(item.courseCode),termId=validTerm(item.termId);if(!DATA.courses[id]||registrationCodes.has(id))throw Error('Use a known course once in current registrations.');registrationCodes.add(id);return {courseCode:id,termId};});
- return {unavailable,offerings,...(currentRegistrations.length?{currentRegistrations}:{})};
+ for(const key of ['termLoads','moves'])if(raw[key]!=null&&(!Array.isArray(raw[key])||raw[key].length>100))throw Error('Invalid semester editing instructions.');
+ const termLoads=[...new Map((raw.termLoads||[]).map(x=>{const termId=validTerm(x.termId);if(!Number.isInteger(x.courseCount)||x.courseCount<0||x.courseCount>6)throw Error('Use a semester target between zero and six courses.');return [termId,{termId,courseCount:x.courseCount}];})).values()];
+ const moves=[...new Map((raw.moves||[]).map(x=>{if(typeof x.requirementId!=='string'||!x.requirementId||x.requirementId.length>120)throw Error('Choose a known course to move.');return [x.requirementId,{requirementId:x.requirementId,termId:validTerm(x.termId)}];})).values()];
+ return {unavailable,offerings,...(currentRegistrations.length?{currentRegistrations}:{}),...(termLoads.length?{termLoads}:{}),...(moves.length?{moves}:{})};
 }
 
 export function mergeScheduling(current={},change={}){
  const old=normalizeScheduling(current),updates=normalizeScheduling({offerings:change.offerings||[],unavailable:change.unavailable||[]});
  // Replacing a term report is also how a student corrects or clears a stale report.
  const refreshed=new Set(updates.offerings.map(t=>t.termId));
- return normalizeScheduling({offerings:[...old.offerings.filter(t=>!refreshed.has(t.termId)),...updates.offerings],unavailable:[...old.unavailable.filter(t=>!refreshed.has(t.termId)),...updates.unavailable],currentRegistrations:change.currentRegistrations??old.currentRegistrations??[]});
+ const termLoads=new Map((old.termLoads||[]).map(x=>[x.termId,x]));for(const x of change.termLoads||[]){validTerm(x.termId);if(x.courseCount===-1)termLoads.delete(x.termId);else termLoads.set(x.termId,x);}
+ const moves=new Map((old.moves||[]).map(x=>[x.requirementId,x]));for(const x of change.moves||[]){if(x.termId==='')moves.delete(x.requirementId);else moves.set(x.requirementId,x);}
+ return normalizeScheduling({offerings:[...old.offerings.filter(t=>!refreshed.has(t.termId)),...updates.offerings],unavailable:[...old.unavailable.filter(t=>!refreshed.has(t.termId)),...updates.unavailable],currentRegistrations:change.currentRegistrations??old.currentRegistrations??[],termLoads:[...termLoads.values()],moves:[...moves.values()]});
 }
 
 export function courseAvailability(course,termId,scheduling={}){

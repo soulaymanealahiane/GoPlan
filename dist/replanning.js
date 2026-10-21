@@ -23,7 +23,7 @@ export function proposeReplan(plan,change,currentTerm){
  if(secondTrack&&(!['BBA','BSCSC'].includes(old.program)||secondTrack===track||!program.tracks.some(t=>t.id===secondTrack)))throw Error('This second focus is not supported.');
  if(minor&&!selectedMinor({...old,minor}))throw Error('This minor is not supported for your degree.');
  const profile=normalizeProfile({...old,track,secondTrack,minor,regularCourses:change.regularCourses??(change.pace&&change.pace!==old.pace?(change.pace==='accelerated'?6:5):old.regularCourses),summerCourses:change.summerCourses??old.summerCourses,summers:change.summers??old.summers});
- if((profile.regularCourses>old.regularCourses||profile.summers&&profile.summerCourses===3&&(!old.summers||old.summerCourses<3))&&(old.gpa===''||old.gpa<3))throw Error('Confirm CGPA 3.0 and good standing before increasing to six regular courses or three summer courses.');
+ if((profile.regularCourses>old.regularCourses||profile.summers&&profile.summerCourses===3&&(!old.summers||old.summerCourses<3))&&(old.gpa===''?!change.allowConditionalLoad:old.gpa<3))throw Error('Confirm CGPA 3.0 and good standing before increasing to six regular courses or three summer courses.');
  const protectedCourses=plan.courses.filter(c=>['completed','in-progress'].includes(plan.tracking?.[c.id]?.status)||old.priorCodes.includes(c.code));
  const options=coursesFor(profile),choices={...profile.choices};
  for(const item of change.choices||[]){const c=options.find(c=>c.id===item.requirementId);if(!c?.choice||c.approvalOnly||needsPersonalConfirmation(c)||!courseOptions(c,profile).some(o=>o.code===item.courseCode&&!o.topic&&!o.creditsProvisional))throw Error('This requested course needs a verified equivalent or placement approval.');if(protectedCourses.some(p=>p.id===c.id&&p.code!==item.courseCode))throw Error('Completed and current courses cannot be replaced.');choices[c.id]=item.courseCode;}
@@ -38,19 +38,24 @@ export function proposeReplan(plan,change,currentTerm){
  // Validate reports against the original plan, before replacements remove their codes.
  for(const x of change.unavailable||[])if(!plan.courses.some(c=>c.code===x.courseCode))throw Error('Choose an unavailable course from your degree plan.');
  const scheduling=mergeScheduling(plan.scheduling||{},change);
+ scheduling.moves=(scheduling.moves||[]).filter(x=>termOrder(parseTerm(x.termId))>=termOrder(boundary)||(change.moves||[]).some(m=>m.requirementId===x.requirementId));
+ for(const move of scheduling.moves||[]){const c=courses.find(c=>c.id===move.requirementId);if(!c)throw Error('Choose a course in this degree to move.');if(termOrder(parseTerm(move.termId))<termOrder(boundary))throw Error('Future edits cannot move a course into a past semester.');if(protectedCourses.some(x=>x.id===c.id)&&!plan.terms.some(t=>t.id===move.termId&&t.courses.includes(c.id)))throw Error('Completed and current courses cannot be moved.');}
+ for(const load of scheduling.termLoads||[]){const term=parseTerm(load.termId),max=program.level==='graduate'?(term.season==='Summer'?2:4):(term.season==='Summer'?3:6);if(load.courseCount>max)throw Error('The requested load exceeds this degree’s semester limit.');if((change.termLoads||[]).some(x=>x.termId===load.termId)&&termOrder(term)<termOrder(boundary))throw Error('Past semesters cannot be rebalanced.');if(load.courseCount===(term.season==='Summer'?3:6)&&(old.gpa===''?!change.allowConditionalLoad:old.gpa<3))throw Error('The heavier semester load needs CGPA 3.0 and good standing or applicable permission.');}
+
  for(const t of fixedTerms)if(t.courses.some(id=>!courseAvailability(plan.courses.find(c=>c.id===id)?.code,t.id,scheduling).allowed))throw Error('A completed or current course cannot also be unavailable in that semester. Correct the offering report or update its progress first.');
  const terms=generatePlan(profile,{fixedTerms,notBefore:boundary,...scheduling});
+ for(const term of terms){const original=plan.terms.find(t=>t.id===term.id);if(original?.note)term.note=original.note;}
  const tracking=Object.fromEntries(Object.entries(plan.tracking||{}).filter(([id])=>courses.some(c=>c.id===id&&c.code===plan.courses.find(old=>old.id===id)?.code)));
  const candidate={...structuredClone(plan),profile,courses,terms,tracking,program:structuredClone(program),minor:selectedMinor(profile),scheduling,updatedAt:new Date().toISOString()};
  const issues=validatePlan(terms,courses,profile,scheduling);
  const before=graduationTerm(plan),after=graduationTerm(candidate),pending=terms.find(t=>t.id==='pending')?.courses.length||0;
  const conflicts=issues.filter(i=>i.level==='conflict'),unresolved=courses.filter(c=>c.unresolved).length;
- const priorIssues=validatePlan(plan.terms,plan.courses,old),priorPending=new Set(plan.terms.find(t=>t.id==='pending')?.courses||[]);
+ const priorIssues=validatePlan(plan.terms,plan.courses,old,plan.scheduling),priorPending=new Set(plan.terms.find(t=>t.id==='pending')?.courses||[]);
  const newlyPending=(terms.find(t=>t.id==='pending')?.courses||[]).filter(id=>!priorPending.has(id));
  const newConflicts=conflicts.filter(i=>!i.text.includes('requirements need manual placement')&&!priorIssues.some(p=>p.level==='conflict'&&p.id===i.id&&p.text===i.text));
  const extraRegularTerms=before&&after?terms.filter(t=>t.season!=='Summer'&&!['prior','pending'].includes(t.id)&&termOrder(t)>termOrder(before)&&termOrder(t)<=termOrder(after)).length:0;
  const moves=courses.flatMap(c=>{const from=plan.terms.find(t=>t.courses.includes(c.id)),to=terms.find(t=>t.courses.includes(c.id));return from?.id!==to?.id?[{id:c.id,course:c.code||c.title,from:from?label(from):'New requirement',to:to?label(to):'Unscheduled',fromTermId:from?.id||'',toTermId:to?.id||''}]:[];});
- const replacements=courses.flatMap(c=>{const previous=plan.courses.find(old=>old.id===c.id);return previous?.code&&c.code&&previous.code!==c.code?[{id:c.id,from:previous.code,to:c.code,title:c.title,requirement:c.category,reason:(change.choices||[]).find(x=>x.requirementId===c.id)?.reason||'Eligible alternative for the same requirement.'}]:[];});
+ const replacements=courses.flatMap(c=>{const previous=plan.courses.find(old=>old.id===c.id);return previous&&c.code&&previous.code!==c.code?[{id:c.id,from:previous.code,to:c.code,title:c.title,requirement:c.category,reason:(change.choices||[]).find(x=>x.requirementId===c.id)?.reason||'Eligible alternative for the same requirement.'}]:[];});
  const analyzedTerms=[...new Set([currentTerm,...scheduling.offerings.map(t=>t.termId),...scheduling.unavailable.map(t=>t.termId)])],analyses=analyzedTerms.map(id=>analyzeCourseAvailability(plan,id,scheduling));
  const bottlenecks=analyses.flatMap(a=>a.bottlenecks),affectedIds=new Set(analyses.flatMap(a=>a.affected.map(c=>c.requirementId))),releasedTerms=new Set(analyses.flatMap(a=>a.affected.map(c=>c.termId)));
  const slotFillers=moves.filter(m=>courses.some(c=>c.id===m.id&&c.code&&!c.unresolved)&&releasedTerms.has(m.toTermId)&&!affectedIds.has(m.id)&&m.fromTermId&&m.fromTermId!=='prior'&&(m.fromTermId==='pending'||termOrder(parseTerm(m.fromTermId))>termOrder(parseTerm(m.toTermId))));

@@ -1,7 +1,7 @@
 function showSignInRecovery(output,error){output.innerHTML='<p class="warning">'+esc(error.message)+'</p>';if(['ACCESS_REQUIRED','SIGN_IN_REQUIRED'].includes(error.code))output.insertAdjacentHTML('beforeend','<a class="button primary" href="/signin.html">Sign in to continue</a>');}
 import {dashboardView} from './dashboard-view.js';
 import {createDashboardController} from './dashboard-controller.js';
-import {newcomerWorkspace,refreshMinorDraft} from './dashboard-flow.js';
+import {newcomerWorkspace,refreshMinorDraft,studyBoundary} from './dashboard-flow.js';
 import {updateStudyReview} from './study-review.js';
 import {createAccountWorkspace} from './accounts.js';
 import {openMistakeReport,openMyReports,ethicsPolicy} from './feedback-view.js';
@@ -42,7 +42,7 @@ const head=(title,subtitle='')=>`<div class="modal-head"><div><h2 id="modal-titl
 const close=()=>$('#modal').close();
 function invalidateAdvice(j){j.agentStamps={};j.agentChoices={};j.lastUpdates={};j.paceAdvice=null;j.details=null;j.advice=null;j.choiceReasons={};j.internships=[];j.exchanges=[];j.detailsDirty=true;}
 function setDegree(id){if(!DATA.programs.some(p=>p.id===id))return;state.journey.profile=normalizeProfile({...state.journey.profile,program:id,track:'',secondTrack:'',minor:'',choices:{}});state.journey.programChosen=true;invalidateAdvice(state.journey);}
-async function getAdvice(stage,{researchOnly=false,serviceAction}={}){
+async function getAdvice(stage,{researchOnly=false,serviceAction,editingPlan}={}){
  if(runtime.busy)return false;
  lastStage=stage;runtime.aiError='';runtime.researchFailureStage=null;
  const j=state.journey;synchronizeGoal(j);
@@ -52,7 +52,7 @@ async function getAdvice(stage,{researchOnly=false,serviceAction}={}){
  if(stage==='direction'&&missingAnswers(j.questionnaire).length){const missing=missingAnswers(j.questionnaire);runtime.validation=Object.fromEntries(missing.map(q=>[q.id,true]));j.step=1;j.questionIndex=QUESTIONS.findIndex(q=>q.id===missing[0].id);render();$('[data-question="'+missing[0].id+'"]')?.focus();return false;}runtime.validation={};
  if(!accounts.signedIn){location.assign('/signin.html');return false;}
  lastStage=stage;runtime.busy=true;runtime.researchOnly=researchOnly;runtime.aiError='';const before=adviceFingerprint(stage,j);render();
- try{const action=serviceAction||await dashboard.authorizeAdvice(stage);const result=await requestAdvice(stage,j,{...(researchOnly?{researchOnly:true}:{}),serviceAction:action});if(j!==state.journey||before!==adviceFingerprint(stage,j))throw Error('Your choices changed. Request fresh advice for the latest answers.');if(researchOnly){applyResearchRefresh(j,stage,result);persist();return false;}if(result.kind==='answer'){showAnswer(result,j.profile);return false;}acceptAdvice(j,stage,result);persist();return result.kind!=='clarify';}
+ try{const action=serviceAction||await dashboard.authorizeAdvice(stage);const editing=stage==='pace'&&j.refinements?.pace?{plan:editingPlan||active()||buildProposal(j,state.plan)}:null;if(editing)editing.currentTerm=studyBoundary(editing.plan).currentTerm;const result=await requestAdvice(stage,j,{...(editing?{plan:replanSnapshot(editing.plan),currentTerm:editing.currentTerm}:{}),...(researchOnly?{researchOnly:true}:{}),serviceAction:action});if(j!==state.journey||before!==adviceFingerprint(stage,j))throw Error('Your choices changed. Request fresh advice for the latest answers.');if(researchOnly){applyResearchRefresh(j,stage,result);persist();return false;}if(result.kind==='answer'){runtime.dashboardNotice=result.answer;showAnswer(result,j.profile);return !!j.refinements?.[stage];}if(result.kind==='clarify'){runtime.dashboardNotice=result.questions?.[0]||result.summary;return true;}acceptAdvice(j,stage,result,editing||{});persist();return true;}
  catch(e){runtime.aiError=e.name==='TimeoutError'?'The adviser took too long. Your draft is saved; please retry.':e.message;if(researchOnly)runtime.researchFailureStage=stage;else runtime.aiFailure={stage,fingerprint:before,code:e.code,retryable:e.retryable!==false,message:runtime.aiError};return false;}
  finally{runtime.busy=false;runtime.researchOnly=false;render();}
 }
