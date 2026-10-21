@@ -7,7 +7,7 @@ import {acceptAdvice} from './dist/journey-state.js';
 import {agentContext} from './dist/agent-context.js';
 import {advise,availableTargets,canonicalTargetKeys,opportunityRefinementPolicy} from './server/advisor.mjs';
 import {companySizePreference,rankOpportunityTargets} from './dist/opportunity-matching.js';
-import {exchangeScheme,companyType,opportunityLabel} from './dist/opportunity-labels.js';
+import {exchangeScheme,companyType,companySector,opportunityLabel} from './dist/opportunity-labels.js';
 import {experienceCards} from './dist/views.js';
 import {dashboardView} from './dist/dashboard-view.js';
 import {createDashboardController} from './dist/dashboard-controller.js';
@@ -24,13 +24,16 @@ for(const t of addition.internships){
  assert.ok(t.sources.every(s=>s.primary&&s.checkedAt==='2026-10-21'&&s.url.startsWith('https://')));
  assert.match(t.availability,/must be confirmed/);assert.equal(t.selectionProbabilityKnown,false);
  assert.notEqual(companyType(t),'Morocco');
+ assert.doesNotMatch(opportunityLabel(t),/unconfirmed|unknown|startup|scaleup|established company/i);
 }
 const seen=new Set();for(const t of O.internships)for(const key of canonicalTargetKeys(t)){
  assert.ok(!seen.has(key),'New records cannot be aliases counted as extra companies: '+key);seen.add(key);
 }
 assert.equal(companyType({id:'wafr',organizationType:'established'}),'Startup','Reviewed company type also fixes old labels.');
 assert.equal(companyType({organizationType:'scaleup'}),'Scaleup');
-assert.equal(companyType({organizationType:'unknown'}),'Type unconfirmed');
+assert.equal(companyType({organizationType:'unknown'}),'Company');
+assert.equal(companySector({id:'green-watech'}),'Water & environment');
+assert.equal(opportunityLabel({id:'green-watech',organizationType:'unknown'}),'Water & environment · Morocco');
 assert.equal(companySizePreference({refinement:'Avoid startups; focus on established companies.',questionnaire:{industries:'Startups and small businesses'}}),'established');
 assert.equal(companySizePreference({refinement:'Companies that are startups, please.'}),'startup');
 assert.equal(companySizePreference({refinement:'Startups rather than large companies.'}),'startup');
@@ -89,7 +92,7 @@ const state={...emptyWorkspace(),phase:'saved',plan:makePlan(j),journey:j},befor
 const html=dashboardView(state,runtime);for(const route of ['Bilateral Exchange','PEL','ISEP Exchange'])assert.ok(html.includes(route),route);
 let modal='';const controller=createDashboardController({runtime,read:()=>state,modal:v=>modal=v,head:(title,subtitle)=>title+' '+subtitle,render(){},persist:()=>assert.fail('Reading labels cannot rewrite a plan.'),getAdvice:()=>assert.fail('Reading labels cannot spend an AI change.')});
 for(let i=0;i<3;i++){await controller.click({dataset:{action:'dashboard-target',targetType:'exchanges',targetIndex:String(i)}});assert.ok(modal.includes(['Bilateral Exchange','PEL','ISEP Exchange'][i]));}
-await controller.click({dataset:{action:'dashboard-target',targetType:'internships',targetIndex:'0'}});assert.ok(modal.includes('Startup · Morocco'));
+await controller.click({dataset:{action:'dashboard-target',targetType:'internships',targetIndex:'0'}});assert.ok(modal.includes('Retail technology · Morocco'));
 assert.equal(JSON.stringify(state),before);
 const workbook=await createWorkbook(state.plan.terms,state.plan.courses,state.plan.profile,[],[],fs.readFileSync('dist/template-styles.xml','utf8'),state.plan);
 const workbookText=new TextDecoder().decode(workbook);
