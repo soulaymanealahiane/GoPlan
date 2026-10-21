@@ -34,11 +34,11 @@ const response=data=>openaiFixture({status:'completed',output:[{content:[{type:'
 const item=(t,i)=>({id:t.id,tier:i<3?'reach':i===3?'target':'safety',reason:'Relates to the stated product ambition.',tierReason:'A search strategy only.',industryReason:'A qualified inference from the digital economy evidence.',answerIds:['ambitions'],evidenceIds:['ita-digital-morocco-2025']});
 let attempts=0;const result=await advise({...j,...agentContext(j,'targets'),stage:'targets'},env,async(_,init)=>{
  attempts++;const p=JSON.parse(init.body),c=JSON.parse(p.input);assert.equal(p.reasoning.effort,'low');assert.equal(c.currentRecommendation.internships.length,5);assert.equal(c.request.refinement,'Add startups, keep exchange institutions.');
- const companies=attempts===1?earlier.internships:[...c.companies.filter(t=>['chari','freterium','yakeey'].includes(t.id)),...earlier.internships.slice(0,2)];
- if(attempts===2)assert.match(c.repair.reason,/No destinations changed/);
+ const companies=attempts===1?earlier.internships:[...c.companies.filter(t=>['chari','freterium','yakeey'].includes(t.id)),...c.companies.filter(t=>!['chari','freterium','yakeey'].includes(t.id)).slice(0,2)];
+ if(attempts===2)assert.match(c.repair.reason,/Unknown or incompatible opportunity|No destinations changed/);
  return response({summary:'Startup options with unchanged exchanges.',internships:companies.map(item),exchanges:earlier.exchanges.map(item),update:{summary:'Added startup exposure.',changes:['Included startups'],limitations:[]}});
 });
-assert.equal(attempts,2);assert.equal(result.update.added.length,3);assert.equal(result.update.removed.length,3);assert.equal(result.exchanges[0].id,earlier.exchanges[0].id);
+assert.equal(attempts,2);assert.equal(result.update.added.length,5);assert.equal(result.update.removed.length,5);assert.equal(result.exchanges[0].id,earlier.exchanges[0].id);
 const savedPlan=makePlan(j),savedBefore=JSON.stringify(savedPlan),previewJourney=newJourney(savedPlan);acceptAdvice(previewJourney,'targets',result);assert.equal(JSON.stringify(savedPlan),savedBefore,'A preview must not change the saved plan before acceptance.');
 acceptAdvice(j,'targets',result);assert.equal(j.feedbackHistory.targets.length,1);assert.ok(agentContext(j,'targets').feedbackHistory[0].request.includes('startups'));
 const restored=validateSavedWorkspace({...emptyWorkspace(),journey:j});assert.equal(restored.journey.feedbackHistory.targets.length,1);

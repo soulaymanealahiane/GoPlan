@@ -71,7 +71,7 @@ export function opportunityRefinementPolicy(refinement,current={}){
  const changeTypes=text.trim()?mentioned.filter(type=>!explicitPreserve.has(type)):Object.keys(patterns);
  if(text.trim()&&!mentioned.length)changeTypes.push(...Object.keys(patterns));
  const preserveTypes=Object.keys(patterns).filter(type=>(explicitPreserve.has(type)||mentioned.length===1&&!mentioned.includes(type))&&current[type]?.length);
- return {changeTypes,preserveTypes,preferNovel:/\b(?:new|different|alternative|alternatives|replace|other|more|refresh|broaden)\b/.test(text),policy:'Preserve the IDs and order of unaffected targets. For alternatives, compare canonical organizations and study routes; different aliases or rewritten reasons do not count as new recommendations.'};
+ return {changeTypes,preserveTypes,preferNovel:!!text.trim()&&(changeTypes.some(type=>current[type]?.length)||/\b(?:new|different|alternative|alternatives|replace|other|more|refresh|broaden)\b/.test(text)),policy:'Preserve the IDs and order of unaffected targets. For alternatives, compare canonical organizations and study routes; different aliases or rewritten reasons do not count as new recommendations.'};
 }
 export function validateOpportunitySelection(items,records,type,{current=[],policy={preserveTypes:[]}}={}){
  const seen=new Set();

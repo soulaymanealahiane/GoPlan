@@ -1,3 +1,4 @@
+import {opportunityLabel} from './opportunity-labels.js';
 import {manualCatalogue,addManualSemester,addManualCourse,removeManualCourse,noteManualSemester,removeManualSemester} from './manual-plan.js';
 import {manualChangeMessage} from './manual-checks.js';
 import {SERVICE_STAGES} from './service-policy.js';
@@ -165,7 +166,7 @@ export function createDashboardController(h){
  function target(type,index){
   const t=(current()?.targets||state().journey.details||{})[type]?.[index];if(!t)return;
   const plan=current(),journey=plan?{...plan.decisions,profile:plan.profile}:state().journey;
-  h.modal(h.head(t.name,t.country||t.organizationType||'A target to explore')+opportunityDetail(t,journey,type));
+  h.modal(h.head(t.name,opportunityLabel(t,type))+opportunityDetail(t,journey,type));
  }
  function why(kind){const a=current()?.decisions?.advice?.academic||state().journey.advice?.academic||{},key={'Degree':'rationale','Focus':'focusRationale','Minor':'minorRationale','Second focus':'secondFocusRationale'}[kind];h.modal(h.head('Why this match?')+`<p>${esc(a[key]||'Your combination connects your stated interests with its academic requirements.')}</p><details class="quiet-details"><summary>More context</summary>${(current()?.decisions?.advice?.assessment||state().journey.advice?.assessment||[]).map(x=>`<p>${esc(x.explanation)}</p>`).join('')}</details>`);}
  async function submit(form){

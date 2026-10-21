@@ -26,7 +26,7 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 - **Constrained AI recommendations:** server-side OpenAI Responses API calls produce structured proposals that are validated against reviewed program data before they can change a plan.
 - **Deterministic academic scheduling:** prerequisite and corequisite checks, credit limits, independent regular/summer loads, minor requirements and preserved completed courses.
 - **Saved manual degree plan:** add or remove courses from the available AUI catalogue, move them between semesters, record progress and keep semester notes without AI calls. Prerequisite checks protect course additions, replacements and moves; a compact degree check lists missing and extra courses. Adding an existing course moves it without duplicating it. Global AI prompts create a preview; graduation delays are shown before saving.
-- **Evidence-aware research:** profile-based ranking across 40 reviewed Moroccan internship targets and 38 institutions from the supplied AUI exchange list, plus bounded web discovery. Alternative requests avoid previously suggested targets; current openings and exchange access still require confirmation.
+- **Evidence-aware research:** profile-based ranking across 92 reviewed Moroccan internship targets and 38 institutions from the supplied AUI exchange list, plus bounded web discovery. Company revisions explore unseen targets; exchange cards show their recorded program type; current openings and exchange access still require confirmation.
 - **Bounded one-time service:** five guided stages, two structural AI prompts per stage and five global prompts after saving. Atomic server-side counters and persistent response receipts enforce the allowance across devices and avoid duplicate paid work.
 - **Private cloud workspaces:** per-account ownership checks, optimistic revision control, recovery of interrupted saves and deliberate resolution of conflicting edits.
 - **Independent email authentication:** Supabase verifies email during account creation and recovery, and authenticates email/password sign-ins; GoPlan issues revocable, hashed sessions in HttpOnly cookies. Admin access uses a server-configured email allowlist.
@@ -59,7 +59,7 @@ pnpm test
 pnpm build
 ```
 
-Tests cover degree/minor combinations, prerequisite ordering, independent course loads, AI schema validation, progress preservation, feedback consent, account isolation, CSRF checks, session revocation and sync conflicts. The 38-script suite includes 19 integrated roadmap resilience groups, 96 opportunity-selection checks and 22 post-AI workspace groups (765 catalogue/requirement selections and 40 validated HTTP saves). Provider calls are fixtures, not live model evaluations. See [verification](docs/MVP-VALIDATION.md). No unmeasured accuracy or performance claim is implied.
+Tests cover degree/minor combinations, prerequisite ordering, independent course loads, AI schema validation, progress preservation, feedback consent, account isolation, CSRF checks, session revocation and sync conflicts. The 44-script suite includes 28 integrated roadmap resilience groups, 96 opportunity-selection checks and 22 post-AI workspace groups (765 catalogue/requirement selections and 40 validated HTTP saves). Provider calls are fixtures, not live model evaluations. See [verification](docs/MVP-VALIDATION.md). No unmeasured accuracy or performance claim is implied.
 
 ## Repository map
 

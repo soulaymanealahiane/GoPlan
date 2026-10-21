@@ -1,3 +1,4 @@
+import {opportunityLabel} from './opportunity-labels.js';
 import {sourceLinks,roadmapInsights} from './journey-view.js';
 export {journeyView} from './journey-view.js';
 import {DATA,programFor,coursesFor,creditsOf,label} from './planner.js';
@@ -24,7 +25,7 @@ export function opportunityDetail(t,journey={},type='internships'){
  const website=opportunityWebsite(t,type),label=website?new URL(website).hostname.replace(/^www\./,''):'';
  return `${website?`<p class="opportunity-website">${link(website,label)}</p>`:''}<p class="opportunity-fit">${esc(opportunityDescription(t,journey,type))}</p>`;
 }
-export function experienceCards(items=[],journey={},type='internships'){return '<div class="target-grid">'+items.map(t=>`<article class="target-card"><h3>${esc(t.name)}</h3><small>${esc([t.organizationType,t.country].filter(Boolean).join(' · '))}</small>${opportunityDetail(t,journey,type)}</article>`).join('')+'</div>';}
+export function experienceCards(items=[],journey={},type='internships'){return '<div class="target-grid">'+items.map(t=>`<article class="target-card"><h3>${esc(t.name)}</h3><small>${esc(opportunityLabel(t,type))}</small>${opportunityDetail(t,journey,type)}</article>`).join('')+'</div>';}
 
 function basePlanView(plan,draft){
  const cs=plan.courses,done=completedIds(plan),checks=planIssues(plan),completed=creditsOf(cs.filter(c=>done.includes(c.id))),total=creditsOf(cs),first=plan.terms.find(t=>!['prior','pending'].includes(t.id)&&t.courses.some(id=>!done.includes(id)))?.id;

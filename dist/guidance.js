@@ -71,7 +71,7 @@ export function validateSavedWorkspace(raw){
  if(j.scheduling)j.scheduling=normalizeScheduling(j.scheduling);
  const stages=['setup','direction','courses','targets','pace'];
  j.refinements=Object.fromEntries(stages.map(stage=>[stage,typeof j.refinements?.[stage]==='string'?j.refinements[stage].slice(0,2500):'']));
- j.seenTargetIds=Object.fromEntries(['internships','exchanges'].map(type=>[type,[...new Set((Array.isArray(j.seenTargetIds?.[type])?j.seenTargetIds[type]:[]).filter(id=>typeof id==='string'&&/^[-a-zA-Z0-9]{1,100}$/.test(id)))].slice(-60)]));
+ j.seenTargetIds=Object.fromEntries(['internships','exchanges'].map(type=>[type,[...new Set((Array.isArray(j.seenTargetIds?.[type])?j.seenTargetIds[type]:[]).filter(id=>typeof id==='string'&&/^[-a-zA-Z0-9]{1,100}$/.test(id)))].slice(-200)]));
  j.feedbackHistory=Object.fromEntries(stages.map(stage=>[stage,(Array.isArray(j.feedbackHistory?.[stage])?j.feedbackHistory[stage]:[]).slice(-4).filter(x=>object(x)&&typeof x.request==='string'&&typeof x.summary==='string').map(x=>({request:x.request.slice(0,2500),summary:x.summary.slice(0,1000)}))]));
  if(!object(j.agentChoices))j.agentChoices={};
  if(!Number.isInteger(j.step)||j.step<0||j.step>5||!['undergraduate','graduate','open'].includes(j.level))throw Error('Invalid guided setup.');

@@ -18,6 +18,18 @@ const themes={
  agriculture:['agricultur','food','farmer','forestry'],
 };
 export const detectOpportunityThemes=value=>{const text=' '+normalize(value)+' ';return Object.keys(themes).filter(key=>themes[key].some(term=>text.includes(term)));};
+export function companySizePreference(request){
+ const preference=text=>{
+  text=normalize(text);
+  if(/\b(?:avoid|exclude|no|not|without|rather than)\s+(?:any\s+)?(?:established|large|big|mature)\s+(?:compan(?:y|ies)|firms?|employers?|businesses)\b/.test(text))return 'startup';
+  if(/\b(?:avoid|exclude|no|not|without)\s+(?:any\s+)?(?:startups?|scaleups?)\b/.test(text))return 'established';
+  if(/\b(?:startups?|scaleups?)\b/.test(text))return 'startup';
+  if(/\b(?:established|large|big|mature)\s+(?:compan(?:y|ies)|firms?|employers?|businesses)\b/.test(text))return 'established';
+  return '';
+ };
+ // The latest explicit size preference supersedes an earlier questionnaire.
+ return preference(request.refinement)||preference(Object.values(request.questionnaire||{}).join(' '));
+}
 const hash=value=>{let n=2166136261;for(const c of value)n=Math.imul(n^c.charCodeAt(0),16777619);n^=n>>>16;n=Math.imul(n,0x85ebca6b);n^=n>>>13;n=Math.imul(n,0xc2b2ae35);return (n^n>>>16)>>>0;};
 export function opportunityInterests(request){
  const p=request.profile||{},degree=p.program?programFor(p):null,minor=selectedMinor(p),q=request.questionnaire||{},weights={};
@@ -29,7 +41,7 @@ export function opportunityInterests(request){
 }
 export function rankOpportunityTargets(records,request,type,{limit=records.length}={}){
  const interests=opportunityInterests(request),weights=Object.fromEntries(interests.themes.map(t=>[t.theme,t.weight])),seed=JSON.stringify([request.profile?.program,request.profile?.track,request.profile?.secondTrack,request.profile?.minor,request.questionnaire,request.refinement]),preference=normalize([request.refinement,...Object.values(request.questionnaire||{})].join(' '));
- const startups=type==='internships'&&/\b(startups?|scaleups?)\b/.test(preference),preferNovel=/\b(?:new|different|alternative|alternatives|replace|other|more|refresh|broaden)\b/.test(normalize(request.refinement));
+ const size=type==='internships'?companySizePreference(request):'',startups=size==='startup',preferNovel=request.preferNovel??(!!String(request.refinement||'').trim()&&((request.currentRecommendation?.[type]?.length||request.seenTargetIds?.[type]?.length)>0||/\b(?:new|different|alternative|alternatives|replace|other|more|refresh|broaden)\b/.test(normalize(request.refinement))));
  const prior=Array.isArray(request.currentRecommendation?.[type])?request.currentRecommendation[type]:[],seenIds=new Set([...(request.seenTargetIds?.[type]||[]),...prior.map(record=>record.id)]);
  const seenRecords=[...prior,...records.filter(record=>seenIds.has(record.id))],seenNames=new Set(seenRecords.map(record=>normalize(record.name)).filter(Boolean)),seenInstitutions=new Set(seenRecords.map(record=>normalize(record.institutionId)).filter(Boolean));
  const pool=records.map(record=>{
@@ -38,7 +50,7 @@ export function rankOpportunityTargets(records,request,type,{limit=records.lengt
   const score=matched.reduce((sum,t)=>sum+weights[t],0)/Math.sqrt(Math.max(1,topics.length));
   const location=[record.country,...(record.regions||[])].some(place=>{const text=normalize(place);return text&&text!=='morocco'&&preference.includes(text);})?6:0;
   const seen=seenIds.has(record.id)||seenNames.has(normalize(record.name))||type==='exchanges'&&seenInstitutions.has(normalize(record.institutionId));
-  return {record,topics,matched,seen,score:score+location+(startups&&['startup','scaleup'].includes(record.organizationType)?20:0),tie:hash(seed+record.id)};
+  return {record,topics,matched,seen,score:score+location+(startups&&['startup','scaleup'].includes(record.organizationType)||size==='established'&&record.organizationType==='established'?20:0),tie:hash(seed+record.id)};
  }),out=[],countries=new Map(),sectors=new Map();
  while(pool.length&&out.length<limit){
   const adjusted=item=>item.score-(type==='exchanges'?(countries.get(item.record.country)||0)*2:(sectors.get(item.record.industries?.[0]||item.topics[0])||0)*1.5);

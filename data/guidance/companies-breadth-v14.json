@@ -1,0 +1,2932 @@
+{
+  "reviewedAt": "2026-10-21",
+  "method": "Company and investor primary pages reviewed for Moroccan presence and activity. Subject fit is inferred; no vacancy or personal eligibility claim. Company growth stages remain unknown when not established by evidence.",
+  "internships": [
+    {
+      "id": "cgi-morocco",
+      "name": "CGI Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "software",
+        "consulting"
+      ],
+      "tags": [
+        "software",
+        "consulting",
+        "data",
+        "supply-chain"
+      ],
+      "fields": [
+        "software",
+        "consulting",
+        "data",
+        "supply-chain"
+      ],
+      "reason": "CGI develops business software and provides IT consulting, including supply-chain applications delivered with teams in Morocco.",
+      "moroccoEvidence": "The official release identifies CGI teams in Morocco.",
+      "officialUrl": "https://www.cgi.com/maroc/fr",
+      "sourceUrl": "https://www.cgi.com/en/cgi-supports-michelin-software-data-driven-strategy",
+      "sources": [
+        {
+          "title": "CGI Morocco — official activity and Morocco evidence",
+          "url": "https://www.cgi.com/en/cgi-supports-michelin-software-data-driven-strategy",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "sopra-steria-morocco",
+      "name": "Sopra Steria Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "software",
+        "consulting"
+      ],
+      "tags": [
+        "software",
+        "consulting",
+        "business",
+        "data"
+      ],
+      "fields": [
+        "software",
+        "consulting",
+        "business",
+        "data"
+      ],
+      "reason": "Sopra Steria provides consulting and digital services, with a Moroccan site listed in its corporate report.",
+      "moroccoEvidence": "Corporate sustainability report lists a Morocco office.",
+      "officialUrl": "https://www.soprasteria.com/",
+      "sourceUrl": "https://www.soprasteria.com/docs/librariesprovider2/sopra-steria-it-documents/csr/2025/sopra_steria_extract_urd_2024_en_sustainabiliy_report_final_opti.pdf",
+      "sources": [
+        {
+          "title": "Sopra Steria Morocco — official activity and Morocco evidence",
+          "url": "https://www.soprasteria.com/docs/librariesprovider2/sopra-steria-it-documents/csr/2025/sopra_steria_extract_urd_2024_en_sustainabiliy_report_final_opti.pdf",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "inetum-morocco",
+      "name": "Inetum Maroc",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "software",
+        "cloud"
+      ],
+      "tags": [
+        "software",
+        "cloud",
+        "cybersecurity",
+        "consulting"
+      ],
+      "fields": [
+        "software",
+        "cloud",
+        "cybersecurity",
+        "consulting"
+      ],
+      "reason": "Inetum Maroc combines technology consulting, enterprise systems and digital solutions.",
+      "moroccoEvidence": "Official company careers information describes the Maroc operation.",
+      "officialUrl": "https://www.inetum.com/",
+      "sourceUrl": "https://www.inetum.com/global/en/careers/a1226e9b-0004-4c5b-89ea-6a6ce3201885.html",
+      "sources": [
+        {
+          "title": "Inetum Maroc — official activity and Morocco evidence",
+          "url": "https://www.inetum.com/global/en/careers/a1226e9b-0004-4c5b-89ea-6a6ce3201885.html",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "ibm-morocco",
+      "name": "IBM Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "software",
+        "consulting"
+      ],
+      "tags": [
+        "software",
+        "consulting",
+        "data",
+        "cloud"
+      ],
+      "fields": [
+        "software",
+        "consulting",
+        "data",
+        "cloud"
+      ],
+      "reason": "IBM Morocco provides technology consulting, software development and IT services.",
+      "moroccoEvidence": "Official certification directory lists IBM Morocco in Casablanca and its service scope.",
+      "officialUrl": "https://www.ibm.com/",
+      "sourceUrl": "https://www.ibm.com/support/pages/sites/default/files/inline-files/%24FILE/emea_9k_0.pdf",
+      "sources": [
+        {
+          "title": "IBM Morocco — official activity and Morocco evidence",
+          "url": "https://www.ibm.com/support/pages/sites/default/files/inline-files/%24FILE/emea_9k_0.pdf",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "oracle-morocco",
+      "name": "Oracle Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "cloud",
+        "software"
+      ],
+      "tags": [
+        "cloud",
+        "software",
+        "data",
+        "ai"
+      ],
+      "fields": [
+        "cloud",
+        "software",
+        "data",
+        "ai"
+      ],
+      "reason": "Oracle operates a Casablanca cloud region for cloud computing and artificial intelligence services.",
+      "moroccoEvidence": "Oracle announces its Casablanca cloud region serving Morocco.",
+      "officialUrl": "https://www.oracle.com/ma/",
+      "sourceUrl": "https://www.oracle.com/africa-fr/news/announcement/oracle-first-hyperscaler-open-public-cloud-2026-04-07/",
+      "sources": [
+        {
+          "title": "Oracle Morocco — official activity and Morocco evidence",
+          "url": "https://www.oracle.com/africa-fr/news/announcement/oracle-first-hyperscaler-open-public-cloud-2026-04-07/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "devoteam-morocco",
+      "name": "Devoteam Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "consulting",
+        "cloud"
+      ],
+      "tags": [
+        "consulting",
+        "cloud",
+        "software",
+        "data"
+      ],
+      "fields": [
+        "consulting",
+        "cloud",
+        "software",
+        "data"
+      ],
+      "reason": "Devoteam provides technology consulting through a Moroccan office in Salé.",
+      "moroccoEvidence": "The company office directory lists Devoteam Morocco in Salé.",
+      "officialUrl": "https://africa.devoteam.com/",
+      "sourceUrl": "https://africa.devoteam.com/our-offices/",
+      "sources": [
+        {
+          "title": "Devoteam Morocco — official activity and Morocco evidence",
+          "url": "https://africa.devoteam.com/our-offices/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "schneider-electric-morocco",
+      "name": "Schneider Electric Maroc",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "energy",
+        "automation"
+      ],
+      "tags": [
+        "energy",
+        "automation",
+        "electrical",
+        "industrial-engineering"
+      ],
+      "fields": [
+        "energy",
+        "automation",
+        "electrical",
+        "industrial-engineering"
+      ],
+      "reason": "Schneider Electric develops electrification, automation and energy-efficiency solutions for industry and buildings.",
+      "moroccoEvidence": "The Moroccan company page lists its Casablanca address.",
+      "officialUrl": "https://www.se.com/ma/fr/",
+      "sourceUrl": "https://www.se.com/ma/fr/",
+      "sources": [
+        {
+          "title": "Schneider Electric Maroc — official activity and Morocco evidence",
+          "url": "https://www.se.com/ma/fr/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "stellantis-morocco",
+      "name": "Stellantis Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "automotive",
+        "manufacturing"
+      ],
+      "tags": [
+        "automotive",
+        "manufacturing",
+        "automation",
+        "logistics"
+      ],
+      "fields": [
+        "automotive",
+        "manufacturing",
+        "automation",
+        "logistics"
+      ],
+      "reason": "Stellantis manufactures vehicles in Kénitra, including local work on factory automation.",
+      "moroccoEvidence": "Official company release describes automation work at its Kénitra plant.",
+      "officialUrl": "https://www.stellantis.com/",
+      "sourceUrl": "https://www.media.stellantis.com/me-fr/corporate/press/stellantis-kenitra-l-innovation-locale-au-coeur-de-l-automatisation-industrielle",
+      "sources": [
+        {
+          "title": "Stellantis Morocco — official activity and Morocco evidence",
+          "url": "https://www.media.stellantis.com/me-fr/corporate/press/stellantis-kenitra-l-innovation-locale-au-coeur-de-l-automatisation-industrielle",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "leoni-morocco",
+      "name": "LEONI Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "automotive",
+        "electrical"
+      ],
+      "tags": [
+        "automotive",
+        "electrical",
+        "manufacturing",
+        "logistics"
+      ],
+      "fields": [
+        "automotive",
+        "electrical",
+        "manufacturing",
+        "logistics"
+      ],
+      "reason": "LEONI manufactures automotive wiring systems at Moroccan sites including Casablanca, Bouskoura and Agadir.",
+      "moroccoEvidence": "Official location directory identifies Moroccan wiring-system plants.",
+      "officialUrl": "https://www.leoni.com/",
+      "sourceUrl": "https://www.leoni.com/about-us/locations/africa",
+      "sources": [
+        {
+          "title": "LEONI Morocco — official activity and Morocco evidence",
+          "url": "https://www.leoni.com/about-us/locations/africa",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "stmicroelectronics-morocco",
+      "name": "STMicroelectronics Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "electronics",
+        "manufacturing"
+      ],
+      "tags": [
+        "electronics",
+        "manufacturing",
+        "semiconductors",
+        "data"
+      ],
+      "fields": [
+        "electronics",
+        "manufacturing",
+        "semiconductors",
+        "data"
+      ],
+      "reason": "STMicroelectronics packages and tests semiconductor chips at its Bouskoura site.",
+      "moroccoEvidence": "The company documents its Bouskoura manufacturing site.",
+      "officialUrl": "https://www.st.com/",
+      "sourceUrl": "https://www.st.com/content/st_com/en/about/manufacturing-at-st/our-facilities/bouskoura-st-site.html",
+      "sources": [
+        {
+          "title": "STMicroelectronics Morocco — official activity and Morocco evidence",
+          "url": "https://www.st.com/content/st_com/en/about/manufacturing-at-st/our-facilities/bouskoura-st-site.html",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "lear-morocco",
+      "name": "Lear Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "automotive",
+        "manufacturing"
+      ],
+      "tags": [
+        "automotive",
+        "manufacturing",
+        "electrical",
+        "logistics"
+      ],
+      "fields": [
+        "automotive",
+        "manufacturing",
+        "electrical",
+        "logistics"
+      ],
+      "reason": "Lear produces automotive seating and electrical systems, with Moroccan manufacturing, engineering and logistics teams.",
+      "moroccoEvidence": "The company describes its Tangier plant and wider Moroccan operations.",
+      "officialUrl": "https://www.lear.com/",
+      "sourceUrl": "https://www.lear.com/de/newsroom/lear-adding-connection-systems-plant-in-morocco",
+      "sources": [
+        {
+          "title": "Lear Morocco — official activity and Morocco evidence",
+          "url": "https://www.lear.com/de/newsroom/lear-adding-connection-systems-plant-in-morocco",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        },
+        {
+          "title": "Lear Morocco — official company information",
+          "url": "https://jobs.lear.com/go/Morocco/4351801/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "bank-of-africa",
+      "name": "BANK OF AFRICA Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA",
+        "MAISD"
+      ],
+      "industries": [
+        "banking",
+        "finance"
+      ],
+      "tags": [
+        "banking",
+        "finance",
+        "international-trade",
+        "digital"
+      ],
+      "fields": [
+        "banking",
+        "finance",
+        "international-trade",
+        "digital"
+      ],
+      "reason": "BANK OF AFRICA provides banking, business finance and digital banking services in Morocco.",
+      "moroccoEvidence": "The official Moroccan bank site describes local services and agency access.",
+      "officialUrl": "https://www.bankofafrica.ma/fr",
+      "sourceUrl": "https://www.bankofafrica.ma/fr",
+      "sources": [
+        {
+          "title": "BANK OF AFRICA Morocco — official activity and Morocco evidence",
+          "url": "https://www.bankofafrica.ma/fr",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "cfg-bank",
+      "name": "CFG Bank",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA",
+        "MAISD"
+      ],
+      "industries": [
+        "finance",
+        "banking"
+      ],
+      "tags": [
+        "finance",
+        "banking",
+        "investment",
+        "data"
+      ],
+      "fields": [
+        "finance",
+        "banking",
+        "investment",
+        "data"
+      ],
+      "reason": "CFG Bank combines banking with online investment services connected to the Casablanca stock market.",
+      "moroccoEvidence": "The company documents its services for Moroccan capital markets.",
+      "officialUrl": "https://www.cfgbank.com/",
+      "sourceUrl": "https://www.cfgbank.com/particuliers/notre-offre/bourse/actions-et-opcvm/",
+      "sources": [
+        {
+          "title": "CFG Bank — official activity and Morocco evidence",
+          "url": "https://www.cfgbank.com/particuliers/notre-offre/bourse/actions-et-opcvm/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "bmci",
+      "name": "BMCI",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA",
+        "MAISD"
+      ],
+      "industries": [
+        "banking",
+        "finance"
+      ],
+      "tags": [
+        "banking",
+        "finance",
+        "digital",
+        "software"
+      ],
+      "fields": [
+        "banking",
+        "finance",
+        "digital",
+        "software"
+      ],
+      "reason": "BMCI provides banking services and a mobile application for accounts, payments and investment portfolios.",
+      "moroccoEvidence": "The Moroccan bank documents local banking and payment services.",
+      "officialUrl": "https://www.bmci.ma/",
+      "sourceUrl": "https://www.bmci.ma/application-bancaire-bmci-connect/",
+      "sources": [
+        {
+          "title": "BMCI — official activity and Morocco evidence",
+          "url": "https://www.bmci.ma/application-bancaire-bmci-connect/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "credit-du-maroc",
+      "name": "Crédit du Maroc",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA",
+        "MAISD"
+      ],
+      "industries": [
+        "banking",
+        "finance"
+      ],
+      "tags": [
+        "banking",
+        "finance",
+        "investment",
+        "business"
+      ],
+      "fields": [
+        "banking",
+        "finance",
+        "investment",
+        "business"
+      ],
+      "reason": "Crédit du Maroc is a Moroccan banking group with corporate-finance and capital-market activities.",
+      "moroccoEvidence": "The bank official prospectus identifies its Moroccan banking and capital-market operations.",
+      "officialUrl": "https://www.creditdumaroc.ma/",
+      "sourceUrl": "https://www.creditdumaroc.ma/sites/default/files/extrait_du_prospectus_offre_de_vente_au_public.pdf",
+      "sources": [
+        {
+          "title": "Crédit du Maroc — official activity and Morocco evidence",
+          "url": "https://www.creditdumaroc.ma/sites/default/files/extrait_du_prospectus_offre_de_vente_au_public.pdf",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "sanlamallianz-morocco",
+      "name": "SanlamAllianz Maroc",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BBA",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA",
+        "MAISD"
+      ],
+      "industries": [
+        "insurance",
+        "finance"
+      ],
+      "tags": [
+        "insurance",
+        "finance",
+        "risk",
+        "data"
+      ],
+      "fields": [
+        "insurance",
+        "finance",
+        "risk",
+        "data"
+      ],
+      "reason": "SanlamAllianz Maroc provides insurance for vehicles, homes, health and savings.",
+      "moroccoEvidence": "The official Moroccan insurer site describes its local services.",
+      "officialUrl": "https://sanlamallianz.ma/fr/",
+      "sourceUrl": "https://sanlamallianz.ma/fr/",
+      "sources": [
+        {
+          "title": "SanlamAllianz Maroc — official activity and Morocco evidence",
+          "url": "https://sanlamallianz.ma/fr/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "cosumar",
+      "name": "COSUMAR",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BBA",
+        "BACS",
+        "MSSEM",
+        "MBA"
+      ],
+      "industries": [
+        "agriculture",
+        "food"
+      ],
+      "tags": [
+        "agriculture",
+        "food",
+        "manufacturing",
+        "sustainability"
+      ],
+      "fields": [
+        "agriculture",
+        "food",
+        "manufacturing",
+        "sustainability"
+      ],
+      "reason": "COSUMAR produces sugar in Morocco and works across the agricultural and industrial sugar value chain.",
+      "moroccoEvidence": "The company describes its Moroccan sugar and agricultural activities.",
+      "officialUrl": "https://www.cosumar.co.ma/",
+      "sourceUrl": "https://www.cosumar.co.ma/",
+      "sources": [
+        {
+          "title": "COSUMAR — official activity and Morocco evidence",
+          "url": "https://www.cosumar.co.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "mutandis",
+      "name": "Mutandis",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BBA",
+        "BACS",
+        "MSSEM",
+        "MBA"
+      ],
+      "industries": [
+        "manufacturing",
+        "food"
+      ],
+      "tags": [
+        "manufacturing",
+        "food",
+        "packaging",
+        "retail"
+      ],
+      "fields": [
+        "manufacturing",
+        "food",
+        "packaging",
+        "retail"
+      ],
+      "reason": "Mutandis manufactures consumer products including detergents, seafood, beverage bottles and fruit juice.",
+      "moroccoEvidence": "Official investor information describes manufacturing and consumer-product operations in Morocco.",
+      "officialUrl": "https://mutandis.com/en/home/",
+      "sourceUrl": "https://mutandis.com/en/home/",
+      "sources": [
+        {
+          "title": "Mutandis — official activity and Morocco evidence",
+          "url": "https://mutandis.com/en/home/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "eaux-minerales-oulmes",
+      "name": "Les Eaux Minérales d’Oulmès",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BBA",
+        "BACS",
+        "MSSEM",
+        "MBA"
+      ],
+      "industries": [
+        "water",
+        "food"
+      ],
+      "tags": [
+        "water",
+        "food",
+        "manufacturing",
+        "environment"
+      ],
+      "fields": [
+        "water",
+        "food",
+        "manufacturing",
+        "environment"
+      ],
+      "reason": "Les Eaux Minérales d’Oulmès produces and distributes bottled water and beverages.",
+      "moroccoEvidence": "The company identifies its Moroccan water brands, sources and production activities.",
+      "officialUrl": "https://www.oulmes.ma/",
+      "sourceUrl": "https://www.oulmes.ma/",
+      "sources": [
+        {
+          "title": "Les Eaux Minérales d’Oulmès — official activity and Morocco evidence",
+          "url": "https://www.oulmes.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "novec",
+      "name": "NOVEC",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSESS",
+        "BSRESE",
+        "BSGE",
+        "BSEMS",
+        "BBA",
+        "BAIS",
+        "MSSEM",
+        "MAISD",
+        "MBA"
+      ],
+      "industries": [
+        "engineering",
+        "water"
+      ],
+      "tags": [
+        "engineering",
+        "water",
+        "environment",
+        "energy",
+        "construction"
+      ],
+      "fields": [
+        "engineering",
+        "water",
+        "environment",
+        "energy",
+        "construction"
+      ],
+      "reason": "NOVEC provides engineering advice for water, energy, transport infrastructure and environmental projects.",
+      "moroccoEvidence": "The Moroccan engineering company lists local projects and engineering disciplines.",
+      "officialUrl": "https://www.novec.ma/",
+      "sourceUrl": "https://www.novec.ma/",
+      "sources": [
+        {
+          "title": "NOVEC — official activity and Morocco evidence",
+          "url": "https://www.novec.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "alstom-morocco",
+      "name": "Alstom Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "rail",
+        "transport"
+      ],
+      "tags": [
+        "rail",
+        "transport",
+        "electrical",
+        "engineering"
+      ],
+      "fields": [
+        "rail",
+        "transport",
+        "electrical",
+        "engineering"
+      ],
+      "reason": "Alstom works on Moroccan trains, trams, railway signalling and maintenance.",
+      "moroccoEvidence": "Official country page describes Alstom operations in Morocco.",
+      "officialUrl": "https://www.alstom.com/",
+      "sourceUrl": "https://www.alstom.com/alstom-morocco",
+      "sources": [
+        {
+          "title": "Alstom Morocco — official activity and Morocco evidence",
+          "url": "https://www.alstom.com/alstom-morocco",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "wafr",
+      "name": "WafR",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "retail",
+        "fintech"
+      ],
+      "tags": [
+        "retail",
+        "fintech",
+        "marketing",
+        "software"
+      ],
+      "fields": [
+        "retail",
+        "fintech",
+        "marketing",
+        "software"
+      ],
+      "reason": "WafR builds an application connecting Moroccan grocers with retail promotions and digital services.",
+      "moroccoEvidence": "Investor portfolio and company app document services for Moroccan retailers.",
+      "officialUrl": "https://www.wafr.co/",
+      "sourceUrl": "https://um6pventures.com/portfoliodigital-transformation-startups",
+      "sources": [
+        {
+          "title": "WafR — official activity and Morocco evidence",
+          "url": "https://um6pventures.com/portfoliodigital-transformation-startups",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        },
+        {
+          "title": "WafR — official company information",
+          "url": "https://www.wafr.co/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "hsabati",
+      "name": "Hsabati",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "saas",
+        "finance"
+      ],
+      "tags": [
+        "saas",
+        "finance",
+        "business",
+        "software"
+      ],
+      "fields": [
+        "saas",
+        "finance",
+        "business",
+        "software"
+      ],
+      "reason": "Hsabati develops business-management software connecting invoicing, stock, customer relationships and financing.",
+      "moroccoEvidence": "The investor identifies Hsabati as a Moroccan-based startup.",
+      "officialUrl": "https://www.hsabati.com/",
+      "sourceUrl": "https://um6pventures.com/portfoliodigital-transformation-startups",
+      "sources": [
+        {
+          "title": "Hsabati — official activity and Morocco evidence",
+          "url": "https://um6pventures.com/portfoliodigital-transformation-startups",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        },
+        {
+          "title": "Hsabati — official company information",
+          "url": "https://www.hsabati.com/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "spotter",
+      "name": "Spotter",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "fintech",
+        "finance"
+      ],
+      "tags": [
+        "fintech",
+        "finance",
+        "risk",
+        "software"
+      ],
+      "fields": [
+        "fintech",
+        "finance",
+        "risk",
+        "software"
+      ],
+      "reason": "Spotter develops merchant payment and credit-risk technology in Casablanca.",
+      "moroccoEvidence": "The company site identifies its Casablanca base and Moroccan merchant services.",
+      "officialUrl": "https://www.spotter.ma/",
+      "sourceUrl": "https://um6pventures.com/portfoliodigital-transformation-startups",
+      "sources": [
+        {
+          "title": "Spotter — official activity and Morocco evidence",
+          "url": "https://um6pventures.com/portfoliodigital-transformation-startups",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        },
+        {
+          "title": "Spotter — official company information",
+          "url": "https://www.spotter.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "paylik",
+      "name": "Paylik",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "fintech",
+        "finance"
+      ],
+      "tags": [
+        "fintech",
+        "finance",
+        "human-resources",
+        "software"
+      ],
+      "fields": [
+        "fintech",
+        "finance",
+        "human-resources",
+        "software"
+      ],
+      "reason": "Paylik develops a platform that lets employees access salary they have already earned.",
+      "moroccoEvidence": "The investor explicitly identifies Paylik as a Moroccan-based startup.",
+      "officialUrl": "https://tasbiq.ma/",
+      "sourceUrl": "https://um6pventures.com/portfoliodigital-transformation-startups",
+      "sources": [
+        {
+          "title": "Paylik — official activity and Morocco evidence",
+          "url": "https://um6pventures.com/portfoliodigital-transformation-startups",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "weego",
+      "name": "Weego",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BBA",
+        "BSEMS",
+        "BSGE",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA",
+        "MAISD"
+      ],
+      "industries": [
+        "logistics",
+        "transport"
+      ],
+      "tags": [
+        "logistics",
+        "transport",
+        "saas",
+        "software"
+      ],
+      "fields": [
+        "logistics",
+        "transport",
+        "saas",
+        "software"
+      ],
+      "reason": "Weego develops transit-planning, transport-management and digital-ticketing software.",
+      "moroccoEvidence": "The investor documents its Moroccan incubation and a transport pilot with SOTREG.",
+      "officialUrl": "https://weegolines.com/",
+      "sourceUrl": "https://um6pventures.com/portfoliodigital-transformation-startups",
+      "sources": [
+        {
+          "title": "Weego — official activity and Morocco evidence",
+          "url": "https://um6pventures.com/portfoliodigital-transformation-startups",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "atlan-space",
+      "name": "ATLAN Space",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "ai",
+        "robotics"
+      ],
+      "tags": [
+        "ai",
+        "robotics",
+        "environment",
+        "data",
+        "agriculture"
+      ],
+      "fields": [
+        "ai",
+        "robotics",
+        "environment",
+        "data",
+        "agriculture"
+      ],
+      "reason": "ATLAN Space develops artificial intelligence for autonomous aircraft used in environmental monitoring and data collection.",
+      "moroccoEvidence": "The Moroccan investor identifies the company as a Moroccan technology startup.",
+      "officialUrl": "https://www.atlanspace.com/",
+      "sourceUrl": "https://mnf.ma/en/atlan-space-raises-mad-10-million-from-maroc-numeric-fund-ii/",
+      "sources": [
+        {
+          "title": "ATLAN Space — official activity and Morocco evidence",
+          "url": "https://mnf.ma/en/atlan-space-raises-mad-10-million-from-maroc-numeric-fund-ii/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        },
+        {
+          "title": "ATLAN Space — official company information",
+          "url": "https://mnf.ma/en/statut/activer/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "damanesign",
+      "name": "Damanesign",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "cybersecurity",
+        "software"
+      ],
+      "tags": [
+        "cybersecurity",
+        "software",
+        "business",
+        "digital-identity"
+      ],
+      "fields": [
+        "cybersecurity",
+        "software",
+        "business",
+        "digital-identity"
+      ],
+      "reason": "Damanesign develops electronic-signature and digital-trust services for Moroccan organizations.",
+      "moroccoEvidence": "The investor identifies a Moroccan startup; its current company site describes local digital-trust services.",
+      "officialUrl": "https://www.damanesign.ma/",
+      "sourceUrl": "https://mnf.ma/en/damanesign-raises-mad-4-million-from-maroc-numeric-fund-ii/",
+      "sources": [
+        {
+          "title": "Damanesign — official activity and Morocco evidence",
+          "url": "https://mnf.ma/en/damanesign-raises-mad-4-million-from-maroc-numeric-fund-ii/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        },
+        {
+          "title": "Damanesign — official company information",
+          "url": "https://www.damanesign.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "agenz",
+      "name": "Agenz",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "data",
+        "proptech"
+      ],
+      "tags": [
+        "data",
+        "proptech",
+        "finance",
+        "software"
+      ],
+      "fields": [
+        "data",
+        "proptech",
+        "finance",
+        "software"
+      ],
+      "reason": "Agenz develops property-valuation tools and market data for Moroccan real-estate transactions.",
+      "moroccoEvidence": "The investor describes a Moroccan proptech company founded in 2021.",
+      "officialUrl": "https://agenz.ma/",
+      "sourceUrl": "https://mnf.ma/en/agenz-raises-5-million-from-breega-attijariwafa-ventures-and-saviu-ventures-to-accelerate-the-digitalization-of-the-moroccan-real-estate-market/",
+      "sources": [
+        {
+          "title": "Agenz — official activity and Morocco evidence",
+          "url": "https://mnf.ma/en/agenz-raises-5-million-from-breega-attijariwafa-ventures-and-saviu-ventures-to-accelerate-the-digitalization-of-the-moroccan-real-estate-market/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "z-systems",
+      "name": "z.systems",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "retail",
+        "logistics"
+      ],
+      "tags": [
+        "retail",
+        "logistics",
+        "marketing",
+        "software"
+      ],
+      "fields": [
+        "retail",
+        "logistics",
+        "marketing",
+        "software"
+      ],
+      "reason": "z.systems connects brands, wholesalers and Moroccan retailers through a digital commerce platform.",
+      "moroccoEvidence": "The investor documents the Morocco-based retail technology startup.",
+      "officialUrl": "https://www.z.systems/",
+      "sourceUrl": "https://mnf.ma/en/zsystems-secures-1-65-million-to-accelerate-the-digitization-of-traditional-retail-in-morocco/",
+      "sources": [
+        {
+          "title": "z.systems — official activity and Morocco evidence",
+          "url": "https://mnf.ma/en/zsystems-secures-1-65-million-to-accelerate-the-digitization-of-traditional-retail-in-morocco/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        },
+        {
+          "title": "z.systems — official company information",
+          "url": "https://www.z.systems/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "aza-petrosolutions",
+      "name": "AZA Petrosolutions",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "energy",
+        "iot"
+      ],
+      "tags": [
+        "energy",
+        "iot",
+        "software",
+        "automation"
+      ],
+      "fields": [
+        "energy",
+        "iot",
+        "software",
+        "automation"
+      ],
+      "reason": "AZA Petrosolutions develops connected systems for monitoring fuel distribution and service-station operations.",
+      "moroccoEvidence": "The investor identifies the startup as based in Agadir.",
+      "officialUrl": "https://petro.aza.ma/",
+      "sourceUrl": "https://mnf.ma/en/aza-petrosolutions-raises-mad-3-million-from-maroc-numeric-fund-ii/",
+      "sources": [
+        {
+          "title": "AZA Petrosolutions — official activity and Morocco evidence",
+          "url": "https://mnf.ma/en/aza-petrosolutions-raises-mad-3-million-from-maroc-numeric-fund-ii/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "manageo",
+      "name": "Manageo",
+      "organizationType": "unknown",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "saas",
+        "business"
+      ],
+      "tags": [
+        "saas",
+        "business",
+        "finance",
+        "software"
+      ],
+      "fields": [
+        "saas",
+        "business",
+        "finance",
+        "software"
+      ],
+      "reason": "Manageo develops software for small-business invoicing, inventory, cash management and reporting.",
+      "moroccoEvidence": "The company describes its Moroccan business-management software.",
+      "officialUrl": "https://manageo.io/",
+      "sourceUrl": "https://manageo.io/",
+      "sources": [
+        {
+          "title": "Manageo — official activity and Morocco evidence",
+          "url": "https://manageo.io/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "peaqock",
+      "name": "Peaqock Financials",
+      "organizationType": "unknown",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "fintech",
+        "data"
+      ],
+      "tags": [
+        "fintech",
+        "data",
+        "finance",
+        "software"
+      ],
+      "fields": [
+        "fintech",
+        "data",
+        "finance",
+        "software"
+      ],
+      "reason": "Peaqock Financials develops financial-data visualization and reporting software.",
+      "moroccoEvidence": "The investor identifies Peaqock Financials as a Moroccan fintech company.",
+      "officialUrl": "https://www.peaqock.com/",
+      "sourceUrl": "https://mnf.ma/en/portefeuille/peaqock-financials/",
+      "sources": [
+        {
+          "title": "Peaqock Financials — official activity and Morocco evidence",
+          "url": "https://mnf.ma/en/portefeuille/peaqock-financials/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "medi1tv",
+      "name": "Medi1TV",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BACS",
+        "BAIS",
+        "BBA",
+        "BSCSC",
+        "MACDM",
+        "MSDMA",
+        "MAISD",
+        "MBA"
+      ],
+      "industries": [
+        "journalism",
+        "media"
+      ],
+      "tags": [
+        "journalism",
+        "media",
+        "television",
+        "international-studies"
+      ],
+      "fields": [
+        "journalism",
+        "media",
+        "television",
+        "international-studies"
+      ],
+      "reason": "Medi1TV produces television news, reports and current-affairs programming for the Maghreb and wider region.",
+      "moroccoEvidence": "The broadcaster official site publishes Moroccan news programming and local contact information.",
+      "officialUrl": "https://www.medi1tv.com/",
+      "sourceUrl": "https://www.medi1tv.com/",
+      "sources": [
+        {
+          "title": "Medi1TV — official activity and Morocco evidence",
+          "url": "https://www.medi1tv.com/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "hit-radio",
+      "name": "HIT RADIO",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BACS",
+        "BAIS",
+        "BBA",
+        "BSCSC",
+        "MACDM",
+        "MSDMA",
+        "MAISD",
+        "MBA"
+      ],
+      "industries": [
+        "media",
+        "radio"
+      ],
+      "tags": [
+        "media",
+        "radio",
+        "music",
+        "marketing"
+      ],
+      "fields": [
+        "media",
+        "radio",
+        "music",
+        "marketing"
+      ],
+      "reason": "HIT RADIO produces music radio, podcasts, interviews and digital entertainment in Morocco.",
+      "moroccoEvidence": "The broadcaster identifies its Moroccan radio service and local frequencies.",
+      "officialUrl": "https://www.hitradio.ma/",
+      "sourceUrl": "https://www.hitradio.ma/",
+      "sources": [
+        {
+          "title": "HIT RADIO — official activity and Morocco evidence",
+          "url": "https://www.hitradio.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "centrale-danone",
+      "name": "Centrale Danone",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BBA",
+        "BACS",
+        "MSSEM",
+        "MBA"
+      ],
+      "industries": [
+        "food",
+        "agriculture"
+      ],
+      "tags": [
+        "food",
+        "agriculture",
+        "manufacturing",
+        "sustainability"
+      ],
+      "fields": [
+        "food",
+        "agriculture",
+        "manufacturing",
+        "sustainability"
+      ],
+      "reason": "Centrale Danone produces dairy products in Morocco and works on food quality and sustainable production.",
+      "moroccoEvidence": "The company official country site describes Danone in Morocco.",
+      "officialUrl": "https://corporate.danone.ma/",
+      "sourceUrl": "https://corporate.danone.ma/",
+      "sources": [
+        {
+          "title": "Centrale Danone — official activity and Morocco evidence",
+          "url": "https://corporate.danone.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "nestle-morocco",
+      "name": "Nestlé Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BBA",
+        "BACS",
+        "MSSEM",
+        "MBA"
+      ],
+      "industries": [
+        "food",
+        "manufacturing"
+      ],
+      "tags": [
+        "food",
+        "manufacturing",
+        "agriculture",
+        "quality"
+      ],
+      "fields": [
+        "food",
+        "manufacturing",
+        "agriculture",
+        "quality"
+      ],
+      "reason": "Nestlé manufactures milk powders and coffee products at its El Jadida food and beverage factory.",
+      "moroccoEvidence": "The company history identifies its El Jadida factory.",
+      "officialUrl": "https://www.nestle-mena.com/",
+      "sourceUrl": "https://www.nestle-mena.com/en/our-history-in-mena",
+      "sources": [
+        {
+          "title": "Nestlé Morocco — official activity and Morocco evidence",
+          "url": "https://www.nestle-mena.com/en/our-history-in-mena",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "bel-morocco",
+      "name": "Bel Maroc",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BBA",
+        "BACS",
+        "MSSEM",
+        "MBA"
+      ],
+      "industries": [
+        "food",
+        "manufacturing"
+      ],
+      "tags": [
+        "food",
+        "manufacturing",
+        "water",
+        "sustainability"
+      ],
+      "fields": [
+        "food",
+        "manufacturing",
+        "water",
+        "sustainability"
+      ],
+      "reason": "Bel Maroc produces cheese at its Tangier factory, with work on food production and water efficiency.",
+      "moroccoEvidence": "The company directory lists its Casablanca office and Tangier plant.",
+      "officialUrl": "https://www.groupe-bel.com/",
+      "sourceUrl": "https://www.groupe-bel.com/notre-aventure/bel-a-l-international/",
+      "sources": [
+        {
+          "title": "Bel Maroc — official activity and Morocco evidence",
+          "url": "https://www.groupe-bel.com/notre-aventure/bel-a-l-international/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "dhl-morocco",
+      "name": "DHL Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BBA",
+        "BSEMS",
+        "BSGE",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA",
+        "MAISD"
+      ],
+      "industries": [
+        "logistics",
+        "supply-chain"
+      ],
+      "tags": [
+        "logistics",
+        "supply-chain",
+        "international-trade",
+        "transport"
+      ],
+      "fields": [
+        "logistics",
+        "supply-chain",
+        "international-trade",
+        "transport"
+      ],
+      "reason": "DHL provides parcel delivery and freight logistics services in Morocco.",
+      "moroccoEvidence": "The official country page identifies services in Morocco.",
+      "officialUrl": "https://www.dhl.com/ma-en/home.html",
+      "sourceUrl": "https://www.dhl.com/ma-en/home.html",
+      "sources": [
+        {
+          "title": "DHL Morocco — official activity and Morocco evidence",
+          "url": "https://www.dhl.com/ma-en/home.html",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "royal-air-maroc",
+      "name": "Royal Air Maroc",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BBA",
+        "BSEMS",
+        "BSGE",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA",
+        "MAISD"
+      ],
+      "industries": [
+        "aviation",
+        "transport"
+      ],
+      "tags": [
+        "aviation",
+        "transport",
+        "logistics",
+        "international-trade"
+      ],
+      "fields": [
+        "aviation",
+        "transport",
+        "logistics",
+        "international-trade"
+      ],
+      "reason": "Royal Air Maroc operates passenger flights and air-cargo services linking Morocco with international destinations.",
+      "moroccoEvidence": "The airline official Moroccan site provides passenger and cargo services.",
+      "officialUrl": "https://www.royalairmaroc.com/ma-en",
+      "sourceUrl": "https://www.royalairmaroc.com/ma-en",
+      "sources": [
+        {
+          "title": "Royal Air Maroc — official activity and Morocco evidence",
+          "url": "https://www.royalairmaroc.com/ma-en",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "sonasid",
+      "name": "Sonasid",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "materials",
+        "manufacturing"
+      ],
+      "tags": [
+        "materials",
+        "manufacturing",
+        "recycling",
+        "environment"
+      ],
+      "fields": [
+        "materials",
+        "manufacturing",
+        "recycling",
+        "environment"
+      ],
+      "reason": "Sonasid makes steel products in Morocco using recycled scrap as a raw material.",
+      "moroccoEvidence": "The company describes its Moroccan steel production and recycling process.",
+      "officialUrl": "https://www.sonasid.ma/",
+      "sourceUrl": "https://www.sonasid.ma/",
+      "sources": [
+        {
+          "title": "Sonasid — official activity and Morocco evidence",
+          "url": "https://www.sonasid.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "colorado",
+      "name": "Colorado",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "materials",
+        "manufacturing"
+      ],
+      "tags": [
+        "materials",
+        "manufacturing",
+        "chemistry",
+        "construction"
+      ],
+      "fields": [
+        "materials",
+        "manufacturing",
+        "chemistry",
+        "construction"
+      ],
+      "reason": "Colorado manufactures architectural paints, automotive refinishing products and industrial coatings.",
+      "moroccoEvidence": "The Moroccan company site lists its product families and local agencies.",
+      "officialUrl": "https://www.colorado.ma/",
+      "sourceUrl": "https://www.colorado.ma/",
+      "sources": [
+        {
+          "title": "Colorado — official activity and Morocco evidence",
+          "url": "https://www.colorado.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "disway",
+      "name": "Disway",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "technology",
+        "supply-chain"
+      ],
+      "tags": [
+        "technology",
+        "supply-chain",
+        "retail",
+        "solar"
+      ],
+      "fields": [
+        "technology",
+        "supply-chain",
+        "retail",
+        "solar"
+      ],
+      "reason": "Disway distributes computing equipment, technology solutions and solar products.",
+      "moroccoEvidence": "The Moroccan company site lists its technology distribution and solar activities.",
+      "officialUrl": "https://www.disway.com/",
+      "sourceUrl": "https://www.disway.com/",
+      "sources": [
+        {
+          "title": "Disway — official activity and Morocco evidence",
+          "url": "https://www.disway.com/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "m2m-group",
+      "name": "M2M Group",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "fintech",
+        "software"
+      ],
+      "tags": [
+        "fintech",
+        "software",
+        "cybersecurity",
+        "digital-identity"
+      ],
+      "fields": [
+        "fintech",
+        "software",
+        "cybersecurity",
+        "digital-identity"
+      ],
+      "reason": "M2M Group develops electronic-payment, biometric-identity and multiservice-card systems.",
+      "moroccoEvidence": "Official company contact details locate its operations in Morocco.",
+      "officialUrl": "https://m2mgroup.com/",
+      "sourceUrl": "https://m2mgroup.com/",
+      "sources": [
+        {
+          "title": "M2M Group — official activity and Morocco evidence",
+          "url": "https://m2mgroup.com/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "microdata",
+      "name": "Microdata",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSEMS",
+        "MSSE",
+        "MSBDA",
+        "MSDMA",
+        "MBA"
+      ],
+      "industries": [
+        "cloud",
+        "cybersecurity"
+      ],
+      "tags": [
+        "cloud",
+        "cybersecurity",
+        "technology",
+        "software"
+      ],
+      "fields": [
+        "cloud",
+        "cybersecurity",
+        "technology",
+        "software"
+      ],
+      "reason": "Microdata integrates IT infrastructure, cloud, backup and maintenance services in Morocco.",
+      "moroccoEvidence": "The company describes its Moroccan IT infrastructure activities.",
+      "officialUrl": "https://www.microdata.ma/",
+      "sourceUrl": "https://www.microdata.ma/",
+      "sources": [
+        {
+          "title": "Microdata — official activity and Morocco evidence",
+          "url": "https://www.microdata.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "suez-morocco",
+      "name": "SUEZ Morocco",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSESS",
+        "BSRESE",
+        "BSGE",
+        "BSEMS",
+        "BBA",
+        "BAIS",
+        "MSSEM",
+        "MAISD",
+        "MBA"
+      ],
+      "industries": [
+        "water",
+        "waste"
+      ],
+      "tags": [
+        "water",
+        "waste",
+        "recycling",
+        "environment"
+      ],
+      "fields": [
+        "water",
+        "waste",
+        "recycling",
+        "environment"
+      ],
+      "reason": "SUEZ develops Moroccan water-management, waste-treatment and recycling projects.",
+      "moroccoEvidence": "Official company release documents water and waste operations in Morocco.",
+      "officialUrl": "https://www.suez.com/fr/afrique",
+      "sourceUrl": "https://www.suez.com/fr/actualites/communiques-de-presse/suez-renforce-presence-maroc-quatre-nouveaux-accords-gestion-eau-dechets",
+      "sources": [
+        {
+          "title": "SUEZ Morocco — official activity and Morocco evidence",
+          "url": "https://www.suez.com/fr/actualites/communiques-de-presse/suez-renforce-presence-maroc-quatre-nouveaux-accords-gestion-eau-dechets",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "laprophan",
+      "name": "LAPROPHAN",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSESS",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "health",
+        "pharma"
+      ],
+      "tags": [
+        "health",
+        "pharma",
+        "manufacturing",
+        "quality"
+      ],
+      "fields": [
+        "health",
+        "pharma",
+        "manufacturing",
+        "quality"
+      ],
+      "reason": "LAPROPHAN develops and manufactures medicines at its Casablanca pharmaceutical sites.",
+      "moroccoEvidence": "The company identifies itself as a Moroccan pharmaceutical laboratory with Casablanca sites.",
+      "officialUrl": "https://laprophan.com/",
+      "sourceUrl": "https://laprophan.com/",
+      "sources": [
+        {
+          "title": "LAPROPHAN — official activity and Morocco evidence",
+          "url": "https://laprophan.com/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "akdital",
+      "name": "AKDITAL",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSCSC",
+        "BBA",
+        "BACS",
+        "BSESS",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "health",
+        "hospital-management"
+      ],
+      "tags": [
+        "health",
+        "hospital-management",
+        "business",
+        "data"
+      ],
+      "fields": [
+        "health",
+        "hospital-management",
+        "business",
+        "data"
+      ],
+      "reason": "AKDITAL operates private healthcare facilities across Moroccan cities.",
+      "moroccoEvidence": "The official group site identifies its Moroccan healthcare network and Casablanca office.",
+      "officialUrl": "https://akdital.ma/",
+      "sourceUrl": "https://akdital.ma/",
+      "sources": [
+        {
+          "title": "AKDITAL — official activity and Morocco evidence",
+          "url": "https://akdital.ma/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "stroc-industrie",
+      "name": "STROC Industrie",
+      "organizationType": "established",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BSESS",
+        "BBA",
+        "BSCSC",
+        "MSSEM",
+        "MSBDA",
+        "MBA"
+      ],
+      "industries": [
+        "engineering",
+        "construction"
+      ],
+      "tags": [
+        "engineering",
+        "construction",
+        "energy",
+        "materials"
+      ],
+      "fields": [
+        "engineering",
+        "construction",
+        "energy",
+        "materials"
+      ],
+      "reason": "STROC Industrie designs and builds industrial facilities, storage systems and process equipment.",
+      "moroccoEvidence": "Official company information lists a Casablanca office and Moroccan industrial projects.",
+      "officialUrl": "https://www.stroc.com/",
+      "sourceUrl": "https://www.stroc.com/",
+      "sources": [
+        {
+          "title": "STROC Industrie — official activity and Morocco evidence",
+          "url": "https://www.stroc.com/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "logidoo",
+      "name": "Logidoo",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BBA",
+        "BSEMS",
+        "BSGE",
+        "BSCSC",
+        "BAIS",
+        "BACS",
+        "MSBDA",
+        "MBA",
+        "MAISD"
+      ],
+      "industries": [
+        "logistics",
+        "supply-chain"
+      ],
+      "tags": [
+        "logistics",
+        "supply-chain",
+        "software",
+        "international-trade"
+      ],
+      "fields": [
+        "logistics",
+        "supply-chain",
+        "software",
+        "international-trade"
+      ],
+      "reason": "Logidoo develops a digital platform coordinating transport, fulfilment and cross-border logistics.",
+      "moroccoEvidence": "The investor explicitly lists Logidoo operations in Morocco.",
+      "officialUrl": "https://logidoo.co/",
+      "sourceUrl": "https://mnf.ma/en/logidoo-raises-usd-1-55-million-in-seed-round/",
+      "sources": [
+        {
+          "title": "Logidoo — official activity and Morocco evidence",
+          "url": "https://mnf.ma/en/logidoo-raises-usd-1-55-million-in-seed-round/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "terraa",
+      "name": "Terraa",
+      "organizationType": "startup",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BSESS",
+        "BSGE",
+        "BSEMS",
+        "BSRESE",
+        "BBA",
+        "BACS",
+        "MSSEM",
+        "MBA"
+      ],
+      "industries": [
+        "agriculture",
+        "food"
+      ],
+      "tags": [
+        "agriculture",
+        "food",
+        "logistics",
+        "software"
+      ],
+      "fields": [
+        "agriculture",
+        "food",
+        "logistics",
+        "software"
+      ],
+      "reason": "Terraa connects fresh-produce sourcing with online ordering and delivery.",
+      "moroccoEvidence": "Official company terms identify its Casablanca registered office.",
+      "officialUrl": "https://terraa.co/",
+      "sourceUrl": "https://terraa.co/conditions-generales-de-vente/",
+      "sources": [
+        {
+          "title": "Terraa — official activity and Morocco evidence",
+          "url": "https://terraa.co/conditions-generales-de-vente/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        },
+        {
+          "title": "Terraa — official company information",
+          "url": "https://um6pventures.com/portfoliodigital-transformation-startups",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    },
+    {
+      "id": "elbotola",
+      "name": "Elbotola",
+      "organizationType": "unknown",
+      "kind": "company",
+      "type": "internship-target",
+      "country": "Morocco",
+      "regions": [
+        "Morocco"
+      ],
+      "programs": [
+        "BACS",
+        "BAIS",
+        "BBA",
+        "BSCSC",
+        "MACDM",
+        "MSDMA",
+        "MAISD",
+        "MBA"
+      ],
+      "industries": [
+        "journalism",
+        "media"
+      ],
+      "tags": [
+        "journalism",
+        "media",
+        "sports",
+        "marketing"
+      ],
+      "fields": [
+        "journalism",
+        "media",
+        "sports",
+        "marketing"
+      ],
+      "reason": "Elbotola publishes digital sports news and develops online sports-media services.",
+      "moroccoEvidence": "The investor identifies the Moroccan sports-media company.",
+      "officialUrl": "https://www.elbotola.com/",
+      "sourceUrl": "https://mnf.ma/elbotola-com-leve-35-millions-de-dirhams-pour-conquerir-les-marches-de-la-region-mena/",
+      "sources": [
+        {
+          "title": "Elbotola — official activity and Morocco evidence",
+          "url": "https://mnf.ma/elbotola-com-leve-35-millions-de-dirhams-pour-conquerir-les-marches-de-la-region-mena/",
+          "primary": true,
+          "checkedAt": "2026-10-21"
+        }
+      ],
+      "checkedAt": "2026-10-21",
+      "fitIsInference": true,
+      "evidenceStatus": "primary-source-research-target",
+      "availability": "Research target only. Current internships and student eligibility must be confirmed.",
+      "applicationRoute": "Use the company careers or contact page to check student opportunities.",
+      "selectionProbabilityKnown": false
+    }
+  ]
+}

@@ -15,5 +15,7 @@ for(const patch of variety.exchangePatches){
  const {sourcesToAdd,eligibilityToAdd,constraintsToAdd,...fields}=patch;
  Object.assign(target,fields,{curated:true,academicFitReviewedAt:variety.reviewedAt});target.sources=[...target.sources,...sourcesToAdd];target.eligibility=[...target.eligibility,...(eligibilityToAdd||[])];target.constraints=[...target.constraints,...(constraintsToAdd||[]),patch.reason];
 }
-const data={reviewedAt:variety.reviewedAt,internships:[...companies.internships.map(t=>({...t,organizationType:t.organizationType||'established'})),...read('startups-v6.json').internships,...expansion.internships,...variety.internships],exchanges:exchanges.exchanges.filter(x=>x.curated),exchangeSource:{term:exchanges.sourceTerm,window:exchanges.sourceWindow,counts:exchanges.counts},isep:exchanges.isep};
+const breadth=read('companies-breadth-v14.json');
+const data={reviewedAt:breadth.reviewedAt,internships:[...companies.internships.map(t=>({...t,organizationType:t.organizationType||'established'})),...read('startups-v6.json').internships,...expansion.internships,...variety.internships,...breadth.internships],exchanges:exchanges.exchanges.filter(x=>x.curated),exchangeSource:{term:exchanges.sourceTerm,window:exchanges.sourceWindow,counts:exchanges.counts},isep:exchanges.isep};
+if(new Set(data.internships.map(t=>t.id)).size!==data.internships.length)throw Error('Duplicate reviewed company ID.');
 fs.writeFileSync(new URL('dist/opportunities.js',root),'// Reviewed primary-source evidence. Rebuild with node scripts/build-opportunities.mjs\nexport default '+JSON.stringify(data)+';\n');

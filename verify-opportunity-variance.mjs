@@ -8,14 +8,14 @@ import {newJourney,makePlan,validateSavedWorkspace,emptyWorkspace} from './dist/
 import {acceptAdvice} from './dist/journey-state.js';
 import {agentContext} from './dist/agent-context.js';
 import {openaiFixture} from './tests/openai-fixture.mjs';
-assert.equal(OPPORTUNITIES.internships.length,40);assert.equal(OPPORTUNITIES.exchanges.length,38);
+assert.equal(OPPORTUNITIES.internships.length,92);assert.equal(OPPORTUNITIES.exchanges.length,38);
 const original=JSON.parse(fs.readFileSync('data/guidance/exchanges-v4.json','utf8')),expansion=JSON.parse(fs.readFileSync('data/guidance/opportunities-expansion-v12.json','utf8'));
 for(const patch of expansion.exchangePatches){const old=original.exchanges.find(t=>t.id===patch.id),record=OPPORTUNITIES.exchanges.find(t=>t.id===patch.id);assert.ok(old);assert.equal(record.scheme,old.scheme);assert.equal(record.term,old.term);assert.equal(record.availabilityConfirmed,false);assert.ok(old.constraints.every(x=>record.constraints.includes(x)));assert.ok(record.sources.some(s=>s.primary&&s.checkedAt==='2026-10-17'));assert.ok(!record.graduateAccessVerified);}
 const profile=(program,track,text)=>({profile:{program,track},questionnaire:{ambitions:text,activities:text,strengths:text}});
 const health=profile('BSCSC','SE','Healthcare ultrasound software and medical artificial intelligence'),finance=profile('BBA','FIN','Banking finance accounting investment risk'),media=profile('BBA','MKT','Creative marketing film media storytelling advertising'),environment=profile('BSESS','','Water climate agriculture environmental policy');
 const top=(r,type='internships',n=5)=>rankOpportunityTargets(availableTargets(type,r.profile),r,type,{limit:n});
 const overlap=(a,b)=>a.filter(t=>b.some(x=>x.id===t.id)).length;
-assert.ok(top(health).some(t=>t.id==='deepecho'));assert.ok(top(finance).some(t=>t.id==='cih-bank'));assert.ok(top(environment).some(t=>t.id==='green-watech'));assert.ok(top(media).some(t=>t.id==='snrt'||t.id==='publicis-morocco'));
+assert.ok(top(health).some(t=>t.id==='deepecho'));assert.ok(top(finance).some(t=>t.id==='cih-bank'));assert.ok(top(environment).every(t=>t.matchThemes.includes('environment')||t.matchThemes.includes('agriculture')),'The expanded pool must retain environmental/agricultural subject fit rather than a fixed brand.');assert.ok(top(media).some(t=>t.matchThemes.includes('media')));
 assert.ok(overlap(top(finance),top(media))<=2,'Different interests within the same degree must produce different preferred hosts.');
 assert.ok(overlap(top(health),top(environment))<=1);assert.ok(overlap(top(finance,'exchanges'),top(media,'exchanges'))<=2);
 assert.deepEqual(top(health).map(t=>t.id),rankOpportunityTargets([...availableTargets('internships',health.profile)].reverse(),health,'internships',{limit:5}).map(t=>t.id),'Input file order must not determine the preferred names.');
@@ -30,4 +30,4 @@ const second=await advise(input(),env,fetcher);assert.equal(overlap(first.intern
 const third=await advise(input(),env,fetcher);assert.equal(overlap([...first.internships,...second.internships],third.internships),0,'Repeated alternatives must not cycle back to earlier names.');acceptAdvice(j,'targets',third);
 const restored=validateSavedWorkspace(JSON.parse(JSON.stringify({...emptyWorkspace(),phase:'saved',plan:makePlan(j),journey:j})));assert.ok(newJourney(restored.plan).seenTargetIds.internships.includes(first.internships[0].id));
 assert.equal(bodies.length,3,'Diversity must not require extra model requests or retries.');
-console.log('Passed 40 sourced hosts, 38 AUI-listed institutions, inherited route restrictions, profile-dependent priorities, deterministic ordering, bounded model pools, alternatives without repeated/cycled names, preserved exchange lists and saved history. No live calls.');
+console.log('Passed 92 sourced hosts, 38 AUI-listed institutions, inherited route restrictions, profile-dependent priorities, deterministic ordering, bounded model pools, alternatives without repeated/cycled names, preserved exchange lists and saved history. No live calls.');
