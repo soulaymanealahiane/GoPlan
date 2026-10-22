@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import {adviseJourney} from './server/journey-agent.mjs';
-import {availableTargets} from './server/advisor.mjs';
+import {availableTargets,sanitizeRequest} from './server/advisor.mjs';
+import {questionnaireGoal} from './dist/questionnaire.js';
 import {normalizeProfile} from './dist/planner.js';
 import {applyResearchRefresh} from './dist/research-refresh.js';
 import {researchView} from './dist/journey-view.js';
 import {localDatabase} from './server/local-db.mjs';
-import {RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS,extractResearch,searchEvidence,publicUrl} from './server/research.mjs';
+import {RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS,extractResearch,searchEvidence,publicUrl,researchFor} from './server/research.mjs';
 import {REQUEST_TIMEOUT_MS,REQUEST_BUDGET_USD} from './server/request-policy.mjs';
 import {researchCacheKey} from './server/research-cache.mjs';
 assert.equal(RESEARCH_TIMEOUT_MS,60000);assert.equal(RESEARCH_TOOL_CALLS,4);
@@ -41,6 +42,12 @@ assert.equal(second.research.status,'live');assert.equal(calls,6);
 assert.ok(second.research.sources.some(s=>s.url===company.sourceUrl),'Retain previously verified company evidence.');
 assert.ok(second.research.sources.some(s=>s.url===publicUrl(partner.sourceUrl)));
 const third=await adviseJourney(input,env,()=>{throw Error('Complete evidence should not be purchased again.');});assert.equal(third.research.status,'live');
+// Normal recommendation requests must reuse complete fresh evidence too.
+const normal={...sanitizeRequest({...input,stage:'details',goal:questionnaireGoal(input.questionnaire)}),questionnaire:input.questionnaire,questionnaireRankings:{},refinement:'',seenTargetIds:{internships:[],exchanges:[]},currentTargets:current,researchOnly:false};
+let duplicateCalls=0;
+const reused=await researchFor(normal,'targets',env,()=>{duplicateCalls++;throw Error('Fresh complete evidence must avoid repeated search and extraction.');},{exchangeTargets:partners});assert.equal(reused.status,'live');assert.equal(calls,6);assert.equal(duplicateCalls,0);
+let freshSearches=0;
+await researchFor({...normal,refinement:'Find different companies for finance.'},'targets',env,async()=>{freshSearches++;return Response.json({error:{}},{status:503});},{exchangeTargets:partners});assert.equal(freshSearches,1,'Changed interests/requests cannot silently reuse old evidence.');
 const j={profile:structuredClone(profile),details:{...structuredClone(current),targetSummary:'Keep this summary'},internships:current.internships.map(t=>t.id),exchanges:current.exchanges.map(t=>t.id),agentStamps:{targets:'keep stamp'},advice:{academic:{program:'BSCSC'},summary:'Original direction'}};
 const before=structuredClone(j);
 // Even an unexpected extra decision field in a response must not change a plan.

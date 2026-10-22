@@ -1,19 +1,20 @@
 // Public academic interests only. These are relevance hints, not eligibility rules.
 import {programFor,coursesFor} from './planner.js';
+import {weightedPreferences,cleanRankings} from './preferences.js';
 import {selectedMinor} from './minors.js';
 const normalize=value=>String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const themes={
- software:['software','programm','coding','comput','informat','digital product'],
+ software:['software','programm','coding','comput','informat','digital product','technology'],
  data:['data','analytics','statistics','machine learning','artificial intelligence',' ai ','mathemat','robotics'],
  security:['cyber','security','securite','networks'],
- finance:['financ','fintech','bank','accounting','audit','payment','risk'],
+ finance:['financ','fintech','bank','accounting','audit','payment','risk','money','invest'],
  business:['business','management','entrepreneur','startup','marketing','commerce','retail','human resources','recruit'],
- media:['media','journalis','communication','film','design','advertis','creative','storytell','broadcast'],
+ media:['media','journalis','communicat','film','design','advertis','creative','storytell','broadcast','writing'],
  environment:['environment','sustainab','climate','water','waste','ecolog','environnement'],
  energy:['energy','renewable','solar','wind','energie'],
  engineering:['engineering','manufactur','industrial','mechanic','materials','aerospace','automotive','electrical','construction'],
  logistics:['logistic','supply chain','transport','rail','operations'],
- policy:['politic','policy','international studies','international relations','governance','social sciences','diploma','geopolit'],
+ policy:['politic','policy','international studies','international relations','governance','social sciences','social justice','human rights','humanitarian','education','teaching','mentoring','diploma','geopolit'],
  health:['health','medical','pharma','ultrasound','biolog','patient'],
  agriculture:['agricultur','food','farmer','forestry'],
 };
@@ -28,19 +29,22 @@ export function companySizePreference(request){
   return '';
  };
  // The latest explicit size preference supersedes an earlier questionnaire.
- return preference(request.refinement)||preference(Object.values(request.questionnaire||{}).join(' '));
+ const latest=preference(request.refinement);if(latest)return latest;
+ const ranked=cleanRankings(request.questionnaireRankings,request.questionnaire);
+ for(const id of ['entrepreneurship','industries'])for(const choice of ranked[id]||[]){const value=preference(choice);if(value)return value;}
+ return preference(Object.values(request.questionnaire||{}).join(' '));
 }
 const hash=value=>{let n=2166136261;for(const c of value)n=Math.imul(n^c.charCodeAt(0),16777619);n^=n>>>16;n=Math.imul(n,0x85ebca6b);n^=n>>>13;n=Math.imul(n,0xc2b2ae35);return (n^n>>>16)>>>0;};
 export function opportunityInterests(request){
  const p=request.profile||{},degree=p.program?programFor(p):null,minor=selectedMinor(p),q=request.questionnaire||{},weights={};
  const add=(text,weight)=>{for(const key of detectOpportunityThemes(text))weights[key]=(weights[key]||0)+weight;};
- add(request.refinement,10);add(q.activities,8);add(q.ambitions,7);add(q.industries,6);add(q.strengths,4);add(q.entrepreneurship,3);add(q.automation,2);
+ add(request.refinement,10);const importance={activities:8,ambitions:7,industries:6,strengths:4,entrepreneurship:3,automation:2};weightedPreferences(q,request.questionnaireRankings,(text,weight,id)=>{if(importance[id])add(text,weight*importance[id]);});
  if(!Object.values(q).some(Boolean))add(request.goal,5);
  add(degree?.tracks.find(t=>t.id===p.track)?.name,2);add(degree?.tracks.find(t=>t.id===p.secondTrack)?.name,1);add(minor?.name,1);add(degree?.name,1);
  return {degree:degree?.name||'Undecided',focus:degree?.tracks.find(t=>t.id===p.track)?.name||'',secondFocus:degree?.tracks.find(t=>t.id===p.secondTrack)?.name||'',minor:minor?.name||'',themes:Object.entries(weights).sort((a,b)=>b[1]-a[1]).map(([theme,weight])=>({theme,weight})),skills:[...new Set((degree?coursesFor(p):[]).filter(c=>c.code).map(c=>c.title))].slice(0,12)};
 }
 export function rankOpportunityTargets(records,request,type,{limit=records.length}={}){
- const interests=opportunityInterests(request),weights=Object.fromEntries(interests.themes.map(t=>[t.theme,t.weight])),seed=JSON.stringify([request.profile?.program,request.profile?.track,request.profile?.secondTrack,request.profile?.minor,request.questionnaire,request.refinement]),preference=normalize([request.refinement,...Object.values(request.questionnaire||{})].join(' '));
+ const interests=opportunityInterests(request),weights=Object.fromEntries(interests.themes.map(t=>[t.theme,t.weight])),seed=JSON.stringify([request.profile?.program,request.profile?.track,request.profile?.secondTrack,request.profile?.minor,request.questionnaire,request.questionnaireRankings,request.refinement]),preference=normalize([request.refinement,...Object.values(request.questionnaire||{})].join(' '));
  const size=type==='internships'?companySizePreference(request):'',startups=size==='startup',preferNovel=request.preferNovel??(!!String(request.refinement||'').trim()&&((request.currentRecommendation?.[type]?.length||request.seenTargetIds?.[type]?.length)>0||/\b(?:new|different|alternative|alternatives|replace|other|more|refresh|broaden)\b/.test(normalize(request.refinement))));
  const prior=Array.isArray(request.currentRecommendation?.[type])?request.currentRecommendation[type]:[],seenIds=new Set([...(request.seenTargetIds?.[type]||[]),...prior.map(record=>record.id)]);
  const seenRecords=[...prior,...records.filter(record=>seenIds.has(record.id))],seenNames=new Set(seenRecords.map(record=>normalize(record.name)).filter(Boolean)),seenInstitutions=new Set(seenRecords.map(record=>normalize(record.institutionId)).filter(Boolean));

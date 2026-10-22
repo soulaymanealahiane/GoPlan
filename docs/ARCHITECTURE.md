@@ -16,6 +16,10 @@ flowchart LR
 
 ## Recommendation boundary
 
+The questionnaire stores ordered choices in `questionnaireRankings` alongside readable answers. The shared vocabulary validates the signal at the browser and server boundaries. Earlier choices receive higher relevance weights; the model receives the same order for academic choices. Eligibility rules, explicit constraints, recorded study and the latest requested edit take precedence. Reordering invalidates cached advice. An explicit global preference edit clears the old ranking for that answer.
+
+Complete research evidence is reused for matching requests within the existing 15-minute cache lifetime. Incomplete evidence still follows the research path, and changed preferences, rankings, refinements, profile or target history change the cache key. This avoids repeated search/extraction without reducing the reasoning level, evidence checks or academic validation. First-time provider latency remains variable.
+
 The model proposes decisions; it does not write directly to a student's saved roadmap. Academic choices are bounded by the reviewed dataset and checked after generation. The scheduler computes semester placement using prerequisites, credit caps and recorded progress. A changed roadmap is previewed before acceptance. At most one repair within the shared time and spending budget corrects rejected proposals; network failure does not produce fabricated advice. Terminal initial Courses/Pace failures can continue using degree rules and the chosen load; initial opportunity failures use supported, profile-ranked reviewed records. Explicit AI revisions still report failure without claiming a change.
 
 ## Academic sources

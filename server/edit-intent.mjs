@@ -1,5 +1,5 @@
 import {DATA,normalizeProfile,coursesFor,fitDegreePrerequisites,termOrder} from '../dist/planner.js';
-import {eligibleMinors,suggestChoices,tagsForText} from '../dist/guidance.js';
+import {eligibleMinors,suggestChoices,tagsForText,preferenceWeights} from '../dist/guidance.js';
 import {courseOptions} from '../dist/course-options.js';
 import {prerequisiteCoverage} from '../dist/course-eligibility.js';
 import {academicChanges} from '../dist/edit-updates.js';
@@ -47,17 +47,17 @@ function compatible(profile,raw){
  for(const [id,code]of Object.entries(profile.choices||{})){const c=rows.find(c=>c.id===id);if(c?.choice&&courseOptions(c,p).some(o=>o.code===code))choices[id]=code;}
  return normalizeProfile({...p,choices});
 }
-export function minorEditOption(profile,minor,studentContext,{releaseFree=false,interests=[]}={}){
+export function minorEditOption(profile,minor,studentContext,{releaseFree=false,interests=[],questionnaire={},questionnaireRankings={}}={}){
  let candidate=compatible(profile,{minor}),protectedCodes=new Set((studentContext?.records||[]).filter(r=>['completed','in-progress'].includes(r.status)).map(r=>r.courseCode));
  if(releaseFree){const choices={...candidate.choices};for(const c of coursesFor(candidate))if(isFreeSlot(c)&&!protectedCodes.has(c.code)&&!candidate.priorCodes.includes(c.code))delete choices[c.id];candidate=normalizeProfile({...candidate,choices});}
  const protectedIds=coursesFor(candidate).filter(c=>protectedCodes.has(c.code)).map(c=>c.id);
- candidate=fitDegreePrerequisites(candidate,{protectedIds}).profile;for(let pass=0;pass<3;pass++){const before=JSON.stringify(candidate.choices);candidate=suggestChoices({profile:candidate,protectedChoices:Object.fromEntries(coursesFor(candidate).filter(c=>protectedIds.includes(c.id)).map(c=>[c.id,c.code])),interests}).profile;if(JSON.stringify(candidate.choices)===before)break;}
+ candidate=fitDegreePrerequisites(candidate,{protectedIds}).profile;for(let pass=0;pass<3;pass++){const before=JSON.stringify(candidate.choices);candidate=suggestChoices({profile:candidate,protectedChoices:Object.fromEntries(coursesFor(candidate).filter(c=>protectedIds.includes(c.id)).map(c=>[c.id,c.code])),interests,questionnaire,questionnaireRankings}).profile;if(JSON.stringify(candidate.choices)===before)break;}
  const courses=coursesFor(candidate),coverage=prerequisiteCoverage(courses,candidate.priorCodes),minorRows=courses.filter(c=>c.minorId===minor),issues=coverage.issues.filter(i=>minorRows.some(c=>c.id===i.id)),approval=minorRows.filter(c=>c.approvalOnly||c.approvalRequired),selected=eligibleMinors(candidate).find(m=>m.id===minor);
  const recipe={academic:Object.fromEntries(['program','track','secondTrack','minor'].map(k=>[k,candidate[k]||''])),choices:candidate.choices};let verified=false,fitReason='',finishOrder=Infinity;try{const checked=checkedMinorPlan(candidate,recipe,{protectedCodes:[...protectedCodes]}),last=checked.terms.filter(t=>!['prior','pending'].includes(t.id)&&t.courses.length).at(-1);finishOrder=last?termOrder(last):Infinity;verified=true;}catch(error){fitReason=error.message;}
  const original=coursesFor(profile),extraCourseCount=Math.max(0,courses.length-original.length),extraCredits=Math.max(0,courses.reduce((n,c)=>n+c.credits,0)-original.reduce((n,c)=>n+c.credits,0));
- return {id:minor,name:selected?.name||minor,source:selected?.source,profile:candidate,coursePlan:recipe,verified,fitReason,extraCourseCount,extraCredits,finishOrder,preferenceScore:[...new Set([...(selected?.tags||[]),...tagsForText(selected?.name)])].filter(t=>interests.includes(t)).length,requiredCourses:minorRows.map(c=>({id:c.id,code:c.code,title:c.title,credits:c.credits,approvalRequired:!!(c.approvalOnly||c.approvalRequired),prerequisites:c.rule})),missingPrerequisites:issues.map(i=>i.message),approvalSlots:approval.length,prerequisiteAllocations:courses.filter(c=>c.prerequisiteFor?.length).map(c=>({requirementId:c.id,courseCode:c.code,requiredBy:c.prerequisiteFor})),noSupplementaryCourses:issues.length===0&&!minorRows.some(c=>!c.code&&!c.approvalOnly&&!c.approvalRequired)};
+ return {id:minor,name:selected?.name||minor,source:selected?.source,profile:candidate,coursePlan:recipe,verified,fitReason,extraCourseCount,extraCredits,finishOrder,preferenceScore:[...new Set([...(selected?.tags||[]),...tagsForText(selected?.name)])].reduce((sum,t)=>sum+(preferenceWeights({interests,questionnaire,questionnaireRankings})[t]||0),0),requiredCourses:minorRows.map(c=>({id:c.id,code:c.code,title:c.title,credits:c.credits,approvalRequired:!!(c.approvalOnly||c.approvalRequired),prerequisites:c.rule})),missingPrerequisites:issues.map(i=>i.message),approvalSlots:approval.length,prerequisiteAllocations:courses.filter(c=>c.prerequisiteFor?.length).map(c=>({requirementId:c.id,courseCode:c.code,requiredBy:c.prerequisiteFor})),noSupplementaryCourses:issues.length===0&&!minorRows.some(c=>!c.code&&!c.approvalOnly&&!c.approvalRequired)};
 }
-export function academicEdit(text,profile,studentContext,questionnaire={}){
+export function academicEdit(text,profile,studentContext,questionnaire={},questionnaireRankings={}){
  if(!requestedEdit(text).isEdit)return {patch:{},options:[],editableFields:[]};
  const patch={},switchTarget=changedClauses(text).map(c=>/\bswitch\s+(?:from\s+.+?\s+)?to\s+([^,;.]+?)(?=\s+and\s+|$)/i.exec(c)?.[1]).filter(Boolean).at(-1),programLabel=labelFor(text,'program')??switchTarget,focusLabel=labelFor(text,'track'),secondLabel=labelFor(text,'secondTrack');let minorLabel=labelFor(text,'minor');
  const programs=DATA.programs.filter(p=>p.level===DATA.programs.find(p=>p.id===profile.program)?.level),program=programLabel!==undefined?named(programLabel,programs,'program'):null;
@@ -72,13 +72,13 @@ export function academicEdit(text,profile,studentContext,questionnaire={}){
  if(minorLabel==='')patch.minor='';else if(minorLabel!==undefined){const minor=named(minorLabel,available,'minor');if(minor)patch.minor=minor.id;}
  // Every request to recommend an unspecified minor gets an actual curriculum
  // comparison. This must not depend on one spelling of "extra prerequisite".
- const compare=requestedEdit(text).sections.includes('direction')&&/\bminor\b/i.test(text);
+ const compare=requestedEdit(text).sections.includes('direction')&&changedClauses(text).some(clause=>/\bminor\b/i.test(clause));
  let options=[];
  const unknownNamedMinor=minorLabel&&/\bminor\s+(?:to|into|as)\s+/i.test(text)&&!/^(?:a |an |another |different |one |minor |that |which |best|most |suitable |compatible |no |without |avoid |fit |require )/i.test(minorLabel);
  const broadRebuild=/\b(?:rebuild|rethink|redo)\b[^.;\n]{0,70}\b(?:whole|entire|roadmap|degree)\b/i.test(text)&&!patch.program;
  if(compare&&patch.minor===undefined&&!unknownNamedMinor&&!broadRebuild){
-  const interests=tagsForText(Object.values(questionnaire).join(' '));
-  options=available.filter(m=>m.id!==profile.minor&&!['individual-minor'].includes(m.id)).map(m=>{let option=minorEditOption(candidate,m.id,studentContext,{interests});if(!option.verified){const freed=minorEditOption(candidate,m.id,studentContext,{interests,releaseFree:true});if(freed.verified)option=freed;}return option;}).sort((a,b)=>Number(b.verified)-Number(a.verified)||a.extraCourseCount-b.extraCourseCount||a.extraCredits-b.extraCredits||b.preferenceScore-a.preferenceScore||a.finishOrder-b.finishOrder||a.approvalSlots-b.approvalSlots||a.prerequisiteAllocations.length-b.prerequisiteAllocations.length||a.id.localeCompare(b.id));
+  const weights=preferenceWeights({questionnaire,questionnaireRankings}),interests=Object.keys(weights).sort((a,b)=>weights[b]-weights[a]);
+  options=available.filter(m=>m.id!==profile.minor&&!['individual-minor'].includes(m.id)).map(m=>{let option=minorEditOption(candidate,m.id,studentContext,{interests,questionnaire,questionnaireRankings});if(!option.verified){const freed=minorEditOption(candidate,m.id,studentContext,{interests,questionnaire,questionnaireRankings,releaseFree:true});if(freed.verified)option=freed;}return option;}).sort((a,b)=>Number(b.verified)-Number(a.verified)||a.extraCourseCount-b.extraCourseCount||a.extraCredits-b.extraCredits||b.preferenceScore-a.preferenceScore||a.finishOrder-b.finishOrder||a.approvalSlots-b.approvalSlots||a.prerequisiteAllocations.length-b.prerequisiteAllocations.length||a.id.localeCompare(b.id));
   const best=options.find(m=>m.verified);if(best)patch.minor=best.id;
  }
  if(patch.minor&&!options.some(m=>m.id===patch.minor))options.unshift(minorEditOption(candidate,patch.minor,studentContext));

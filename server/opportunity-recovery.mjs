@@ -1,6 +1,7 @@
 import {sanitizeRequest,availableTargets,opportunityRefinementPolicy,validateOpportunitySelection} from './advisor.mjs';
 import {rankOpportunityTargets} from './opportunity-matching.mjs';
 import {cleanQuestionnaire,questionnaireGoal} from '../dist/questionnaire.js';
+import {cleanRankings} from '../dist/preferences.js';
 import {EVIDENCE_REVIEWED} from '../dist/evidence.js';
 import {DATA} from '../dist/planner.js';
 import {opportunityDescription,opportunityContextKey} from '../dist/opportunity-description.js';
@@ -16,7 +17,7 @@ export function reviewedOpportunityShortlist(input,{reasonCode='unavailable'}={}
  if(!DATA.programs.some(p=>p.id===input?.profile?.program))throw Error('Choose a supported degree before exploring opportunities.');
  const questionnaire=cleanQuestionnaire(input?.questionnaire);
  const request=sanitizeRequest({...input,stage:'details',goal:questionnaireGoal(questionnaire)||String(input?.goal||'Help me explore university internships and exchanges.').slice(0,4000)});
- request.questionnaire=questionnaire;request.refinement=String(input?.refinement||'').slice(0,2500);
+ request.questionnaire=questionnaire;request.questionnaireRankings=cleanRankings(input?.questionnaireRankings,questionnaire);request.refinement=String(input?.refinement||'').slice(0,2500);
  const current=input?.currentRecommendation&&typeof input.currentRecommendation==='object'?input.currentRecommendation:{};
  const policy=opportunityRefinementPolicy(request.refinement,current),out={};
  for(const type of ['internships','exchanges']){

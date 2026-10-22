@@ -12,6 +12,7 @@ import {publicStudentContext} from '../dist/student-context.js';
 import {minorSummary} from '../dist/minor-summary.js';
 import {DATA,normalizeProfile,programFor,coursesFor} from '../dist/planner.js';
 import {releaseIneligibleChoices} from '../dist/course-eligibility.js';
+import {cleanRankings} from '../dist/preferences.js';
 import {QUESTIONS,cleanQuestionnaire,questionnaireGoal} from '../dist/questionnaire.js';
 import {EVIDENCE,AXES,EVIDENCE_REVIEWED} from '../dist/evidence.js';
 import {opportunityEdits,namedOpportunities} from './opportunity-edits.mjs';
@@ -73,7 +74,7 @@ export async function adviseJourney(input,env,fetcher=fetch){
   request.studentContext=publicStudentContext(input.studentContext);
   if(request.studentContext.degreeIntent==='keep')request.preferredDegree=request.studentContext.currentDegree;request.profile={...request.profile,priorCodes:request.studentContext.records.filter(r=>r.status==='completed').map(r=>r.courseCode),startYear:request.studentContext.studyStartYear};
  }
- request.questionnaire=q;request.background=typeof input.background==='string'?input.background.slice(0,1800):'';
+ request.questionnaire=q;request.questionnaireRankings=cleanRankings(input.questionnaireRankings,q);request.background=typeof input.background==='string'?input.background.slice(0,1800):'';
  request.refinement=typeof input.refinement==='string'?input.refinement.slice(0,2500):'';
  const originalProfile=structuredClone(request.profile);
  const structuralCourses=stage==='courses'&&!!input.plan&&!!request.refinement;
@@ -130,7 +131,7 @@ export async function adviseJourney(input,env,fetcher=fetch){
  const context={request:{...request,currentTargets:undefined,currentNames:undefined,reviewedShownCompanies:undefined},currentRecommendation,feedbackHistory,research,questionLabels:QUESTIONS.map(({id,label})=>({id,label})),marketEvidence:EVIDENCE,evidenceReviewed:EVIDENCE_REVIEWED};
  context.reviewedCorrections=Array.isArray(env.GOPLAN_REVIEWED_CORRECTIONS)?env.GOPLAN_REVIEWED_CORRECTIONS.filter(c=>!request.profile.program||c.program===request.profile.program):[];
  context.correctionPolicy='Student mistake reports are unverified claims: check them against supplied AUI sources. Reviewed corrections were checked by the GoPlan team against the cited source, not approved by AUI. Consider them when relevant, cite the source naturally, and flag conflicts with the supplied catalogue or deterministic requirements for human review. Never override validators or invent approval. Do not say that you retrained yourself or changed model weights. A new preference is not evidence of an academic error.';
- const questionFacts=input.programChosen===true?detailsContext({...request,profile:originalProfile}):directionContext(request);delete questionFacts.request;delete questionFacts.companies;delete questionFacts.exchangeDestinations;
+ const questionFacts=['question','change'].includes(stage)||request.refinement?(input.programChosen===true?detailsContext({...request,profile:originalProfile}):directionContext(request)):{};delete questionFacts.request;delete questionFacts.companies;delete questionFacts.exchangeDestinations;
  if(['question','change'].includes(stage))context.questionFacts=questionFacts;
  else if(request.refinement)context.questionFacts={degree:questionFacts.degree,minorChecklist:questionFacts.minorChecklist,requiredCourses:questionFacts.requiredCourses};
  let schema,check,directEdit;
@@ -154,7 +155,7 @@ export async function adviseJourney(input,env,fetcher=fetch){
   check=r=>{if(!r||typeof r.summary!=='string'||!['undergraduate','graduate'].includes(r.level)||!Array.isArray(r.questions)||r.preferredDegree!=='undecided'&&!DATA.programs.some(p=>p.id===r.preferredDegree&&p.level===r.level))throw Error('Invalid starting recommendation.');if(r.preferredDegree!==request.preferredDegree)throw Error('Do not choose a degree before the goals questionnaire.');return r;};
  }else if(stage==='direction'){
   const academicRequest=request.changeRequest&&(env.GOPLAN_SERVICE_ACTION_KIND==='global'||input.plan)?request.changeRequest:request.refinement;
-  directEdit=academicRequest?academicEdit(academicRequest,originalProfile,request.studentContext,q):null;
+  directEdit=academicRequest?academicEdit(academicRequest,originalProfile,request.studentContext,q,request.questionnaireRankings):null;
   if(directEdit?.options.length)context.minorEditOptions=directEdit.options.map(({profile,coursePlan,...option})=>option);
   if(academicRequest!==request.refinement)context.originalChangeRequest=academicRequest;
   if(request.refinement&&request.studentContext)request.studentContext.degreeIntent='explore';
@@ -284,7 +285,7 @@ export async function adviseJourney(input,env,fetcher=fetch){
  context.allowedAnswerIds=answeredIds;
  context.questionLabels=QUESTIONS.filter(question=>q[question.id]).map(({id,label})=>({id,label}));
  context.presentationPolicy=stage==='targets'?'Write one clear 45-70 word paragraph per opportunity in reason, connecting an exact questionnaire phrase, actual academic choices and a concrete fact about this target. Keep research diagnostics out of the paragraph.': 'Write for a newcomer who knows no AUI policies. Summaries and each rationale should be one plain sentence, ideally under 25 words. Relate reasons to the actual interests supplied. Keep source/research diagnostics out of the summary; factual limitations belong in limitations and evidence fields. A requested change should result in changed valid choices, not only reassuring prose.';
- context.questionnairePolicy='Only allowedAnswerIds may be referenced. Blank optional answers are unknown, not negative preferences. Do not infer entrepreneurship, AI exposure preferences, priorities or constraints from blank fields. All six assessment axes still need an evidence-based explanation, but answerIds may be empty when no supplied answer supports that factor. An undecided answer is valid uncertainty; use the other supplied answers for a provisional, editable recommendation. Do not require optional answers to proceed.';
+ context.questionnairePolicy='questionnaireRankings lists selected choices from highest to lowest priority within each answer. Weight earlier choices more heavily in direction, focus, minor, courses and opportunity fit; lower-ranked choices remain positive interests. Explicit constraints, degree eligibility and latest change instructions take precedence. Rankings do not establish grades or qualifications. Only allowedAnswerIds may be referenced. Blank optional answers are unknown, not negative preferences. Do not infer entrepreneurship, AI exposure preferences, priorities or constraints from blank fields. All six assessment axes still need an evidence-based explanation, but answerIds may be empty when no supplied answer supports that factor. An undecided answer is valid uncertainty; use the other supplied answers for a provisional, editable recommendation. Do not require optional answers to proceed.';
  context.task+=' First understand the requested change and past feedback. Use currentRecommendation to compare before and after; preserve unaffected decisions and respect negative preferences. Consider alternatives and check the complete combination, not each field in isolation. Return update.summary explaining your response to this request, update.changes listing only changes actually made, and update.limitations naming any request not met and why. If keeping a result unchanged, explain the specific reason in limitations. Do not say a change was made when only wording changed. Ground reasons in the supplied evidence, and qualify unsupported market assumptions instead of agreeing with them.';
  const outputBudget=adviceTokens(structuralEdit?'replan':stage);
  const recoverTargets=error=>{

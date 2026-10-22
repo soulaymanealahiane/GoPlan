@@ -1,6 +1,6 @@
 export const QUESTIONS=[
  {id:'ambitions',label:'What problems would you like to solve?',hint:'Describe an impact, a possible career, or something you want to build. Being undecided is fine.',required:true},
- {id:'activities',label:'What work would you enjoy doing each day?',hint:'For example: building technology, investigating data, designing, writing, negotiating, or leading people.',required:true},
+ {id:'activities',label:'What work would you enjoy doing each day?',hint:'For example: investing, diplomacy, teaching, marketing, writing, research, building technology or leading people.',required:true},
  {id:'strengths',label:'Which subjects interest you?',hint:'Tell us what you enjoy learning or would like to explore. No grades needed.',required:true},
  {id:'industries',label:'Which industries or communities interest you?',hint:'Explain why. Include industries you would prefer to avoid.'},
  {id:'priorities',label:'What matters most in your future work?',hint:'Rank or describe income, stability, impact, creativity, international work and flexibility.'},
@@ -9,6 +9,6 @@ export const QUESTIONS=[
  {id:'constraints',label:'What practical limits should your plan respect?',hint:'Study workload, summer availability, budget, exchange preferences, graduation timing or other commitments. Avoid private details.'}
 ];
 export const emptyQuestionnaire=()=>Object.fromEntries(QUESTIONS.map(q=>[q.id,'']));
-export function cleanQuestionnaire(raw={}){return Object.fromEntries(QUESTIONS.map(q=>[q.id,typeof raw[q.id]==='string'?raw[q.id].trim().slice(0,1200):'']));}
-export function questionnaireGoal(raw={}){return QUESTIONS.filter(q=>raw[q.id]?.trim()).map(q=>q.label+' '+raw[q.id].trim()).join('\n').slice(0,4000);}
+export function cleanQuestionnaire(raw={}){return Object.fromEntries(QUESTIONS.map(q=>[q.id,typeof raw[q.id]==='string'?raw[q.id].trim().slice(0,2400):'']));}
+export function questionnaireGoal(raw={}){return QUESTIONS.filter(q=>raw[q.id]?.trim()).map(q=>q.label+' '+raw[q.id].trim()).join('\n').slice(0,12000);}
 export function missingAnswers(raw={}){return QUESTIONS.filter(q=>q.required&&String(raw[q.id]||'').trim().length<10&&!/^(undecided|not sure|unsure)$/i.test(String(raw[q.id]||'').trim()));}

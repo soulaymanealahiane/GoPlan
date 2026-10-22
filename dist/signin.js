@@ -2,11 +2,12 @@ const $=id=>document.getElementById(id);let email='',mode='signup';
 
 const forms=['login','email','code','password'];
 
-function show(form,title,intro){for(const name of forms)$(name+'-form').hidden=name!==form;$('auth-title').textContent=title;$('auth-intro').textContent=intro;$('auth-status').textContent='';}
+function status(message='',error=false){const node=$('auth-status');node.textContent=message;node.className=error?'auth-message error':'auth-message';node.setAttribute('role',error?'alert':'status');node.setAttribute('aria-live',error?'assertive':'polite');}
+function show(form,title,intro){for(const name of forms)$(name+'-form').hidden=name!==form;$('auth-title').textContent=title;$('auth-intro').textContent=intro;status();}
 
 async function call(path,body){const r=await fetch('/api/auth/'+path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(35000)});const d=await r.json();if(!r.ok)throw Error(d.error||'Please try again.');return d;}
 
-async function submit(event,action){event.preventDefault();const button=event.target.querySelector('button');button.disabled=true;$('auth-status').textContent='One moment…';try{await action();}catch(e){$('auth-status').textContent=e.name==='TimeoutError'?'This is taking longer than expected. Please try again.':e.message;}finally{button.disabled=false;}}
+async function submit(event,action){event.preventDefault();const button=event.target.querySelector('button');button.disabled=true;status('One moment…');try{await action();}catch(e){status(e.name==='TimeoutError'?'This is taking longer than expected. Please try again.':e.message,true);}finally{button.disabled=false;}}
 
 function done(){for(const id of ['login-password','new-password','confirm-password','code'])$(id).value='';location.replace(new URLSearchParams(location.search).get('next')==='admin'?'/admin':'/demo');}
 
@@ -22,7 +23,11 @@ $('email-form').onsubmit=e=>submit(e,async()=>{email=$('email').value.trim();con
 
 $('code-form').onsubmit=e=>submit(e,async()=>{await call('verify',{email,code:$('code').value.trim()});$('code').value='';show('password','Email verified.','Choose a password for future sign-ins.');$('new-password').focus();});
 
-$('password-form').onsubmit=e=>submit(e,async()=>{if($('new-password').value!==$('confirm-password').value)throw Error('Your passwords do not match.');await call('password',{email,password:$('new-password').value});done();});
+let mismatchShown=false;
+function checkPasswords(showError=false){const mismatch=$('new-password').value!==$('confirm-password').value;if(showError||mismatchShown){mismatchShown=mismatch;$('password-match-error').hidden=!mismatch;$('confirm-password').setAttribute('aria-invalid',String(mismatch));if(!mismatch&&$('auth-status').classList.contains('error'))status();}return !mismatch;}
+$('confirm-password').onblur=()=>{if($('confirm-password').value)checkPasswords(true);};
+for(const id of ['new-password','confirm-password'])$(id).oninput=()=>checkPasswords();
+$('password-form').onsubmit=e=>{if(!checkPasswords(true)){e.preventDefault();status('Passwords don’t match. Enter the same password in both fields.',true);$('confirm-password').focus();return;}return submit(e,async()=>{await call('password',{email,password:$('new-password').value});done();});};
 
 $('different-email').onclick=()=>begin(mode);$('restart-verification').onclick=()=>begin(mode);
 

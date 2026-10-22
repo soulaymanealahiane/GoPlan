@@ -23,6 +23,8 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 
 ## Engineering highlights
 
+- **Ranked student preferences:** eight expanded question sets cover technical, business, financial, social, international and creative interests. Students reorder selections; validated priorities persist across devices and influence academic advice, course suggestions, company size preferences and opportunity matching. Free-text answers and older workspaces remain supported.
+
 - **Constrained AI recommendations:** server-side OpenAI Responses API calls produce structured proposals that are validated against reviewed program data before they can change a plan.
 - **Deterministic academic scheduling:** prerequisite and corequisite checks, credit limits, independent regular/summer loads, minor requirements and preserved completed courses.
 - **Saved manual degree plan:** add or remove courses from the available AUI catalogue, move them between semesters, record progress and keep semester notes without AI calls. Prerequisite checks protect course additions, replacements and moves; a compact degree check lists missing and extra courses. Adding an existing course moves it without duplicating it. Global AI prompts create a preview; graduation delays are shown before saving.
