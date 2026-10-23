@@ -42,7 +42,7 @@ assert.equal(attempts,2);assert.equal(result.update.added.length,5);assert.equal
 const savedPlan=makePlan(j),savedBefore=JSON.stringify(savedPlan),previewJourney=newJourney(savedPlan);acceptAdvice(previewJourney,'targets',result);assert.equal(JSON.stringify(savedPlan),savedBefore,'A preview must not change the saved plan before acceptance.');
 acceptAdvice(j,'targets',result);assert.equal(j.feedbackHistory.targets.length,1);assert.ok(agentContext(j,'targets').feedbackHistory[0].request.includes('startups'));
 const restored=validateSavedWorkspace({...emptyWorkspace(),journey:j});assert.equal(restored.journey.feedbackHistory.targets.length,1);
-j.step=4;const html=journeyView({journey:j});assert.ok(html.includes('How your feedback changed the plan'));assert.ok(html.includes('Chari'));assert.ok(html.includes('data-feedback="targets"'));
+j.step=4;const html=journeyView({journey:j});assert.ok(!html.includes('How your feedback changed the plan'),'Persistent update recaps are removed');assert.ok(html.includes('Chari'));assert.ok(html.includes('data-feedback="targets"'));
 assert.ok(planView(makePlan(j),false).includes('data-action="agent-targets"'));
 // A revised course suggestion must be unlocked, while the manual selection remains locked.
 j.refinements.courses='Change the AI mathematics elective, retain the other selected course.';

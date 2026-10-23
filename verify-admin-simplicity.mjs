@@ -29,11 +29,10 @@ class Element{
  remove(){}
 }
 const nodes=Object.fromEntries(ids.map(id=>[id,new Element('div',id)]));
-Object.assign(nodes.period,{value:'30'});Object.assign(nodes.channel,{value:'all'});Object.assign(nodes['report-filter'],{value:'all'});Object.assign(nodes['roster-mode'],{value:'append'});nodes['roster-fields'].disabled=true;
-const views=['overview','reliability','students','feedback','pilots','data'].map(id=>nodes['view-'+id]);
+Object.assign(nodes.period,{value:'30'});Object.assign(nodes.channel,{value:'all'});Object.assign(nodes['roster-mode'],{value:'append'});nodes['roster-fields'].disabled=true;
+const views=['overview','reliability','students','pilots','data'].map(id=>nodes['view-'+id]);
 const nav=views.map(v=>{const node=new Element('button');node.dataset.tab=v.id.slice(5);return node;});
-nodes['feedback-shortcut'].dataset.tab='feedback';
-const document={getElementById:id=>{assert.ok(nodes[id],'Missing admin element: '+id);return nodes[id];},createElement:tag=>new Element(tag),body:new Element('body'),querySelectorAll:selector=>selector==='.view'?views:selector==='nav [data-tab]'?nav:selector==='[data-tab]'?[...nav,nodes['feedback-shortcut']]:[]};
+const document={getElementById:id=>{assert.ok(nodes[id],'Missing admin element: '+id);return nodes[id];},createElement:tag=>new Element(tag),body:new Element('body'),querySelectorAll:selector=>selector==='.view'?views:selector==='nav [data-tab]'?nav:selector==='[data-tab]'?nav:[]};
 const calls=[];
 let roster={mode:'demo',universityId:'',count:0},failRoster=false;
 const analytics={enabled:true,days:1,since:'2026-10-18',generatedAt:'2026-10-19T00:00:00Z',limits:['Operation totals are not unique students.'],reports:[{status:'pending',count:1}],rows:[{kind:'advice',stage:'targets',channel:'web',count:2,outcome:'success',duration_ms:4000,provider_calls:2,input_tokens:100,output_tokens:60,day:'2026-10-18'},{kind:'advice',stage:'direction',channel:'web',count:1,outcome:'error',duration_ms:1000,provider_calls:1,input_tokens:20,output_tokens:0,day:'2026-10-18'},{kind:'advice',stage:'courses',channel:'web',count:1,outcome:'cached',duration_ms:0,provider_calls:0,input_tokens:0,output_tokens:0,day:'2026-10-18'},{kind:'event',stage:'plan_saved',count:4},{kind:'event',stage:'plan_updated',count:2}]};
@@ -59,8 +58,7 @@ await settle();
 assert.equal(nodes.cards.children.length,4);
 assert.equal(nodes.events.children.length,3,'Saved plans already have a top card.');
 assert.ok(!nodes.events.textContent.includes('Plans saved'));
-assert.equal(nodes['feedback-shortcut'].hidden,false);
-assert.ok(nodes.insights.textContent.includes('1 report awaits review.'));
+assert.ok(!html.includes('view-feedback'));assert.ok(!html.includes('review-dialog'));assert.ok(!nodes.insights.textContent.includes('report'));
 assert.ok(nodes.insights.textContent.includes('1 request failed.'));
 
 await tab('students');
@@ -69,12 +67,6 @@ assert.equal(nodes['student-count'].textContent,'Showing latest 1 of 3 registere
 const oldStudentCalls=calls.filter(c=>c.path==='/api/admin/students').length;
 await nodes.refresh.onclick();assert.equal(calls.filter(c=>c.path==='/api/admin/students').length,oldStudentCalls+1);
 nodes['student-search'].value='missing';nodes['student-search'].oninput();assert.equal(nodes['student-count'].textContent,'0 matches in 1 loaded profiles');
-
-await tab('feedback');assert.equal(nodes['report-status'].textContent,'1 report');
-nodes['report-list'].children[0].children[1].onclick();
-assert.equal(nodes['review-dialog'].open,true);assert.ok(nodes['report-detail'].textContent.includes('has not agreed to shared guidance'));
-nodes.decision.value='confirmed';nodes.decision.onchange();
-assert.equal(nodes['source-url'].required,true);assert.equal(nodes['evidence-checked'].required,true);
 
 await tab('pilots');
 assert.equal(nodes['pilot-status'].textContent,'Open demo · Anyone with an account can plan.');
@@ -99,4 +91,6 @@ failRoster=true;await nodes.refresh.onclick();assert.equal(nodes['roster-fields'
 
 await tab('data');assert.equal(nodes['period-control'].hidden,false);assert.equal(nodes.status.hidden,false);assert.equal(nodes.export.disabled,false);
 assert.equal(calls.filter(c=>c.path.startsWith('/api/admin/analytics')).length,1,'Unrelated sections should not refresh analytics.');
-console.log('Admin simplicity: all six sections, truthful counts, relevant filters, active-section refresh, collapsed diagnostics, demo/import states, replacement confirmation, feedback evidence and visible errors passed. Synthetic records only.');
+console.log('Admin simplicity: all five sections, truthful counts, relevant filters, active-section refresh, collapsed diagnostics, demo/import states, replacement confirmation, retired reporting and visible errors passed. Synthetic records only.');
+
+assert.ok(!calls.some(c=>c.path==='/api/admin/reports'||c.path==='/api/admin/review'));

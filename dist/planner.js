@@ -1,6 +1,8 @@
 import DATA from './academic-data.js';
 import {applyProgramSheetPolicy,sheetRule} from './program-sheet-policy.js';
 applyProgramSheetPolicy(DATA);
+import {applyAcademicCorrections,correctedCourse} from './academic-corrections.js';
+applyAcademicCorrections(DATA);
 import GUIDED from './guided-data.js';
 import {withMinor,selectedMinor} from './minors.js';
 import {withSecondFocus} from './second-focus.js';
@@ -55,7 +57,7 @@ export function coursesFor(raw=DEFAULT_PROFILE){
   if(schoolRule)rule=sheetRule(schoolRule);
   if(topic)rule={...rule,all:(topic.prerequisiteCourses||[]).map(code),review:true};
   const credits=r.choice&&cid?(entry.credits??r.credits):r.credits;
-  return {...r,offeredTerms:rule.offeredTerms||r.offeredTerms,id:r.id,code:cid,topicId:topic?.id||'',title:topic?`${topic.title} · course code to confirm`:cid?(override?.title||(r.choice?entry.title||cid:r.title)):r.title,credits,loadCredits:credits+(r.nonDegreeCredits||0),unresolved:r.choice&&!cid||entry.creditsProvisional===true,rule,prerequisiteText:schoolRule?describeRule(rule):topic?'CSC 4308; exact CSC 41xx registration code requires confirmation.':override?.source?describeRule(rule):entry.prerequisiteText||'',ruleSource:schoolRule?BUSINESS_SOURCE:override?.source||entry.source||r.source,description:entry.description||'',lab:entry.lab===true,kind:/[Ee]lective|[Mm]inor|[Ss]pecial|[Tt]hematic|[Cc]oncentration/.test(r.category)?'focus':/[Gg]eneral/.test(r.category)?'general':/[Mm]ath|[Ss]cience and/.test(r.category)?'foundation':'core'};
+  return correctedCourse(p,{...r,offeredTerms:rule.offeredTerms||r.offeredTerms,id:r.id,code:cid,topicId:topic?.id||'',title:topic?`${topic.title} · course code to confirm`:cid?(override?.title||(r.choice?entry.title||cid:r.title)):r.title,credits,loadCredits:credits+(r.nonDegreeCredits||0),unresolved:r.choice&&!cid||entry.creditsProvisional===true,rule,prerequisiteText:schoolRule?describeRule(rule):topic?'CSC 4308; exact CSC 41xx registration code requires confirmation.':override?.source?describeRule(rule):entry.prerequisiteText||'',ruleSource:schoolRule?BUSINESS_SOURCE:override?.source||entry.source||r.source,description:entry.description||'',lab:entry.lab===true,kind:/[Ee]lective|[Mm]inor|[Ss]pecial|[Tt]hematic|[Cc]oncentration/.test(r.category)?'focus':/[Gg]eneral/.test(r.category)?'general':/[Mm]ath|[Ss]cience and/.test(r.category)?'foundation':'core'});
  };
  return allocatePrerequisiteSlots(requirements.map(r=>resolve(r)),p,(row,selected)=>resolve(requirements.find(r=>r.id===row.id),selected));
 }

@@ -47,7 +47,7 @@ const restored=validateSavedWorkspace(JSON.parse(JSON.stringify(state)));
 assert.deepEqual(restored.draftPlan.terms,edited.terms);assert.deepEqual(buildProposal(restored.journey).terms,edited.terms,'Reloading must not discard an accepted sequence');
 const annotated=structuredClone(edited);annotated.terms[0].note='Keep this personal note';assert.equal(newJourney(annotated).semesterSequence,null,'Later personal edits must invalidate an old cached sequence');
 const html=dashboardView(restored,{dashboardPanel:'semesters',service:{step:4,saved:false,initialMask:31,stageChanges:[2,2,2,2,1]}},{firstName:'Test'});
-assert.match(html,/aria-label="Plan update"/);assert.ok(html.includes('CSC1401'));assert.ok(html.includes('conditional draft'));
+assert.ok(!html.includes('aria-label="Plan update"'));assert.ok(!html.includes('conditional draft'));assert.ok(restored.draftPlan.courses.some(c=>c.code==='CSC1401'));
 
 const lower=proposeReplan(edited,{termLoads:[{termId:'Fall-2027',courseCount:4}],allowConditionalLoad:true},boundary);
 assert.equal(lower.assessment.canApply,true);assert.equal(lower.candidate.profile.regularCourses,6);assert.equal(lower.candidate.profile.summerCourses,2);

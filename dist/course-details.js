@@ -1,8 +1,9 @@
 import {coursesFor,DATA} from './planner.js';
+import {correctedCourse} from './academic-corrections.js';
 
 export function currentCourse(course,profile){
  const fresh=coursesFor(profile).find(c=>c.id===course.id&&c.code===course.code);
- return fresh?{...course,title:fresh.title,prerequisiteFor:fresh.prerequisiteFor,rule:fresh.rule,prerequisiteText:fresh.prerequisiteText,ruleSource:fresh.ruleSource,condition:fresh.condition,source:fresh.source}:course;
+ return correctedCourse(profile,fresh?{...course,title:fresh.title,prerequisiteFor:fresh.prerequisiteFor,rule:fresh.rule,prerequisiteText:fresh.prerequisiteText,ruleSource:fresh.ruleSource,condition:fresh.condition,source:fresh.source}:course);
 }
 export function courseDetailFacts(course,profile){
  const c=currentCourse(course,profile),r=c.rule||{},facts=[];
@@ -19,6 +20,6 @@ export function courseDetailFacts(course,profile){
  else if(c.condition&&!/catalog|source[- ]|not extracted|listed prerequisite|confirm.*description|GoPlan checks/i.test(c.condition))facts.push({label:'Requirement',text:c.condition});
  // Free-text catalog descriptions can contain conflicting prerequisites. Show
  // structured, resolved facts only; an empty facts list needs no filler message.
- const programSheet=/program.sheet|course.sequence/i.test(c.ruleSource?.file||c.ruleSource?.filename||'');
+ const programSheet=c.ruleSource?.kind==='program-sheet'||/program.sheet|course.sequence/i.test(c.ruleSource?.file||c.ruleSource?.filename||'');
  return {course:c,facts,source:programSheet?{label:'Program sheet',page:c.ruleSource.page||c.ruleSource.pdfPage}:null};
 }

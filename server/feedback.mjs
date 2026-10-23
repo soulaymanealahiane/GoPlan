@@ -74,16 +74,3 @@ export async function approvedCorrections(env,now=Date.now()){
  const rows=(await env.DB.prepare("SELECT id,correction FROM feedback_reports WHERE status='confirmed' AND improve=1 AND correction IS NOT NULL AND expires_at>? ORDER BY reviewed_at DESC LIMIT 30").bind(now).all()).results;
  return rows.map(row=>({id:row.id,...JSON.parse(row.correction)}));
 }
-export async function feedbackEndpoint(path,data,request,env,identity=null){
- if(path.startsWith('/api/review/')){
-  if(!env.FEEDBACK_REVIEW_KEY||request.headers.get('Authorization')!=='Bearer '+env.FEEDBACK_REVIEW_KEY)fail('Reviewer access required.',403);
-  if(path==='/api/review/list')return listFeedback(env);
-  if(path==='/api/review/decision')return reviewFeedback(data,env);
- }else{
-  if(!identity&&(!env.AI_ACCESS_CODE||request.headers.get('X-GoPlan-Access')!==env.AI_ACCESS_CODE))fail('Enter your demo access code before sending or managing a report.',401);
-  if(path==='/api/feedback')return submitFeedback(data,env,request.headers.get('X-GoPlan-Session')||'demo');
-  if(path==='/api/feedback/status')return readFeedback(data,env);
-  if(path==='/api/feedback/withdraw')return withdrawFeedback(data,env);
- }
- fail('Not found.',404);
-}

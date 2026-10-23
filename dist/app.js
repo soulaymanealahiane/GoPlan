@@ -1,10 +1,11 @@
+import {unsupportedOperation} from './agent-capabilities.js';
 function showSignInRecovery(output,error){output.innerHTML='<p class="warning">'+esc(error.message)+'</p>';if(['ACCESS_REQUIRED','SIGN_IN_REQUIRED'].includes(error.code))output.insertAdjacentHTML('beforeend','<a class="button primary" href="/signin.html">Sign in to continue</a>');}
 import {dashboardView} from './dashboard-view.js';
 import {createDashboardController} from './dashboard-controller.js';
 import {newcomerWorkspace,refreshMinorDraft,studyBoundary} from './dashboard-flow.js';
 import {updateStudyReview} from './study-review.js';
 import {createAccountWorkspace} from './accounts.js';
-import {openMistakeReport,openMyReports,ethicsPolicy} from './feedback-view.js';
+import {ethicsPolicy} from './ethics-view.js';
 import {homeView} from './home-view.js';
 import {freshWorkspace,editJourney,buildProposal} from './workspace-flow.js';
 import {planningWorkspace} from './student-context.js';
@@ -50,6 +51,7 @@ async function getAdvice(stage,{researchOnly=false,serviceAction,editingPlan}={}
  runtime.aiFailure=null;
  if(stage==='setup'&&j.background.trim().length<10){runtime.validation={background:true};render();$('[data-journey="background"]')?.focus();return false;}
  if(stage==='direction'&&missingAnswers(j.questionnaire).length){const missing=missingAnswers(j.questionnaire);runtime.validation=Object.fromEntries(missing.map(q=>[q.id,true]));j.step=1;j.questionIndex=QUESTIONS.findIndex(q=>q.id===missing[0].id);render();$('[data-question="'+missing[0].id+'"]')?.focus();return false;}runtime.validation={};
+ const unsupported=unsupportedOperation(j.refinements?.[stage]);if(unsupported&&!researchOnly){runtime.dashboardNotice=unsupported.message;runtime.aiError='';runtime.aiFailure=null;render();return false;}
  if(!accounts.signedIn){location.assign('/signin.html');return false;}
  lastStage=stage;runtime.busy=true;runtime.researchOnly=researchOnly;runtime.aiError='';const before=adviceFingerprint(stage,j);render();
  try{const action=serviceAction||await dashboard.authorizeAdvice(stage);const editing=['pace','courses'].includes(stage)&&j.refinements?.[stage]?{plan:editingPlan||active()||buildProposal(j,state.plan)}:null;if(editing)editing.currentTerm=studyBoundary(editing.plan).currentTerm;const result=await requestAdvice(stage,j,{...(editing?{plan:replanSnapshot(editing.plan),currentTerm:editing.currentTerm}:{}),...(researchOnly?{researchOnly:true}:{}),serviceAction:action});if(j!==state.journey||before!==adviceFingerprint(stage,j))throw Error('Your choices changed. Request fresh advice for the latest answers.');if(researchOnly){applyResearchRefresh(j,stage,result);persist();return false;}if(result.kind==='answer'){runtime.dashboardNotice=result.answer;showAnswer(result,j.profile);return !!j.refinements?.[stage];}if(result.kind==='clarify'&&(stage!=='direction'||j.refinements?.direction)){runtime.dashboardNotice=result.questions?.[0]||result.summary;j.pendingEdits={...j.pendingEdits,[stage]:{request:j.refinements?.[stage]||'',question:runtime.dashboardNotice}};persist();return true;}if(j.pendingEdits)delete j.pendingEdits[stage];acceptAdvice(j,stage,result,editing||{});persist();return true;}
@@ -122,8 +124,6 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button,a.b
  case 'my-plans':showMyPlans();break;
  case 'open-local-plan':openLocalPlan(b.dataset.workspaceKey);break;
  case 'change-plan':await dashboard.click({dataset:{action:'dashboard-change'}});break;
- case 'mistake-report':if(state.plan)openMistakeReport({plan:state.plan,workspace:KEY,modal,head,onReconsider:openChange});break;
- case 'my-reports':openMyReports({workspace:KEY,modal,head});break;
  case 'ethics-policy':modal(head('AI and data ethics')+ethicsPolicy());break;
  case 'ask-adviser':await dashboard.click({dataset:{action:'dashboard-change'}});break;
  case 'new-user':startFresh();break;
@@ -152,7 +152,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button,a.b
  case 'report':openReplan();break;
  case 'add-term':addTerm();break;
  case 'export':await exportPlan();break;
- case 'about':modal(`${head('Your workspace')}<p>${accounts.signedIn?'Your roadmaps save to your personal account. Open Account to switch plans, update your name or manage your data.':'Your plan stays on this device. Sign in to create a profile and bring your roadmap across devices.'}</p><div class="card-actions">${btn('ethics-policy','AI and data ethics')}${btn('my-reports','My mistake reports')}</div><details class="quiet-details"><summary>About recommendations</summary><p>GoPlan uses AUI requirements and sourced research. Individual approvals, course offerings and opportunity availability still need confirmation.</p></details>`);break;
+ case 'about':modal(`${head('Your workspace')}<p>${accounts.signedIn?'Your roadmaps save to your personal account. Open Account to switch plans, update your name or manage your data.':'Your plan stays on this device. Sign in to create a profile and bring your roadmap across devices.'}</p><div class="card-actions">${btn('ethics-policy','AI and data ethics')}</div><details class="quiet-details"><summary>About recommendations</summary><p>GoPlan uses AUI requirements and sourced research. Individual approvals, course offerings and opportunity availability still need confirmation.</p></details>`);break;
  }}catch(e){notify(e.message||'The change could not be completed.');console.error(e);}});
 document.addEventListener('submit',async e=>{const f=e.target;if(!['student-entry-form','course-form','source-form','restore-form','report-form'].includes(f.id))return;e.preventDefault();const d=new FormData(f);try{
  if(f.id==='student-entry-form'){const context=readStudentEntry(f,entrySeed),previous=entryMode==='rethink'?(state.phase==='draft'?state.draftPlan:state.plan):null,seed=planningWorkspace({studentContext:context,profileName:accounts.profile?.firstName||state.journey.profile.name||''},previous);if(entryMode==='rethink'&&!previous&&state.journey.scheduling)seed.journey.scheduling=structuredClone(state.journey.scheduling);const submit=f.querySelector('button[type="submit"]');submit.disabled=true;try{await startWorkspace(seed);}finally{submit.disabled=false;}return;}
@@ -228,7 +228,7 @@ document.addEventListener('submit',async e=>{
 let changeBusy=false;
 function openChange(initialRequest=''){
  const p=state.plan;if(!p)return;
- modal(`${head('What has changed?','We’ll keep your plan and take you through the parts that need an update.')}<div class="feedback-invitation"><div><strong>Did the adviser get something wrong?</strong><p>Report a policy or recommendation mistake for evidence review.</p></div>${btn('mistake-report','Report a mistake')}</div><form id="change-plan-form"><label class="field">What would you like to change, and why?<textarea name="request" required minlength="10" maxlength="2500" placeholder="I want more Moroccan startups, I’m reconsidering my minor, or a course is no longer offered.">${esc(initialRequest)}</textarea></label><details class="quiet-details"><summary>Study progress</summary><p>Update course progress on your roadmap before changing academic choices.</p><label class="field">Plan remaining study from<select name="currentTerm">${options(p.terms.filter(t=>!['prior','pending'].includes(t.id)).map(t=>[t.id,label(t)]),p.terms.find(t=>t.courses.some(id=>p.tracking[id]?.status==='in-progress'))?.id||p.terms.find(t=>!['prior','pending'].includes(t.id)&&t.courses.some(id=>p.tracking[id]?.status!=='completed'))?.id)}</select></label></details><button class="button primary" type="submit">Review my change</button><div id="change-plan-result" role="status"></div></form>`);
+ modal(`${head('What has changed?','We’ll keep your plan and take you through the parts that need an update.')}<form id="change-plan-form"><label class="field">What would you like to change, and why?<textarea name="request" required minlength="10" maxlength="2500" placeholder="I want more Moroccan startups, I’m reconsidering my minor, or a course is no longer offered.">${esc(initialRequest)}</textarea></label><details class="quiet-details"><summary>Study progress</summary><p>Update course progress on your roadmap before changing academic choices.</p><label class="field">Plan remaining study from<select name="currentTerm">${options(p.terms.filter(t=>!['prior','pending'].includes(t.id)).map(t=>[t.id,label(t)]),p.terms.find(t=>t.courses.some(id=>p.tracking[id]?.status==='in-progress'))?.id||p.terms.find(t=>!['prior','pending'].includes(t.id)&&t.courses.some(id=>p.tracking[id]?.status!=='completed'))?.id)}</select></label></details><button class="button primary" type="submit">Review my change</button><div id="change-plan-result" role="status"></div></form>`);
 }
 document.addEventListener('submit',async e=>{
  if(e.target.id!=='change-plan-form')return;e.preventDefault();if(changeBusy)return;

@@ -35,5 +35,5 @@ const state={...emptyWorkspace(),journey:j},restored=validateSavedWorkspace(JSON
 for(let i=0;i<8;i++){j.questionIndex=i;const html=questionnaireCard(j);assert.equal((html.match(/data-question="/g)||[]).length,1);assert.ok(html.includes('aria-pressed='));assert.ok(!html.includes('Demo access code'));}
 j.questionIndex=2;assert.ok(questionNavigation(j).includes('Find my direction'));assert.ok(questionnaireCard(j).includes('Personalize further'));
 assert.ok(!journeyView(state,{aiStatus:{available:true},hasAccess:false}).includes('ai-access-code'));
-for(const file of ['dist/app.js','dist/journey-view.js','dist/feedback-view.js'])assert.ok(!fs.readFileSync(file,'utf8').includes('Demo access code'),file+' still exposes a code control.');
+for(const file of ['dist/app.js','dist/journey-view.js','dist/ethics-view.js'])assert.ok(!fs.readFileSync(file,'utf8').includes('Demo access code'),file+' still exposes a code control.');
 DB.close();console.log('Passed mandatory demo sign-in, no code bypass, unrestricted email signup, account-based adviser status, quick-choice cards, optional text, three-answer completion and saved-answer restoration. No live AI calls.');

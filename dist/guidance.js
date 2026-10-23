@@ -5,6 +5,7 @@ import {courseOptions} from './course-options.js';
 import {eligibleCourseOptions,releaseIneligibleChoices} from './course-eligibility.js';
 import {normalizeScheduling} from './course-availability.js';
 import {cleanRankings,weightedPreferences} from './preferences.js';
+import {refreshAcademicCorrections} from './academic-corrections.js';
 import {emptyQuestionnaire,cleanQuestionnaire} from './questionnaire.js';
 import {normalizeStudentContext,recordedStudy} from './student-context.js';
 export {GUIDED};
@@ -108,6 +109,7 @@ export function validateSavedWorkspace(raw){
   for(const r of plan.reports)if(!ids.has(r.courseId)||!['open','resolved'].includes(r.status))throw Error('Invalid conflict report.');
   for(const type of ['internships','exchanges','auiMasters','globalMasters'])if(!Array.isArray(plan.targets[type])||plan.targets[type].some(t=>!object(t)||typeof t.id!=='string'))throw Error('Invalid research targets.');
   if(removeExtraPrerequisites(plan))migratedPlans.add(plan);
+  if(refreshAcademicCorrections(plan))migratedPlans.add(plan);
  }
  if(raw.phase==='saved'&&!raw.plan||raw.phase==='draft'&&!raw.draftPlan)throw Error('The saved plan is missing.');
  const active=raw.phase==='draft'?raw.draftPlan:raw.plan;

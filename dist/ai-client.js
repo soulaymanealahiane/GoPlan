@@ -44,16 +44,7 @@ export function trackUsage(event){
  void fetch(endpoint()+'/api/usage',{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':access},body:JSON.stringify({event}),signal:AbortSignal.timeout(4000)}).catch(()=>{});
 }
 
-export async function feedbackRequest(action,body){
- const response=await fetch(endpoint()+'/api/feedback'+(action?'/'+action:''),{method:'POST',headers:{'Content-Type':'application/json','X-GoPlan-Access':access,'X-GoPlan-Session':sessionId()},body:JSON.stringify(body),signal:AbortSignal.timeout(25000)});
- let data;try{data=await response.json();}catch{throw Error('The report service did not confirm your request. Keep your text and try again.');}
- if(!response.ok){if(response.status===401)setAccessCode('');const error=Error(data.error||'The report could not be saved.');error.code=data.code;throw error;}
- if(access)try{sessionStorage.setItem(accessStorage,access);}catch{}
- return data;
-}
 
-// Reviewed matching only: settle an interrupted initial action without another
-// model call or consuming a guided/global change.
 export async function requestReviewedTargets(journey,{serviceAction}={}){
  const {program,track,secondTrack,minor,choices}=journey.profile;
  const response=await fetch(endpoint()+'/api/reviewed-targets',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({profile:{program,track,secondTrack,minor,choices},questionnaire:journey.questionnaire,questionnaireRankings:journey.questionnaireRankings,goal:journey.goal,serviceAction}),signal:AbortSignal.timeout(20000)});

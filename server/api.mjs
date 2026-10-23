@@ -4,7 +4,8 @@ import {partnershipEndpoint} from './partnerships.mjs';
 import {rosterMode} from './university-access.mjs';
 import {authEndpoint,accountIdentity} from './auth.mjs';
 import {advise} from './advisor.mjs';
-import {feedbackEndpoint,approvedCorrections} from './feedback.mjs';
+import {unsupportedOperation,requestedOperation,capabilityResponse} from '../dist/agent-capabilities.js';
+import {approvedCorrections} from './feedback.mjs';
 import {EVENTS,channelFor,recordSafely,isAnalyticsAdmin,analyticsSnapshot} from './analytics.mjs';
 import {adminEndpoint} from './admin.mjs';
 import {accountEndpoint} from './accounts.mjs';
@@ -32,8 +33,9 @@ export async function handleApi(request,env,options={}){
  if(signedIn&&!['GET','HEAD'].includes(request.method)&&origin!==new URL(request.url).origin)return reply({error:'Open this action from GoPlan.'},403,origin);
  if(rosterMode(env)&&!signedIn&&path!=='/api/status')return reply({error:'Sign in with an approved university email.',code:'ACCESS_REQUIRED'},401,origin);
  if(path==='/api/service'||path.startsWith('/api/service/'))return serviceEndpoint(request,env,signedIn);
- if(path==='/api/status'&&request.method==='GET')return reply({available:!!env.OPENAI_API_KEY,provider:'openai',model:env.OPENAI_MODEL||'gpt-6.1-sol',requiresAccess:false,requiresSignIn:!signedIn,authenticated:!!signedIn,feedbackAvailable:!!env.DB},200,origin);
+ if(path==='/api/status'&&request.method==='GET')return reply({available:!!env.OPENAI_API_KEY,provider:'openai',model:env.OPENAI_MODEL||'gpt-6.1-sol',requiresAccess:false,requiresSignIn:!signedIn,authenticated:!!signedIn,feedbackAvailable:false},200,origin);
  const isFeedback=path==='/api/feedback'||path.startsWith('/api/feedback/')||path.startsWith('/api/review/');
+ if(isFeedback)return reply({error:'Mistake reporting is no longer available.',code:'FEATURE_REMOVED'},410,origin);
  const isEvent=path==='/api/usage',isReviewedTargets=path==='/api/reviewed-targets';
  if(path!=='/api/advice'&&!isFeedback&&!isEvent&&!isReviewedTargets)return reply({error:'Not found'},404,origin);
  if(request.method!=='POST')return reply({error:'Use POST.'},405,origin);
@@ -47,8 +49,9 @@ export async function handleApi(request,env,options={}){
  const all=new Uint8Array(size);let offset=0;for(const chunk of chunks){all.set(chunk,offset);offset+=chunk.length;}
  let data;try{data=JSON.parse(new TextDecoder().decode(all));}catch{return reply({error:'Invalid request.'},400,origin);}
  if(isEvent){if(!data||!EVENTS.has(data.event)||Object.keys(data).some(k=>k!=='event'))return reply({error:'Unknown usage event.'},400,origin);await recordSafely(env,{kind:'event',stage:data.event,channel:channelFor(origin)});return reply({accepted:true},200,origin);}
- if(isFeedback){try{return reply(await feedbackEndpoint(path,data,request,env,signedIn),200,origin);}catch(e){return reply({error:e.status?e.message:'Mistake reporting is unavailable. Your report was not confirmed; keep your text and retry.',code:e.status===401?'ACCESS_REQUIRED':'FEEDBACK_ERROR'},e.status||503,origin);}}
+
  if(isReviewedTargets){try{const value=reviewedOpportunityShortlist({...data,refinement:'',currentRecommendation:{}});return reply(data.serviceAction?await recoverInitialTargets(env.DB,signedIn.id,data.serviceAction,value):value,200,origin);}catch(e){return reply({error:e.status?e.message:'Choose a supported degree before exploring opportunities.',code:e.code},e.status||400,origin);}}
+ const unsupported=unsupportedOperation(requestedOperation(data));if(unsupported)return reply(capabilityResponse(unsupported),200,origin);
  // Recover abandoned initial receipts before leases, provider configuration and
  // instance-local busy maps. Old deployment/request hashes must not strand users.
  if(data.stage==='targets'&&data.serviceAction){try{const value=await recoverInitialTargets(env.DB,signedIn.id,data.serviceAction,()=>reviewedOpportunityShortlist(data),{interruptedOnly:true});if(value)return reply(value,200,origin);}catch(e){if(e.code!=='SERVICE_ACTION_REQUIRED'&&e.code!=='SERVICE_LIMIT')return reply({error:'Your matches could not load. Your answers are saved.',code:'SERVICE_UNAVAILABLE'},503,origin);}}

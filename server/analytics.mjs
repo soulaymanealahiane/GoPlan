@@ -20,7 +20,7 @@ export async function analyticsSnapshot(env,days=30,now=Date.now()){
  days=Math.max(1,Math.min(90,Math.floor(Number(days)||30)));
  const since=new Date(now-(days-1)*DAY).toISOString().slice(0,10);
  const rows=(await env.DB.prepare('SELECT day,kind,stage,channel,outcome,count,duration_ms,provider_calls,input_tokens,output_tokens FROM usage_daily WHERE day>=? ORDER BY day,kind,stage').bind(since).all()).results;
- const reports=(await env.DB.prepare('SELECT status,COUNT(*) AS count FROM feedback_reports WHERE expires_at>? GROUP BY status').bind(now).all()).results;
+ const reports=[]; // Reporting is retired; do not surface historical inbox counts.
  const total={operations:0,success:0,errors:0,cached:0,durationMs:0,providerCalls:0,inputTokens:0,outputTokens:0};
  for(const r of rows.filter(r=>r.kind==='adviser')){total.operations+=r.count;total[r.outcome==='error'?'errors':r.outcome]+=r.count;total.durationMs+=r.duration_ms;total.providerCalls+=r.provider_calls;total.inputTokens+=r.input_tokens;total.outputTokens+=r.output_tokens;}
  return {generatedAt:new Date(now).toISOString(),enabled:env.ANALYTICS_ENABLED==='true',days,since,totals:total,rows,reports,limits:['Counts begin with this release; earlier activity is unavailable.','These are operations and events, not unique students or retention.','Client events are best-effort; exports count download requests, not completed downloads.','Token totals reflect reported provider usage; consult OpenAI billing for current costs; historical totals may include earlier providers.','Local preview activity is excluded. No names, answers, grades or plan contents are recorded.']};

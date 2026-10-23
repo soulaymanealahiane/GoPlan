@@ -10,18 +10,16 @@ const owner=await testSession(DB,'owner','owner@example.com');const student=awai
 const req=(path,headers={},body)=>new Request(base+path,{method:body?'POST':'GET',headers:{...headers,...(body?{'Content-Type':'application/json',Origin:base}:{})},body:body?JSON.stringify(body):undefined});
 for(const headers of [{},{'X-GoPlan-Access':'demo'},student,{'oai-authenticated-user-email':'owner@example.com'}])for(const path of ['/api/admin/analytics','/api/admin/reports'])assert.equal((await handleApi(req(path,headers),env)).status,401);
 assert.equal((await handleApi(req('/api/admin/analytics',owner),env)).status,200);
-assert.equal((await handleApi(req('/api/admin/reports',owner),env)).status,200);
+assert.equal((await handleApi(req('/api/admin/reports',owner),env)).status,410);
 assert.equal(await ownerIdentity(new Request('http://localhost:4317/admin',{headers:owner}),env),null);
 assert.equal((await handleApi(new Request('http://localhost:4317/api/admin/reports',{headers:owner}),env)).status,401);
 assert.equal((await handleApi(req('/api/admin/analytics',{...owner,Origin:'https://evil.example'}),env)).status,403);
 assert.equal(await adminPageGate(req('/admin',owner),env),null);assert.ok((await (await adminPageGate(req('/admin'),env)).text()).includes('/signin.html'));
 const report=await submitFeedback({id:crypto.randomUUID(),receiptToken:'a'.repeat(64),consentShare:true,consentImprove:false,category:'policy',stage:'courses',issue:'A requirement seems to be missing from the plan.',expected:'Check requirements.',evidence:'Needs verification.',academic:{program:'BSCSC'}},env,'test-session');
 const review={id:report.id,status:'needs-information',note:'Please provide the relevant official program sheet.',reviewer:'FORGED REVIEWER'};
-let response=await handleApi(req('/api/admin/review',owner,review),env);assert.equal(response.status,200);assert.equal((await DB.prepare('SELECT reviewer FROM feedback_reviews').first()).reviewer,'owner@example.com');
-assert.equal((await handleApi(new Request(base+'/api/admin/review',{method:'POST',headers:{...owner,'Content-Type':'application/json'},body:JSON.stringify(review)}),env)).status,403);
-assert.equal((await handleApi(req('/api/admin/review',owner,{...review,status:'confirmed',correction:'This correction has not been verified.'}),env)).status,400);
-assert.equal((await handleApi(req('/api/admin/review',owner,{...review,status:'confirmed',evidenceChecked:true,correction:'A longer proposed academic policy correction.',source:{url:'https://evil.example/policy'}}),env)).status,400);
-const result=await (await handleApi(req('/api/admin/reports',owner),env)).json();assert.equal(result.reports.length,1);assert.ok(!JSON.stringify(result).includes('receipt_hash'));assert.ok(!JSON.stringify(result).includes('session_hash'));
+for(const status of ['needs-information','confirmed','dismissed']){const response=await handleApi(req('/api/admin/review',owner,{...review,status}),env);assert.equal(response.status,410);assert.equal((await response.json()).code,'FEATURE_REMOVED');}
+assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM feedback_reviews').first()).n,0,'Retired routes cannot write reviews');
+assert.equal((await DB.prepare('SELECT status FROM feedback_reports WHERE id=?').bind(report.id).first()).status,'pending','Earlier private data is preserved');
 assert.equal((await handleApi(req('/api/admin/analytics',{Authorization:'Bearer private'}),env)).status,200);
 await recordUsage(env,{stage:'direction',channel:'web'});await recordUsage(env,{stage:'courses',channel:'android'});
 assert.equal((await handleApi(req('/api/admin/export'),env)).status,401);
@@ -31,4 +29,4 @@ const csv=await exported.text();assert.ok(csv.includes('"web"'));assert.ok(!csv.
 exported=await handleApi(req('/api/admin/export?channel=android&format=json',owner),env);assert.equal((await exported.json()).rows.length,1);
 assert.equal((await handleApi(req('/api/admin/export?format=html',owner),env)).status,400);
 assert.equal((await handleApi(req('/api/admin/reports',{Authorization:'Bearer metrics'}),{...env,ANALYTICS_ADMIN_KEY:'metrics'})).status,403);
-DB.close();console.log('Owner dashboard: anonymous/tester/non-owner denied, owner and operator allowed, local header spoof blocked, CSRF blocked, review attribution and evidence checks passed.');
+DB.close();console.log('Owner dashboard: anonymous/tester/non-owner denied, owner and operator allowed, local header spoof blocked, CSRF blocked, retired reporting routes and historical-data preservation passed.');

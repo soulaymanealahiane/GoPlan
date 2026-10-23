@@ -1,4 +1,5 @@
 import {editRoadmap} from './roadmap-edit.js';
+import {unsupportedOperation} from './agent-capabilities.js';
 import {opportunityLabel} from './opportunity-labels.js';
 import {manualCatalogue,addManualSemester,addManualCourse,removeManualCourse,noteManualSemester,removeManualSemester} from './manual-plan.js';
 import {manualChangeMessage} from './manual-checks.js';
@@ -31,7 +32,7 @@ export function createDashboardController(h){
  async function nextStage(){const def=SERVICE_STAGES[r.service.step];if(def?.target&&!(state().journey.details?.[def.target]?.length))await recoverTargets();if(r.service.step===0&&!state().journey.programChosen)throw Error('Choose your degree before continuing.');r.service=await advanceStage(r.service.step);h.persist();if(r.service.step<5)await initialStage();else{if(!state().draftPlan)state().draftPlan=buildProposal(state().journey,state().plan);state().phase='draft';r.dashboardPanel='overview';h.persist();}}
  function display(){h.render();}
  function commit(message=''){r.aiError='';r.aiFailure=null;retry=null;h.changed(message);}
- function panel(name){if(guided())return;r.dashboardPanel=name;r.dashboardWelcome=false;r.aiError='';r.aiFailure=null;display();}
+ function panel(name){if(guided())return;r.dashboardPanel=name;r.dashboardWelcome=false;r.dashboardNotice='';r.dashboardAnswer='';r.aiError='';r.aiFailure=null;display();}
  async function advice(stage,editingPlan){r.dashboardWork=stages[stage];const ok=await h.getAdvice(stage,{serviceAction:activeAction||undefined,editingPlan});if(!ok&&!(stage==='direction'&&state().journey.advice?.kind==='clarify'&&!r.aiError))throw Object.assign(Error(r.aiError||'Tell GoPlan a little more about what you want.'),{handled:true});return true;}
  async function recoverInitialStage(def){
   if(def.agent==='targets')return recoverTargets();const j=state().journey;
@@ -86,6 +87,7 @@ export function createDashboardController(h){
 
  async function command(text){
   if(!text?.trim())return;
+  const unsupported=unsupportedOperation(text);if(unsupported){r.dashboardNotice=unsupported.message;r.dashboardAnswer=unsupported.message;r.pendingDashboardRequest='';return;}
   if(guided()){if(operation)operation.atomic=true;const def=SERVICE_STAGES[r.service.step],token=await reserveAction('stage');activeAction=token;const j=state().journey;const pending=j.pendingEdits?.[def.agent];if(pending)text=pending.request.slice(0,1100)+' Follow-up: '+text.slice(0,1300);j.refinements||={};j.refinements[def.agent]=(def.target==='internships'?'Change companies only. Preserve exchange destinations. ':def.target==='exchanges'?'Change exchange destinations only. Preserve companies. ':'')+text;if(def.agent==='courses')j.agentChoices={...j.profile.choices};await advice(def.agent);if(def.id==='semesters'){state().draftPlan=buildProposal(j,state().plan);state().phase='draft';}r.dashboardNotice=r.dashboardNotice||j.lastUpdates?.[def.agent]?.summary;h.persist();return;}
   if(operation)operation.atomic=true;activeAction=await reserveAction('global',4);
   const before=JSON.stringify([state().journey.profile,current()?.id,current()?.updatedAt]),j=structuredClone(state().phase==='journey'?state().journey:newJourney(current()));
@@ -142,7 +144,7 @@ export function createDashboardController(h){
   const s=state();if(!s.draftPlan)return;const firstSave=!r.service?.saved;if(operation)operation.atomic=true;
   if(s.plan)s.history=[structuredClone(s.plan),...(s.history||[])].slice(0,3);
   s.plan=structuredClone(s.draftPlan);s.plan.finalizedAt=new Date().toISOString();s.draftPlan=null;s.phase='saved';s.journey=newJourney(s.plan);r.dashboardPanel='overview';
-  commit('Saved. Your plan is ready.');if(h.saveAccount&&!await h.saveAccount())throw Error('Your plan is kept on this device. Retry cloud saving to finish.');await loadService();if(firstSave){r.manualWelcome=true;display();}trackUsage('plan_saved');
+  commit('Saved. Your plan is ready.');if(h.saveAccount&&!await h.saveAccount())throw Error('Your plan is kept on this device. Retry cloud saving to finish.');await loadService();if(firstSave){r.manualWelcome=false;r.dashboardPanel='semesters';display();}trackUsage('plan_saved');
  }
  function addTerm(){
   const plan=current();if(!plan)return;const last=plan.terms.filter(t=>!['prior','pending'].includes(t.id)).at(-1),season=last?.season==='Fall'?'Spring':last?.season==='Spring'?'Summer':'Fall',year=last?.year+(last?.season==='Fall'?1:0)||new Date().getFullYear();
@@ -163,7 +165,7 @@ export function createDashboardController(h){
  function course(id){
   const p=current(),profile=p?.profile||state().journey.profile,c=(p?.courses||coursesFor(profile)).find(c=>c.id===id);if(!c)return;
   const term=p?.terms.find(t=>t.courses.includes(id)),progress=p?.tracking?.[id]?.status||'planned',detail=courseDetailFacts(c,profile);
-  h.modal(h.head(detail.course.title,c.code||'')+'<p class="course-detail-meta">'+c.credits+' credits · '+esc(c.manualAddition?'Added by you':courseGroups([c],profile)[0]?.title||c.category)+'</p>'+(p?'<form id="dashboard-course-form" data-course-id="'+esc(id)+'"><div class="field-grid"><label class="field">Status<select name="status">'+options([['planned','Planned'],['in-progress','Taking now'],['completed','Completed'],['retake','Need to retake']],progress)+'</select></label><label class="field">Semester<select name="term">'+options(p.terms.map(t=>[t.id,label(t)]),term?.id)+'</select></label></div><details class="quiet-details"><summary>Change course</summary>'+picker(profile,{scope:'all'})+'</details><p id="dashboard-course-error" class="field-error" role="alert"></p><button class="button primary">Save changes</button></form><div class="manual-course-actions">'+action('dashboard-remove-course','Remove course','data-course-id="'+esc(id)+'"')+'</div>':'')+(detail.facts.length?'<details class="quiet-details"><summary>Course details</summary><dl class="course-facts">'+detail.facts.map(f=>'<div><dt>'+esc(f.label)+'</dt><dd>'+esc(f.text)+'</dd></div>').join('')+'</dl></details>':''));
+  h.modal(h.head(detail.course.title,c.code||'')+'<p class="course-detail-meta">'+c.credits+' credits · '+esc(c.manualAddition?'Added by you':courseGroups([c],profile)[0]?.title||c.category)+'</p>'+(p?'<form id="dashboard-course-form" data-course-id="'+esc(id)+'"><div class="field-grid"><label class="field">Status<select name="status">'+options([['planned','Planned'],['in-progress','Taking now'],['completed','Completed'],['retake','Need to retake']],progress)+'</select></label><label class="field">Semester<select name="term">'+options(p.terms.map(t=>[t.id,label(t)]),term?.id)+'</select></label></div><details class="quiet-details"><summary>Change course</summary>'+picker(profile,{scope:'all'})+'</details><p id="dashboard-course-error" class="field-error" role="alert"></p></form><div class="manual-course-actions"><button type="button" class="text-button manual-remove-course" data-action="dashboard-remove-course" data-course-id="'+esc(id)+'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg><span>Remove course</span></button><button type="submit" form="dashboard-course-form" class="button primary">Save changes</button></div>':'')+(detail.facts.length?'<details class="quiet-details"><summary>Course details</summary><dl class="course-facts">'+detail.facts.map(f=>'<div><dt>'+esc(f.label)+'</dt><dd>'+esc(f.text)+'</dd></div>').join('')+'</dl></details>':''));
  }
  function degreeOptions(){
   const p=current()?.profile||state().journey.profile;
