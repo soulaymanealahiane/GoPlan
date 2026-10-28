@@ -161,16 +161,18 @@ function researchCoverage(value,stage,exchangeTargets){
  const summary=`Verified research retained ${value.companies.length} company findings, ${value.exchanges.length} exchange updates and ${value.facts.length} market findings. Current vacancies and individual eligibility still need checking.`;
  return {...value,status,missing,notice,summary};
 }
-export async function researchFor(request,stage,env,fetcher=fetch,{exchangeTargets=[]}={}){
+const redact=s=>String(s||'').replace(/[\w.+-]+@[\w.-]+\.[a-z]+/gi,'[omitted]').replace(/\+?\d[\d ()-]{8,}\d/g,'[omitted]').slice(0,1400);
+export const researchContextKey=(request,stage,exchangeTargets=[])=>researchCacheKey(['experience-research-v5',stage,request.profile,request.questionnaire&&Object.fromEntries(['ambitions','activities','strengths','industries','entrepreneurship','automation'].map(k=>[k,redact(request.questionnaire[k])])),request.questionnaireRankings,redact(request.refinement),request.seenTargetIds,Object.fromEntries(Object.entries(request.currentTargets||{}).filter(([,v])=>Array.isArray(v)).map(([k,v])=>[k,v.map(t=>t.id)])),exchangeTargets.map(t=>t.id)]);
+export async function researchFor(request,stage,env,fetcher=fetch,{exchangeTargets=[],cacheOnly=false}={}){
  if(!['direction','targets'].includes(stage)||env.OPENAI_WEB_RESEARCH==='off'||(stage==='direction'&&env.OPENAI_DIRECTION_RESEARCH!=='on'))return {status:'not-requested',companies:[],exchanges:[],facts:[],sources:[],gaps:[]};
  // Only public-topic preferences and public partner records leave the server.
- const redact=s=>String(s||'').replace(/[\w.+-]+@[\w.-]+\.[a-z]+/gi,'[omitted]').replace(/\+?\d[\d ()-]{8,}\d/g,'[omitted]').slice(0,1400);
  const currentTargets=request.currentTargets||{};
  const selectedExchangeIds=new Set((currentTargets.exchanges||[]).map(t=>t.id));
  const selectedExchangeTargets=exchangeTargets.filter(t=>selectedExchangeIds.has(t.id));
  const coverageTargets=rankOpportunityTargets(selectedExchangeTargets.length?selectedExchangeTargets:exchangeTargets,request,'exchanges',{limit:4});
- const key=await researchCacheKey(['experience-research-v5',stage,request.profile,request.questionnaire&&Object.fromEntries(['ambitions','activities','strengths','industries','entrepreneurship','automation'].map(k=>[k,redact(request.questionnaire[k])])),request.questionnaireRankings,redact(request.refinement),request.seenTargetIds,Object.fromEntries(Object.entries(currentTargets).filter(([,v])=>Array.isArray(v)).map(([k,v])=>[k,v.map(t=>t.id)])),exchangeTargets.map(t=>t.id)]);
+ const key=await researchContextKey(request,stage,exchangeTargets);
  const previous=await cachedResearch(env.DB,key);
+ if(cacheOnly)return previous?researchCoverage(previous,stage,coverageTargets):{status:'reviewed',companies:[],exchanges:[],facts:[],sources:[],gaps:['Recommendations use reviewed sources. Current openings, exchange places and personal eligibility need confirmation.']};
  const needCompanies=stage==='targets'&&(!request.researchOnly||!previous?.companies?.length);
  const needExchanges=stage==='targets'&&coverageTargets.length&&(!request.researchOnly||coverageTargets.some(t=>!previous?.exchanges?.some(e=>e.id===t.id)));
  if(previous&&researchCoverage(previous,stage,coverageTargets).status==='live')return researchCoverage(previous,stage,coverageTargets);

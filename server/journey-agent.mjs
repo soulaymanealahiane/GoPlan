@@ -115,7 +115,7 @@ export async function adviseJourney(input,env,fetcher=fetch){
  // the student's two revisions. It may legitimately keep existing matches.
  if(isInitialOpportunityRequest(input,env))opportunityPolicy.preferNovel=false;
  request.preferNovel=opportunityPolicy.preferNovel;
- const research=hybridEnabled(env)&&stage==='targets'&&!requestsLiveResearch(input)?{status:'reviewed',companies:[],exchanges:[],facts:[],sources:[],gaps:['Recommendations use reviewed sources. Current openings, exchange places and personal eligibility need confirmation.']}:await researchFor(request,stage,env,fetcher,{exchangeTargets:stage==='targets'?availableTargets('exchanges',request.profile):[]});
+ const research=await researchFor(request,stage,env,fetcher,{exchangeTargets:stage==='targets'?availableTargets('exchanges',request.profile):[],cacheOnly:hybridEnabled(env)&&stage==='targets'&&!requestsLiveResearch(input)});
  if(request.researchOnly){
   // Refresh evidence deterministically. Do not pay for a new recommendation or
   // let a search change the student's shortlist, degree, courses or study pace.
