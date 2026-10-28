@@ -1,5 +1,10 @@
 # Architecture
 
+The hybrid decision flow is documented in [HYBRID_ARCHITECTURE.md](HYBRID_ARCHITECTURE.md).
+When enabled, routine choices use Jev, while GoPlan validates and schedules the
+result. Sol remains available for complex requests and fallback. Luna handles
+explicit research refreshes; routine opportunity matching uses reviewed evidence.
+
 ```mermaid
 flowchart LR
     Student[Student browser] --> API[GoPlan API]
@@ -7,7 +12,7 @@ flowchart LR
     API --> Auth[Supabase email verification]
     API --> Store[(SQLite / D1)]
     API --> Agent[AI proposal service]
-    Agent --> Model[OpenAI GPT-6.1 Sol]
+    Agent --> Model[Jev decisions / Sol complex requests and fallback]
     Agent --> Rules[Academic validator]
     Student --> Scheduler[Deterministic planner]
     Rules --> Proposal[Validated proposal]

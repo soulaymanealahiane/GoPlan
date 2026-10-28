@@ -25,7 +25,7 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 
 - **Ranked student preferences:** eight expanded question sets cover technical, business, financial, social, international and creative interests. Students reorder selections; validated priorities persist across devices and influence academic advice, course suggestions, company size preferences and opportunity matching. Free-text answers and older workspaces remain supported.
 
-- **Constrained AI recommendations:** server-side OpenAI Responses API calls produce structured proposals that are validated against reviewed program data before they can change a plan.
+- **Hybrid AI recommendations:** Jev makes bounded choices and relevance judgments; GoPlan validates academic combinations, allocates courses and schedules semesters. GPT-6.1 Sol handles complex requests and fallback, while GPT-6 Luna handles explicit research refreshes. [Hybrid architecture](docs/HYBRID_ARCHITECTURE.md).
 - **Deterministic academic scheduling:** prerequisite and corequisite checks, credit limits, independent regular/summer loads, minor requirements and preserved completed courses.
 - **Saved manual degree plan:** add or remove courses from the available AUI catalogue, move them between semesters, record progress and keep semester notes without AI calls. Prerequisite checks protect course additions, replacements and moves; a compact degree check lists missing and extra courses. Adding an existing course moves it without duplicating it. Global AI prompts create a preview; graduation delays are shown before saving.
 - **Evidence-aware research:** profile-based ranking across 92 reviewed Moroccan internship targets and 38 institutions from the supplied AUI exchange list, plus bounded web discovery. Company revisions explore unseen targets; exchange cards show their recorded program type; current openings and exchange access still require confirmation.
@@ -36,11 +36,11 @@ See [university access configuration](docs/UNIVERSITY_ACCESS.md) for roster mode
 - **Operational visibility:** private usage aggregates, adviser reliability, registered profiles and feedback review. Student answers and grades are excluded from aggregate analytics.
 - **Excel output:** a generated workbook retains the semester-block layout of the planning template.
 
-The proposed university offer is one payment of US$12 per student for one roadmap and its included AI prompts. The financial basis is a US$10 API allowance budget plus 20% markup, excluding hosting, support and other business costs. The public demo does not collect payments.
+The proposed university offer is one payment of US$12 per student for one roadmap and its included AI prompts. The conservative US$10 API allowance ceiling remains in force across providers; it is not a measured average cost. Hosting, support and other business costs are additional. The public demo does not collect payments.
 
 ## Stack
 
-Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; OpenAI GPT-6.1 Sol for advice and GPT-6 Luna for focused live web research. Production email delivery requires a configured SMTP service.
+Vanilla JavaScript ES modules and responsive HTML/CSS; Node.js for development; a Cloudflare Workers-compatible production bundle; SQLite/D1 with Drizzle migrations; Supabase Auth for verified email and password authentication; TypeSafe Jev 1.14 for bounded decisions, OpenAI GPT-6.1 Sol for complex requests and fallback, and GPT-6 Luna for focused research refreshes. Production email delivery requires a configured SMTP service.
 
 OpenAI is the inference provider. GPT-6.1 Sol handles academic advice and feedback, using medium reasoning for academic choices and low reasoning for short answers, routing and target selection. GPT-6 Luna performs focused search and strict evidence extraction. One request-wide 180-second deadline and a $0.25 conservative spending guard cover discovery, advice and repairs; browser requests stop at 195 seconds. Actual input tokens are counted before generation; target ranking uses the standard tier to leave room for research and response validation. Completed search receipts and primary pages support extracted findings. Academic validators remain authoritative. The UI shows concise recommendations and clickable sources; search transcripts and page bodies stay on the server.
 

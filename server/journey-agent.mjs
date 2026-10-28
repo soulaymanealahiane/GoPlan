@@ -1,3 +1,5 @@
+import {hybridProposal,requestsLiveResearch} from './hybrid-adviser.mjs';
+import {hybridEnabled,providerEvent} from './jev.mjs';
 import {opportunityDescription,opportunityContextKey} from '../dist/opportunity-description.js';
 import {rankOpportunityTargets,opportunityInterests} from './opportunity-matching.mjs';
 import {adviceTokens,adviceEffort} from './request-policy.mjs';
@@ -113,7 +115,7 @@ export async function adviseJourney(input,env,fetcher=fetch){
  // the student's two revisions. It may legitimately keep existing matches.
  if(isInitialOpportunityRequest(input,env))opportunityPolicy.preferNovel=false;
  request.preferNovel=opportunityPolicy.preferNovel;
- const research=await researchFor(request,stage,env,fetcher,{exchangeTargets:stage==='targets'?availableTargets('exchanges',request.profile):[]});
+ const research=hybridEnabled(env)&&stage==='targets'&&!requestsLiveResearch(input)?{status:'reviewed',companies:[],exchanges:[],facts:[],sources:[],gaps:['Recommendations use reviewed sources. Current openings, exchange places and personal eligibility need confirmation.']}:await researchFor(request,stage,env,fetcher,{exchangeTargets:stage==='targets'?availableTargets('exchanges',request.profile):[]});
  if(request.researchOnly){
   // Refresh evidence deterministically. Do not pay for a new recommendation or
   // let a search change the student's shortlist, degree, courses or study pace.
@@ -303,6 +305,32 @@ export async function adviseJourney(input,env,fetcher=fetch){
    return result;
   }catch{return null;}
  };
+ const finishProposal=(parsed,attempt,source,model)=>{
+   validateCapabilityOutput(parsed);
+   if(directEdit)parsed=applyAcademicEdit(parsed,request,directEdit);
+   if(request.refinement&&parsed.intent==='unsupported'){if(clearlySupportedOperation(request.refinement,stage))throw Error('This operation is implemented in capabilities. Apply the requested supported edit, or ask for a missing text detail; do not label it unimplemented.');return unsupportedModelResponse(stage);}
+   if(request.refinement&&requestedEdit(request.refinement).isEdit&&parsed.intent==='answer')throw Error('This is a requested edit, not a read-only question. Apply the supported change or identify the specific missing choice.');
+   if(request.refinement&&parsed.intent==='clarify'){if(typeof parsed.answer!=='string'||!parsed.answer.trim())throw Error('State the specific clarification needed.');const answer=cleanUserProse({answer:parsed.answer}).answer;return {source,kind:'clarify',summary:answer,questions:[answer]};}
+   if(request.refinement&&parsed.intent==='answer'){
+    if(typeof parsed.answer!=='string'||!parsed.answer.trim())throw Error('Provide the explanation requested.');
+    return {source,kind:'answer',answer:cleanUserProse({answer:parsed.answer}).answer,minorChecklist:questionFacts.minorChecklist||null};
+   }
+   const checked=check(parsed,attempt);
+   if(stage==='courses'&&!structuralCourses)checked.agentChoices=Object.fromEntries(Object.entries(checked.choices).filter(([id])=>!Object.hasOwn(request.profile.choices,id)));
+   const update=checked.update||parsed.update||{summary:parsed.summary||'',changes:[],limitations:[]};
+   if(typeof update.summary!=='string'||!Array.isArray(update.changes)||!Array.isArray(update.limitations)||[...update.changes,...update.limitations].some(x=>typeof x!=='string'))throw Error('Explain what changed and what could not be fulfilled.');
+   if(request.refinement&&!parsed.update)throw Error('Respond explicitly to the requested change.');
+   if(stage==='targets'){
+    update.added=[];update.removed=[];
+    for(const type of ['internships','exchanges']){const before=currentRecommendation[type]||[],after=checked[type];update.added.push(...after.filter(t=>!before.some(p=>p.id===t.id)).map(t=>t.name));update.removed.push(...before.filter(t=>!after.some(p=>p.id===t.id)).map(t=>t.name));}
+    const actual=targetChanges(currentRecommendation,checked);if(request.refinement&&actual.length){update.summary=actual.map(s=>s.startsWith('Reordered')?s:s.startsWith('Updated company')?'Updated your company recommendations.':'Updated your exchange destinations.').join(' ');update.changes=actual;}
+    if(request.refinement&&!actual.length&&!isInitialOpportunityRequest(input,env)&&(currentRecommendation.internships?.length||currentRecommendation.exchanges?.length)&&!update.added.length&&!update.removed.length){if(!update.limitations.length)throw Error('No destinations changed. Either satisfy the requested change or explain the concrete evidence limitation.');update.changes=[];}
+   }
+   if(stage==='courses'&&!structuralCourses&&request.refinement){const changed=[...new Set([...Object.keys(checked.choices),...Object.keys(currentRecommendation.choices)])].some(id=>checked.choices[id]!==currentRecommendation.choices[id]);if(!changed&&!update.limitations.length)throw Error('No courses changed. Explain the constraint or replace eligible AI suggestions.');}
+   return {source,model,generatedAt:new Date().toISOString(),evidenceReviewed:EVIDENCE_REVIEWED,...cleanUserProse(checked),update:cleanUserProse(update),research:{...research,companies:undefined}};
+ };
+ const hybrid=await hybridProposal({stage,context,request,directEdit,structuralEdit},env,fetcher);
+ if(hybrid){try{return finishProposal(hybrid.proposal,0,hybrid.source,hybrid.model);}catch(error){providerEvent(env,{stage,outcome:'fallback',reason:'academic-validation'});}}
  let previousCourseProposal;
  for(let attempt=0;attempt<2;attempt++){
   let response;
@@ -333,28 +361,7 @@ export async function adviseJourney(input,env,fetcher=fetch){
    const recovered=recoverTargets(error);if(recovered)return recovered;throw error;
   }
   let parsed;try{parsed=JSON.parse(content.filter(c=>c.type==='output_text').map(c=>c.text).join(''));
-   validateCapabilityOutput(parsed);
-   if(directEdit)parsed=applyAcademicEdit(parsed,request,directEdit);
-   if(request.refinement&&parsed.intent==='unsupported'){if(clearlySupportedOperation(request.refinement,stage))throw Error('This operation is implemented in capabilities. Apply the requested supported edit, or ask for a missing text detail; do not label it unimplemented.');return unsupportedModelResponse(stage);}
-   if(request.refinement&&requestedEdit(request.refinement).isEdit&&parsed.intent==='answer')throw Error('This is a requested edit, not a read-only question. Apply the supported change or identify the specific missing choice.');
-   if(request.refinement&&parsed.intent==='clarify'){if(typeof parsed.answer!=='string'||!parsed.answer.trim())throw Error('State the specific clarification needed.');const answer=cleanUserProse({answer:parsed.answer}).answer;return {source:'openai',kind:'clarify',summary:answer,questions:[answer]};}
-   if(request.refinement&&parsed.intent==='answer'){
-    if(typeof parsed.answer!=='string'||!parsed.answer.trim())throw Error('Provide the explanation requested.');
-    return {source:'openai',kind:'answer',answer:cleanUserProse({answer:parsed.answer}).answer,minorChecklist:questionFacts.minorChecklist||null};
-   }
-   const checked=check(parsed,attempt);
-   if(stage==='courses'&&!structuralCourses)checked.agentChoices=Object.fromEntries(Object.entries(checked.choices).filter(([id])=>!Object.hasOwn(request.profile.choices,id)));
-   const update=checked.update||parsed.update||{summary:parsed.summary||'',changes:[],limitations:[]};
-   if(typeof update.summary!=='string'||!Array.isArray(update.changes)||!Array.isArray(update.limitations)||[...update.changes,...update.limitations].some(x=>typeof x!=='string'))throw Error('Explain what changed and what could not be fulfilled.');
-   if(request.refinement&&!parsed.update)throw Error('Respond explicitly to the requested change.');
-   if(stage==='targets'){
-    update.added=[];update.removed=[];
-    for(const type of ['internships','exchanges']){const before=currentRecommendation[type]||[],after=checked[type];update.added.push(...after.filter(t=>!before.some(p=>p.id===t.id)).map(t=>t.name));update.removed.push(...before.filter(t=>!after.some(p=>p.id===t.id)).map(t=>t.name));}
-    const actual=targetChanges(currentRecommendation,checked);if(request.refinement&&actual.length){update.summary=actual.map(s=>s.startsWith('Reordered')?s:s.startsWith('Updated company')?'Updated your company recommendations.':'Updated your exchange destinations.').join(' ');update.changes=actual;}
-    if(request.refinement&&!actual.length&&!isInitialOpportunityRequest(input,env)&&(currentRecommendation.internships?.length||currentRecommendation.exchanges?.length)&&!update.added.length&&!update.removed.length){if(!update.limitations.length)throw Error('No destinations changed. Either satisfy the requested change or explain the concrete evidence limitation.');update.changes=[];}
-   }
-   if(stage==='courses'&&!structuralCourses&&request.refinement){const changed=[...new Set([...Object.keys(checked.choices),...Object.keys(currentRecommendation.choices)])].some(id=>checked.choices[id]!==currentRecommendation.choices[id]);if(!changed&&!update.limitations.length)throw Error('No courses changed. Explain the constraint or replace eligible AI suggestions.');}
-   return {source:'openai',model:payload.model||env.OPENAI_MODEL||'gpt-6.1-sol',generatedAt:new Date().toISOString(),evidenceReviewed:EVIDENCE_REVIEWED,...cleanUserProse(checked),update:cleanUserProse(update),research:{...research,companies:undefined}};}
+   return finishProposal(parsed,attempt,'openai',payload.model||env.OPENAI_MODEL||'gpt-6.1-sol');}
   catch(e){if(attempt===1){if(e.code==='CAPABILITY_OUTPUT')return capabilityResponse({message:'GoPlan rejected the response because it requested an input or action this interface does not support. No changes were made. Describe a supported plan change in text.'});const error=Object.assign(Error('The adviser could not verify this proposal: '+e.message+' Your saved plan is unchanged.'),{code:stage==='targets'?'INVALID_TARGET_RESPONSE':undefined}),recovered=recoverTargets(error);if(recovered)return recovered;throw error;}if(stage==='courses')previousCourseProposal=parsed;context.repair={reason:e.message,previousProposal:parsed||null};context.task+=' Correct the previous proposal using repair. Do not repeat the rejected selection. Leave an unverifiable course open rather than guessing.';}
  }
 }

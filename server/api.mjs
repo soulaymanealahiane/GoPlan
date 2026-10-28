@@ -12,6 +12,7 @@ import {accountEndpoint} from './accounts.mjs';
 import {acquireAdviserLease,adviserFailure,rememberAdviserFailure} from './adviser-lease.mjs';
 import {REQUEST_BUDGET_USD,REQUEST_TIMEOUT_MS} from './request-policy.mjs';
 import {RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS} from './research.mjs';
+import {hybridEnabled,JEV_MODEL} from './jev.mjs';
 
 const pending=new Map(),recent=new Map(),failures=new Map(),activeSessions=new Map();
 const digest=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -33,7 +34,7 @@ export async function handleApi(request,env,options={}){
  if(signedIn&&!['GET','HEAD'].includes(request.method)&&origin!==new URL(request.url).origin)return reply({error:'Open this action from GoPlan.'},403,origin);
  if(rosterMode(env)&&!signedIn&&path!=='/api/status')return reply({error:'Sign in with an approved university email.',code:'ACCESS_REQUIRED'},401,origin);
  if(path==='/api/service'||path.startsWith('/api/service/'))return serviceEndpoint(request,env,signedIn);
- if(path==='/api/status'&&request.method==='GET')return reply({available:!!env.OPENAI_API_KEY,provider:'openai',model:env.OPENAI_MODEL||'gpt-6.1-sol',requiresAccess:false,requiresSignIn:!signedIn,authenticated:!!signedIn,feedbackAvailable:false},200,origin);
+ if(path==='/api/status'&&request.method==='GET')return reply({available:!!env.OPENAI_API_KEY,provider:hybridEnabled(env)?'hybrid':'openai',model:hybridEnabled(env)?env.TYPESAFE_MODEL||JEV_MODEL:env.OPENAI_MODEL||'gpt-6.1-sol',requiresAccess:false,requiresSignIn:!signedIn,authenticated:!!signedIn,feedbackAvailable:false},200,origin);
  const isFeedback=path==='/api/feedback'||path.startsWith('/api/feedback/')||path.startsWith('/api/review/');
  if(isFeedback)return reply({error:'Mistake reporting is no longer available.',code:'FEATURE_REMOVED'},410,origin);
  const isEvent=path==='/api/usage',isReviewedTargets=path==='/api/reviewed-targets';
@@ -61,7 +62,7 @@ export async function handleApi(request,env,options={}){
  // coalesce duplicate clicks and bound simultaneous paid work.
  const session=request.headers.get('X-GoPlan-Session');
  const identity=signedIn?.id||(session&&/^[a-zA-Z0-9-]{16,80}$/.test(session)?session:request.headers.get('CF-Connecting-IP')||options.clientAddress||'demo');
- const scope=await digest(JSON.stringify([env.OPENAI_API_KEY,env.AI_ACCESS_CODE,env.OPENAI_MODEL,env.OPENAI_RESEARCH_MODEL,env.OPENAI_REASONING_EFFORT,env.OPENAI_RESEARCH_REASONING_EFFORT,env.OPENAI_WEB_RESEARCH,env.OPENAI_DIRECTION_RESEARCH,identity]));
+ const scope=await digest(JSON.stringify([env.OPENAI_API_KEY,env.AI_ACCESS_CODE,env.OPENAI_MODEL,env.OPENAI_RESEARCH_MODEL,env.OPENAI_REASONING_EFFORT,env.OPENAI_RESEARCH_REASONING_EFFORT,env.OPENAI_WEB_RESEARCH,env.OPENAI_DIRECTION_RESEARCH,...(env.GOPLAN_HYBRID?[env.GOPLAN_HYBRID,env.TYPESAFE_MODEL,env.TYPESAFE_API_KEY]:[]),identity]));
  // Earlier budget/timeout failures must not block work under revised limits.
  const key=await digest('roadmap-resilience-v2:'+scope+JSON.stringify([data,corrections,REQUEST_BUDGET_USD,REQUEST_TIMEOUT_MS,RESEARCH_TIMEOUT_MS,RESEARCH_TOOL_CALLS])),now=Date.now();
  for(const [id,item] of recent)if(item.expires<=now)recent.delete(id);
@@ -73,7 +74,7 @@ export async function handleApi(request,env,options={}){
   if((activeSessions.get(scope)||0)>=1||pending.size>=8)return reply({error:'The adviser is finishing your previous request. Wait for it before requesting another recommendation.',code:'AGENT_BUSY',retryAfterSeconds:2},429,origin);
   activeSessions.set(scope,(activeSessions.get(scope)||0)+1);
   const metric={stage:data.stage,channel:channelFor(origin),outcome:'error',providerCalls:0,inputTokens:0,outputTokens:0};
-  const measuredFetch=async(...args)=>{const provider=new URL(args[0]).origin==='https://api.openai.com';if(provider)metric.providerCalls++;const response=await (options.fetcher||fetch)(...args);if(provider)try{const p=await response.clone().json();metric.inputTokens+=p.usage?.input_tokens||0;metric.outputTokens+=p.usage?.output_tokens||0;}catch{}return response;};
+  const measuredFetch=async(...args)=>{const provider=['https://api.openai.com','https://api.typesafe.ai'].includes(new URL(args[0]).origin);if(provider)metric.providerCalls++;const response=await (options.fetcher||fetch)(...args);if(provider)try{const p=await response.clone().json();metric.inputTokens+=p.usage?.input_tokens||0;metric.outputTokens+=p.usage?.output_tokens||0;}catch{}return response;};
   let lease,serviceCall;
   job=Promise.resolve().then(async()=>{
    let blocked;

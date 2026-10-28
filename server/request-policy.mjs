@@ -1,4 +1,5 @@
 import {AI_REQUEST_BUDGET} from '../dist/service-policy.js';
+import {JEV_URL,JEV_MODEL,JEV_INPUT_PRICE} from './jev.mjs';
 // One budget and deadline cover discovery, extraction, advice and repairs.
 export const REQUEST_TIMEOUT_MS=180000;
 // Initial opportunity discovery must finish before an edge/gateway disconnect.
@@ -19,6 +20,18 @@ export function boundedRequest(env,fetcher=fetch,{timeoutMs=REQUEST_TIMEOUT_MS}=
  const bounded=async(url,init={})=>{
   controller.signal.throwIfAborted();
   const signal=AbortSignal.any([controller.signal,...(init.signal?[init.signal]:[])]);
+  if(String(url)===JEV_URL){
+   const body=JSON.parse(init.body);
+   if(![JEV_MODEL,'jev-1.13.0'].includes(body.model)||new TextEncoder().encode(init.body).length>60000)throw Object.assign(Error('This decision request exceeds its verified limits.'),{code:'REQUEST_TOO_LARGE',status:422});
+   // Reserve the entire standard context ceiling before a paid Jev call. A
+   // failed or ambiguous transport keeps its reserve; no paid retries occur.
+   const reserve=64000*JEV_INPUT_PRICE/1e6;
+   if(spent+reserve>budget)throw Object.assign(Error('The recommendation reached its spending limit.'),{code:'REQUEST_BUDGET',status:422,retryable:false});
+   spent+=reserve;
+   const response=await fetcher(url,{...init,signal});
+   try{const p=await response.clone().json(),tokens=p.usage?.input_tokens;if(Number.isInteger(tokens)&&tokens>=0&&tokens<=64000)spent+=tokens*JEV_INPUT_PRICE/1e6-reserve;}catch{}
+   return response;
+  }
   if(new URL(url).origin!=='https://api.openai.com')return fetcher(url,{...init,signal});
   const body=JSON.parse(init.body),baseRates=prices[body.model];
   if(!baseRates||!['default','fast',undefined].includes(body.service_tier))throw Object.assign(Error('This model or processing tier has no verified GoPlan spending limit.'),{status:503});
