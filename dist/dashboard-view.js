@@ -64,6 +64,9 @@ function courseDeck(profile,j,plan,runtime){
 }
 function opportunityDeck(j,plan,runtime){
  const type=runtime.targetGroup||'internships',targets=plan?.targets||j.details||{},items=targets[type]||[];
+ // Cached or newly returned exchanges must wait for the entire operation,
+ // including its remaining stage work, to finish before entering the page.
+ if(type==='exchanges'&&isBusy(runtime))return '';
  if(!items.length){
   const exchanges=type==='exchanges';
   if(runtime.service?.saved||runtime.service&&runtime.service.step>=5)return `${opportunityFilters(type)}<section class="empty-deck"><h2>${exchanges?'No exchange destinations saved':'No internship targets saved'}</h2><p>Your courses and semester plan are ready to edit.</p>${button('dashboard-panel','Open my semester plan',false,'data-panel="semesters"')}</section>`;

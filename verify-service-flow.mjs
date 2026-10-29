@@ -9,6 +9,15 @@ import {acceptAdvice} from './dist/journey-state.js';
 import {availableTargets} from './server/advisor.mjs';
 const DB=localDatabase(':memory:'),uid='service-flow',originalFetch=globalThis.fetch,originalForm=globalThis.FormData;
 let state=newcomerWorkspace({year:2026}),runtime={},paid=0,routeStep=5,directionTrack='SE',loseCourses=false;
+const exchangeRenders=[];
+function checkExchangeRender(){
+ if(runtime.service?.step!==3||!state.journey.details?.exchanges?.length)return;
+ const html=dashboardView(state,runtime),busy=!!(runtime.busy||runtime.dashboardBusy);
+ assert.equal(html.includes('opportunity-flashcard'),!busy,'Exchange cards appear only after the entire stage update finishes.');
+ if(busy)assert.match(html,/class="dashboard-working"/,'Keep the progress status visible while hiding exchange cards.');
+ for(const item of state.journey.details.exchanges)assert.equal(html.includes('<h3>'+item.name+'</h3>'),!busy);
+ exchangeRenders.push(busy?'pending':'ready');
+}
 state.journey.questionnaire={ambitions:'Build useful technology.',workStyle:'Software products.',strengths:'Mathematics.'};
 const call=async(stage,action,extra={})=>{
  const receipt=await reserveServiceCall(DB,uid,action,stage,JSON.stringify(extra));if(receipt.cached)return receipt.cached;paid++;
@@ -20,8 +29,8 @@ const call=async(stage,action,extra={})=>{
  if(stage==='pace')result={pace:'balanced',regularCourses:5,summerCourses:2,summers:true,summary:'Your pace.',reason:'Balanced.',actions:[]};
  await receipt.finish(result,200);return result;
 };
-const getAdvice=async(stage,{serviceAction}={})=>{const result=await call(stage,serviceAction,{stage,refinement:state.journey.refinements?.[stage]});if(loseCourses&&stage==='courses'){loseCourses=false;throw TypeError('Synthetic lost courses response');}acceptAdvice(state.journey,stage,result);return true;};
-const h={runtime,read:()=>state,account:()=>({firstName:'Demo'}),render(){},changed(){},persist(){},notify(){},modal(){},head:()=>'',close(){},getAdvice,startWorkspace:async next=>{state=next;},showPlan(){},exportPlan:async()=>{},saveAccount:async()=>{const row=await serviceEntitlement(DB,uid);await DB.prepare('UPDATE service_entitlements SET saved=1 WHERE id=? AND step=5').bind(row.id).run();return true;}};
+const getAdvice=async(stage,{serviceAction}={})=>{const result=await call(stage,serviceAction,{stage,refinement:state.journey.refinements?.[stage]});if(loseCourses&&stage==='courses'){loseCourses=false;throw TypeError('Synthetic lost courses response');}acceptAdvice(state.journey,stage,result);checkExchangeRender();return true;};
+const h={runtime,read:()=>state,account:()=>({firstName:'Demo'}),render:checkExchangeRender,changed(){},persist(){},notify(){},modal(){},head:()=>'',close(){},getAdvice,startWorkspace:async next=>{state=next;},showPlan(){},exportPlan:async()=>{},saveAccount:async()=>{const row=await serviceEntitlement(DB,uid);await DB.prepare('UPDATE service_entitlements SET saved=1 WHERE id=? AND step=5').bind(row.id).run();return true;}};
 const controller=createDashboardController(h);
 globalThis.FormData=class{constructor(form){this.form=form;}get(key){return this.form.values[key];}};
 globalThis.fetch=async(url,init={})=>{
@@ -35,12 +44,21 @@ try{
  const first=await controller.authorizeAdvice('direction');await getAdvice('direction',{serviceAction:first});
  for(let step=0;step<5;step++){
   assert.equal(runtime.service.step,step);let html=dashboardView(state,runtime);assert.ok(html.includes('OF 5'));assert.match(html,/2 of 2 AI changes left/);assert.ok(!html.includes('class="dashboard-tabs"'));assert.ok(!html.includes('Start over'));
+  if(step===3){
+   for(const pending of [{busy:true},{dashboardBusy:true},{busy:true,dashboardBusy:true}]){
+    const waiting=dashboardView(state,{...runtime,...pending});
+    assert.ok(!waiting.includes('opportunity-flashcard'));assert.match(waiting,/class="dashboard-working"/);
+   }
+   const failed=dashboardView(state,{...runtime,busy:false,dashboardBusy:false,aiError:'Could not complete this update.',aiFailure:{retryable:true}});
+   assert.match(failed,/opportunity-flashcard/);assert.match(failed,/Could not complete this update/,'Release existing results for recovery once work has stopped.');
+  }
   for(let n=0;n<2;n++)await controller.submit({id:'dashboard-command-form',values:{request:'Refine this stage '+step+' preference '+n}});
   assert.equal(runtime.service.stageChanges[step],0);html=dashboardView(state,runtime);assert.ok(!html.includes('id="dashboard-request"'));
   const before=paid;await controller.submit({id:'dashboard-command-form',values:{request:'A third prompt must be refused.'}});assert.equal(paid,before);
   await controller.click({dataset:{action:'dashboard-stage-next'}});
  }
  assert.equal(runtime.service.step,5);assert.equal(state.phase,'draft');assert.ok(!dashboardView(state,runtime).includes('id="dashboard-request"'),'Global prompts unlock only after saving.');
+ assert.ok(exchangeRenders.includes('pending')&&exchangeRenders.includes('ready'),'Exercise cached and returned exchanges through pending and completed controller renders.');
  await controller.click({dataset:{action:'dashboard-save'}});assert.equal(runtime.service.saved,true);assert.equal(runtime.service.globalRemaining,5);
  assert.match(dashboardView(state,{...runtime,dashboardPanel:'courses'}),/5 of 5 global AI changes left/,'The saved allowance stays visible outside Your space.');
  for(let n=0;n<5;n++){
