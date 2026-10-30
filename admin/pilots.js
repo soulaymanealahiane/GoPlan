@@ -27,7 +27,7 @@ async function loadPartnerships(){
      retry.addEventListener('click',async()=>{retry.disabled=true;try{const result=await read(await fetch('/api/admin/partnerships/retry-email',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:inquiry.id}),signal:AbortSignal.timeout(20000)}));delivery.textContent=emailState(result.state);if(result.state==='accepted'||result.state==='review_needed')retry.hidden=true;}catch(e){delivery.textContent=e.message;}finally{retry.disabled=false;}});article.append(retry);
     }
    }
-   const link=document.createElement('a');link.href='mailto:'+encodeURIComponent(inquiry.email)+'?subject='+encodeURIComponent('GoPlan university pilot');link.textContent='Reply by email ↗';article.append(link);list.append(article);
+   const link=document.createElement('a');link.href='https://mail.zoho.com/';link.target='_blank';link.rel='noopener noreferrer';link.title='Open Zoho Mail as partnerships@planwithgoplan.com and reply to the inquiry notification.';link.textContent='Reply in Zoho Mail ↗';article.append(link);list.append(article);
   }
   message(status,data.inquiries.length?data.inquiries.length+(data.inquiries.length===1?' inquiry':' inquiries'):'No university inquiries.');
  }catch(e){message(status,e.message,true);}
