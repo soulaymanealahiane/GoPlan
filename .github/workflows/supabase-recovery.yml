@@ -1,0 +1,33 @@
+name: Supabase authentication recovery
+
+on:
+  schedule:
+    - cron: '3-58/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-authentication-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    if: github.repository == 'soulaymanealahiane/GoPlan' && vars.SUPABASE_PROJECT_REF != '' && vars.SUPABASE_PUBLISHABLE_KEY != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check authentication and resume a paused project
+        env:
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_AUTO_RESUME: ${{ vars.SUPABASE_AUTO_RESUME }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: node scripts/supabase-watchdog.mjs
