@@ -14,10 +14,11 @@ export async function notifyPartnership(id,env,options={}){
  if(!claim.meta?.changes)return {state:'sending'};
  const text=['New GoPlan university inquiry','Reference: '+id.slice(0,8),'Received: '+new Date(row.created_at).toISOString(),'Name: '+row.name,'Email: '+row.email,'University: '+row.university,'',row.message,...(row.offer_json?['','Selected package (estimate):',offerSummary(JSON.parse(row.offer_json))]:[]),'','Review in GoPlan: https://planwithgoplan.com/admin'].join('\n');
  const body=JSON.stringify({from,to:[PARTNERSHIP_MAIL_TO],reply_to:row.email,subject:'GoPlan university inquiry · '+id.slice(0,8),text});
+ const mailFetcher=options.mailFetcher||globalThis.fetch.bind(globalThis);
  let code='mail_unconfirmed';
  for(let attempt=0;attempt<2;attempt++){
   try{
-   const response=await (options.mailFetcher||fetch)('https://api.resend.com/emails',{method:'POST',redirect:'error',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'partnership-inquiry/'+id},body,signal:AbortSignal.timeout(5000)});
+   const response=await mailFetcher('https://api.resend.com/emails',{method:'POST',redirect:'manual',headers:{Authorization:'Bearer '+env.RESEND_API_KEY,'Content-Type':'application/json','Idempotency-Key':'partnership-inquiry/'+id},body,signal:AbortSignal.timeout(5000)});
    let result;try{result=await response.json();}catch{result=null;}
    if(response.ok&&typeof result?.id==='string'&&/^[a-zA-Z0-9_-]{8,100}$/.test(result.id)){
     await db.prepare("UPDATE partnership_inquiries SET email_state='accepted',email_id=?,email_error=NULL,email_updated_at=? WHERE id=?").bind(result.id,now,id).run();
@@ -25,7 +26,7 @@ export async function notifyPartnership(id,env,options={}){
    }
    code='mail_http_'+response.status;
    if(response.status!==429&&response.status<500)break;
-  }catch{code='mail_unconfirmed';}
+  }catch(error){code=/illegal invocation/i.test(error?.message||'')?'mail_transport_binding':['TimeoutError','AbortError'].includes(error?.name)?'mail_transport_timeout':error?.name==='TypeError'?'mail_transport_type':'mail_unconfirmed';}
  }
  await db.prepare("UPDATE partnership_inquiries SET email_state='failed',email_error=?,email_updated_at=? WHERE id=? AND email_state<>'accepted'").bind(code,now,id).run();
  return {state:'failed'};
