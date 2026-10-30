@@ -1,4 +1,6 @@
 import {hash} from './feedback.mjs';
+import {calculateOffer} from '../dist/university-offer.js';
+import {notifyPartnership} from './partnership-mail.mjs';
 const error=(message,status)=>{throw Object.assign(Error(message),{status});};
 export async function partnershipEndpoint(request,env,options={}){
  const json=(value,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -13,11 +15,20 @@ export async function partnershipEndpoint(request,env,options={}){
   if(!data||typeof data!=='object'||Array.isArray(data))error('Invalid inquiry.',400);
   if(data.website)return json({reference:'received'});
   for(const [key,max] of [['name',120],['email',254],['university',180],['message',2000]])if(typeof data[key]!=='string'||!data[key].trim()||data[key].length>max)error('Please complete each field within its length limit.',400);
-  const email=data.email.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))error('Enter a valid work email.',400);
+  const email=data.email.trim().toLowerCase();if(!/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(email))error('Enter a valid work email.',400);
+  let offer=null;if(data.offer!==undefined){try{offer=calculateOffer(data.offer).inputs;}catch{error('Choose valid whole-number package quantities.',400);}}
+  if(data.submissionId!==undefined&&!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.submissionId))error('Invalid inquiry reference.',400);
+  const reference=data.submissionId||crypto.randomUUID(),name=data.name.trim(),university=data.university.trim(),message=data.message.trim(),offerJson=offer?JSON.stringify(offer):null;
+  const replay=await env.DB.prepare('SELECT * FROM partnership_inquiries WHERE id=?').bind(reference).first();
+  const same=row=>row.name===name&&row.email===email&&row.university===university&&row.message===message&&row.offer_json===offerJson;
+  if(replay){if(!same(replay))error('This inquiry reference was already used. Reopen the form to send a different inquiry.',409);try{await notifyPartnership(reference,env,options);}catch{}return json({reference:reference.slice(0,8)},201);}
   const now=Date.now(),bucket=Math.floor(now/3600000),ip=request.headers.get('CF-Connecting-IP')||options.clientAddress||'unknown',id=await hash('partnership:'+ip+':'+bucket);
   const count=await env.DB.prepare('INSERT INTO auth_limits(id,count,expires_at) VALUES(?,1,?) ON CONFLICT(id) DO UPDATE SET count=count+1 RETURNING count').bind(id,(bucket+1)*3600000).first();if(count.count>5)error('Please wait before sending another inquiry.',429);
   await env.DB.prepare('DELETE FROM partnership_inquiries WHERE created_at<?').bind(now-180*86400000).run();
-  const reference=crypto.randomUUID();await env.DB.prepare('INSERT INTO partnership_inquiries(id,name,email,university,message,created_at) VALUES(?,?,?,?,?,?)').bind(reference,data.name.trim(),email,data.university.trim(),data.message.trim(),now).run();
+  await env.DB.prepare("INSERT INTO partnership_inquiries(id,name,email,university,message,created_at,offer_json,email_state) VALUES(?,?,?,?,?,?,?,'pending') ON CONFLICT(id) DO NOTHING").bind(reference,name,email,university,message,now,offerJson).run();
+  const stored=await env.DB.prepare('SELECT * FROM partnership_inquiries WHERE id=?').bind(reference).first();if(!same(stored))error('This inquiry reference was already used.',409);
+  // A provider outage cannot discard an inquiry or make the visitor submit twice.
+  try{await notifyPartnership(reference,env,options);}catch{}
   return json({reference:reference.slice(0,8)},201);
  }catch(e){return json({error:e.status?e.message:'Your inquiry could not be saved. Please retry.'},e.status||503);}
 }

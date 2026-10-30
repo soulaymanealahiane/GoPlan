@@ -27,7 +27,7 @@ export async function handleApi(request,env,options={}){
  if(path==='/api/partnerships')return partnershipEndpoint(request,env,options);
  if(path.startsWith('/api/auth/'))return authEndpoint(request,env,options);
  if(path==='/api/account'||path.startsWith('/api/account/'))return accountEndpoint(request,env);
- if(path.startsWith('/api/admin/'))return adminEndpoint(request,env);
+ if(path.startsWith('/api/admin/'))return adminEndpoint(request,env,options);
  if(origin&&!acceptedOrigins.has(origin))return reply({error:'This origin cannot use the GoPlan adviser.'},403);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type, X-GoPlan-Access, X-GoPlan-Session','Access-Control-Max-Age':'600','Vary':'Origin'}});
  let signedIn;try{signedIn=await accountIdentity(request,env);}catch{return reply({error:'Account connection unavailable. Please retry.'},503,origin);}

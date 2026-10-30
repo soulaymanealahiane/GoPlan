@@ -4,3 +4,4 @@
 
 #roster-form{display:grid;gap:14px}#roster-form p{margin:0}#roster-form button{justify-self:start}#roster-replace-confirm{flex-direction:row;align-items:flex-start;line-height:1.5;font-weight:400}#roster-replace-confirm input{flex-shrink:0}
 #roster-fields{display:grid;gap:14px;border:0;padding:0;margin:0;min-width:0;max-width:680px}#roster-fields:disabled{opacity:.55}#roster-fields:disabled button{cursor:not-allowed}#roster-file{width:100%}#roster-form~details{margin-top:18px}details>p{font-size:14px;color:#547266}details[open]{padding-bottom:8px}#pilot-setup{font-size:14px;color:#547266}#pilot-status.error,#partnership-status.error,#roster-status.error{padding:12px;border-radius:8px}#feedback-shortcut{margin-top:8px}
+.notification-status{display:block;margin:12px 0}.notification-retry{display:block;margin:8px 0 15px}

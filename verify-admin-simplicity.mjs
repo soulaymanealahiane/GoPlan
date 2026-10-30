@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
+import {offerSummary} from './dist/university-offer.js';
 
 const html=await readFile(new URL('./admin/index.html',import.meta.url),'utf8');
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
@@ -48,8 +49,8 @@ const fetch=async(path,options={})=>{
  throw Error('Unexpected admin fetch: '+path);
 };
 const common={document,fetch,AbortSignal,console,Date,location:{hostname:'planwithgoplan.com'},setTimeout};
-const pilots=vm.createContext({...common});
-vm.runInContext((await readFile(new URL('./admin/pilots.js',import.meta.url),'utf8')).replace('export async function refreshPilots','async function refreshPilots'),pilots);
+const pilots=vm.createContext({...common,offerSummary});
+vm.runInContext((await readFile(new URL('./admin/pilots.js',import.meta.url),'utf8')).replace("import {offerSummary} from '/university-offer.js';",'').replace('export async function refreshPilots','async function refreshPilots'),pilots);
 const context=vm.createContext({...common,refreshPilots:pilots.refreshPilots});
 vm.runInContext((await readFile(new URL('./admin/admin.js',import.meta.url),'utf8')).replace("import {refreshPilots} from './pilots.js';",''),context);
 const settle=async()=>{for(let i=0;i<4;i++)await new Promise(resolve=>setImmediate(resolve));};
