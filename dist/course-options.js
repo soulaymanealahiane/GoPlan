@@ -1,6 +1,14 @@
 import DATA from './academic-data.js';
 export const needsPersonalConfirmation=c=>!!c.placementRules||/(?:^|-)(?:arabic|french|civic|language)(?:-|$)/i.test(c.id)||(!c.code&&/^(?:Arabic|French|Language Center|Civic Engagement)\b|\bplacement\b/i.test(c.title));
 
+// A requirement with one confirmed course is compulsory, not a model preference.
+// Language placement and school-approved placeholders still need confirmation.
+export function requiredCourseChoice(requirement,profile){
+ if(!requirement.requirementChoice||requirement.approvalOnly||requirement.approvalRequired||needsPersonalConfirmation(requirement))return '';
+ const options=courseOptions(requirement,profile);
+ return options.length===1&&!options[0].topic&&!options[0].creditsProvisional?options[0].code:'';
+}
+
 // A missing option list on an approval placeholder is not permission to use any course.
 export function courseOptions(requirement, profile) {
   const topics=(requirement.allowedOptions||[]).filter(x=>x.id&&x.title&&!x.courseCode);

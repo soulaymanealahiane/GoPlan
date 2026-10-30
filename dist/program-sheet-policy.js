@@ -7,6 +7,11 @@ const complete=(rule={})=>({all:[],any:[],coreq:[],minCredits:0,review:false,...
 export function applyProgramSheetPolicy(data){
  data.version='aui-2025-26-r5-prerequisite-slots';
  const cs=data.programs.find(p=>p.id==='BSCSC'),bba=data.programs.find(p=>p.id==='BBA');
+ // The catalogue extractor missed MTH1305's description. The applicable BBA
+ // sheet explicitly supplies its code, title and credits; this is a confirmed
+ // degree requirement, not an unknown elective or a language placement slot.
+ const businessMath=data.courses.MTH1305;
+ if(!businessMath||businessMath.creditsProvisional)data.courses.MTH1305={...businessMath,code:'MTH1305',title:'Mathematics for Business',credits:3,creditsProvisional:false,source:source(bbaFile,2),rule:complete({review:true}),prerequisiteText:'Required by the BBA program sheet. Confirm any admission or mathematics placement conditions with AUI.'};
  for(const p of data.programs)p.sourcePolicy=SHEET_POLICY;
  for(const slot of cs.requirements.filter(r=>r.groupId==='free'))slot.source=source(csFile,1);
  for(const override of Object.values(cs.overrides))Object.assign(override,{coreq:override.coreq||[],minCredits:override.minCredits||0});

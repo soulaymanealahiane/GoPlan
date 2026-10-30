@@ -1,7 +1,8 @@
 import {normalizeProfile,label,limits} from './planner.js';
 
 // Sequence receipts are local state, never model-authored course lists.
-export function sequenceKey(raw){const p=normalizeProfile(raw);return JSON.stringify(['program','track','secondTrack','minor','choices','regularCourses','summerCourses','summers','startYear','lc','priorCodes','exchange'].map(k=>p[k]));}
+// Version 2 invalidates cached maps built before required BBA mathematics was resolved.
+export function sequenceKey(raw){const p=normalizeProfile(raw);return JSON.stringify([2,...['program','track','secondTrack','minor','choices','regularCourses','summerCourses','summers','startYear','lc','priorCodes','exchange'].map(k=>p[k])]);}
 export function semesterUpdate(before,after,assessment,change){
  const changes=[],limitations=[];
  if(before.profile.startYear!==after.profile.startYear)changes.push(`Set the degree start to Fall ${after.profile.startYear}.`);

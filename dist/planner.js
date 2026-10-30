@@ -6,7 +6,7 @@ applyAcademicCorrections(DATA);
 import GUIDED from './guided-data.js';
 import {withMinor,selectedMinor} from './minors.js';
 import {withSecondFocus} from './second-focus.js';
-import {courseOptions} from './course-options.js';
+import {courseOptions,requiredCourseChoice} from './course-options.js';
 import {allocatePrerequisiteSlots,uncoveredPrerequisites,isFreeSlot} from './prerequisite-slots.js';
 import {businessRule,BUSINESS_SOURCE,describeRule} from './program-rules.js';
 import {normalizeScheduling,courseAvailability} from './course-availability.js';
@@ -32,7 +32,7 @@ export function coursesFor(raw=DEFAULT_PROFILE){
  const p=normalizeProfile(raw),program=programFor(p),track=program.tracks.find(t=>t.id===p.track);
  const requirements=withMinor(withSecondFocus(track?[...program.requirements.filter(r=>r.groupId!==track.replacesGroup),...track.requirements]:program.requirements,p),p);
 
- const resolve=(r,selected=code(p.choices[r.id]))=>{
+ const resolve=(r,selected=code(p.choices[r.id])||requiredCourseChoice(r,p))=>{
   const topics=(r.allowedOptions||[]).filter(x=>x.id&&x.title&&!x.courseCode),topic=topics.find(x=>code(x.id)===selected),permitted=courseOptions(r,p).some(x=>x.code===selected&&!x.topic);
   const cid=r.choice?(permitted?selected:''):r.code,entry=DATA.courses[cid]||{};
   let rule={all:[],any:[],coreq:[],minCredits:0,review:true,...entry.rule};

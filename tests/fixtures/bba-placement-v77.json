@@ -1,0 +1,157 @@
+{
+  "profile": {
+    "name": "",
+    "program": "BBA",
+    "track": "BAI",
+    "pace": "balanced",
+    "gpa": "",
+    "summers": true,
+    "exchange": false,
+    "startYear": 2026,
+    "lc": 0,
+    "priorCodes": [],
+    "choices": {
+      "bba-history": "HIS1301",
+      "bba-humanities": "LIT2301",
+      "bba-arts": "ART1301",
+      "bba-social": "SOC1301",
+      "bba-computer": "CSC1300",
+      "bba-science": "BIO1400"
+    },
+    "secondTrack": "FIT",
+    "regularCourses": 5,
+    "summerCourses": 2,
+    "minor": ""
+  },
+  "terms": [
+    {
+      "id": "Fall-2026",
+      "season": "Fall",
+      "year": 2026,
+      "courses": [
+        "fas0210",
+        "fye1101",
+        "eng1301",
+        "bba-computer",
+        "bba-arabic"
+      ],
+      "exchange": false,
+      "lc": false
+    },
+    {
+      "id": "Spring-2027",
+      "season": "Spring",
+      "year": 2027,
+      "courses": [
+        "fye1102",
+        "fas1220",
+        "com1301",
+        "bba-french",
+        "bba-history"
+      ],
+      "exchange": false,
+      "lc": false
+    },
+    {
+      "id": "Summer-2027",
+      "season": "Summer",
+      "year": 2027,
+      "courses": [
+        "eng2302",
+        "bba-humanities"
+      ],
+      "exchange": false,
+      "lc": false
+    },
+    {
+      "id": "Fall-2027",
+      "season": "Fall",
+      "year": 2027,
+      "courses": [
+        "bba-arts",
+        "bba-social",
+        "bba-civic",
+        "bba-math",
+        "bba-science"
+      ],
+      "exchange": false,
+      "lc": false
+    },
+    {
+      "id": "Spring-2028",
+      "season": "Spring",
+      "year": 2028,
+      "courses": [
+        "bba-free-1",
+        "bba-free-2",
+        "bba-free-3",
+        "bai3301",
+        "bba-bai-1"
+      ],
+      "exchange": false,
+      "lc": false
+    },
+    {
+      "id": "Summer-2028",
+      "season": "Summer",
+      "year": 2028,
+      "courses": [
+        "bba-bai-2",
+        "second-BBA-FIT-bba-fit-1"
+      ],
+      "exchange": false,
+      "lc": false
+    },
+    {
+      "id": "Fall-2028",
+      "season": "Fall",
+      "year": 2028,
+      "courses": [
+        "gbu3203",
+        "gbu3302",
+        "second-BBA-FIT-bba-fit-2"
+      ],
+      "exchange": false,
+      "lc": false
+    },
+    {
+      "id": "Summer-2029",
+      "season": "Summer",
+      "year": 2029,
+      "courses": [],
+      "exchange": false,
+      "lc": false,
+      "internshipOnly": true
+    },
+    {
+      "id": "pending",
+      "season": "Pending",
+      "year": 0,
+      "courses": [
+        "acc2301",
+        "acc2302",
+        "acc3201",
+        "eco2301",
+        "eco2302",
+        "fin3301",
+        "gbu2301",
+        "gbu3311",
+        "gbu4101",
+        "int4301",
+        "mgt3301",
+        "mgt3302",
+        "mgt4303",
+        "mgt4301",
+        "mis3301",
+        "mkt3301",
+        "bai3302",
+        "bai3303",
+        "second-BBA-FIT-fit3301",
+        "second-BBA-FIT-fit3302",
+        "second-BBA-FIT-fit3303"
+      ],
+      "exchange": false,
+      "lc": false
+    }
+  ]
+}

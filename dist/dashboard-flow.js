@@ -10,8 +10,24 @@ export function newcomerWorkspace({year=new Date().getFullYear(),name='',degree=
  return planningWorkspace({profileName:name,studentContext:{route:'admitted',degreeIntent:degree?'keep':'explore',currentDegree:degree,currentTerm:'Fall-'+year,studyStartYear:year,records:[]}});
 }
 export function needsBusinessMinorRefresh(plan){return !!(plan?.profile?.program==='BSCSC'&&plan.profile.minor==='business-administration'&&plan.courses.filter(c=>c.minorId==='business-administration').length>5);}
+export function needsBusinessPlacementRefresh(plan){
+ if(plan?.profile?.program!=='BBA'||plan.manualEdits)return false;
+ const math=plan.courses.find(c=>c.id==='bba-math'),pending=new Set(plan.terms.find(t=>t.id==='pending')?.courses||[]);
+ return !!(math&&!math.code&&!math.manualOverride&&!['completed','in-progress'].includes(plan.tracking?.[math.id]?.status)&&['acc2301','eco2301','gbu2301'].every(id=>pending.has(id)));
+}
 export function refreshMinorDraft(state){
- const plan=state.phase==='draft'?state.draftPlan:state.plan;if(!plan||plan.manualEdits)return state;
+ const plan=state.phase==='draft'?state.draftPlan:state.plan;if(!plan)return state;
+ if(needsBusinessPlacementRefresh(plan)){
+  const result=manualDegreePlan(plan,plan.profile);
+  // Repair the generated draft without overwriting the saved original, personal
+  // course edits, recorded study, semester notes, or lifetime service allowance.
+  result.id=plan.id;result.createdAt=plan.createdAt;
+  for(const old of plan.terms.filter(t=>t.note)){let term=result.terms.find(t=>t.id===old.id);if(!term){term={...structuredClone(old),courses:[]};result.terms.push(term);}term.note=old.note;}
+  result.terms.sort((a,b)=>a.id==='prior'?-1:b.id==='prior'?1:a.id==='pending'?1:b.id==='pending'?-1:termOrder(a)-termOrder(b));
+  result.decisions.semesterSequence=null;
+  return {...state,journey:result.decisions,draftPlan:result,phase:'draft'};
+ }
+ if(plan.manualEdits)return state;
  const minorCorrection=needsBusinessMinorRefresh(plan)&&state.journey?.minorDataVersion!==2;
  const protectedCourses=plan.courses.filter(c=>['completed','in-progress'].includes(plan.tracking?.[c.id]?.status)||plan.profile.priorCodes?.includes(c.code)),protectedIds=protectedCourses.map(c=>c.id);
  const profile={...plan.profile,choices:{...plan.profile.choices,...Object.fromEntries(protectedCourses.filter(c=>c.choice&&c.code).map(c=>[c.id,c.code]))}};

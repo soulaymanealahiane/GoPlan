@@ -40,7 +40,7 @@ export function eligibleCourseOptions(requirement,raw,context=selectionEligibili
  return courseOptions(requirement,profile).filter(option=>{
   if(option.topic||option.creditsProvisional)return false;
   const source=program.trackOverrides?.[requirement.secondTrack||profile.track]?.[option.code]||program.overrides?.[option.code];
-  let rule=manualRule(profile,option,courses);
+  let rule=manualRule({...profile,track:requirement.secondTrack||profile.track},option,courses);
   if(!source?.source&&requirement.conditionalRules?.[option.code])rule={...rule,...requirement.conditionalRules[option.code]};
   // An already-resolved selected row carries the exact applicable sheet rule.
   const candidate={...option,id:requirement.id,rule:requirement.code===option.code?requirement.rule:rule};
