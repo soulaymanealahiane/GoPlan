@@ -1,6 +1,8 @@
 import DATA from './academic-data.js';
 import GUIDED from './guided-data.js';
+import {minorAllowed} from './degree-policy.js';
 export function selectedMinor(p){
+ if(!minorAllowed(p))return null;
  const m=GUIDED.minors.find(x=>x.id===p.minor);if(!m||DATA.programs.find(x=>x.id===p.program)?.level!=='undergraduate'||m.eligibility?.excludedPrograms?.includes(p.program)||m.eligibility?.eligiblePrograms?.length&&!m.eligibility.eligiblePrograms.includes(p.program))return null;
  if(m.id==='mathematics'&&p.program==='BSCSC')return {...m,name:'Mathematics (Individual Minor)',reviewRequired:true,programRules:[],requirements:[...['MTH2304','EGR3392','CSC4351','EGR4394'].map(id=>({id:'imath-'+id.toLowerCase(),courseCode:id,type:'requiredCourse',title:DATA.courses[id]?.title||id,credits:3,category:'Minor',source:m.source})),{id:'imath-approved',type:'requirementChoice',title:'Mathematics elective — school approval needed',credits:3,category:'Minor',allowedCourses:[],approvalOnly:true,approvalRequired:true,condition:'A further 3-credit math-intensive SSE course (2000 level or above), or actual mathematics special topic, must be approved for this Individual Minor.',source:m.source}]};
  if(!m.variants)return m;const v=m.variants.find(x=>x.eligiblePrograms.includes(p.program));return v?{...m,...v,id:m.id,name:m.name,notes:[...(m.notes||[]),...(v.notes||[])]}:null;

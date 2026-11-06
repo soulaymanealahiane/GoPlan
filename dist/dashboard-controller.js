@@ -1,3 +1,5 @@
+import {degreeChoiceFields,changeDegreeChoice} from './degree-choice-view.js';
+import {degreePolicy,degreeSelectionIssues} from './degree-policy.js';
 import {editRoadmap} from './roadmap-edit.js';
 import {unsupportedOperation} from './agent-capabilities.js';
 import {opportunityLabel} from './opportunity-labels.js';
@@ -171,7 +173,7 @@ export function createDashboardController(h){
   const p=current()?.profile||state().journey.profile;
   h.modal(h.head('Your degree, your choice')+`<form id="dashboard-degree-form"><label class="field">Degree<select name="program" id="dashboard-degree">${options(DATA.programs.filter(p=>p.level==='undergraduate').map(p=>[p.id,p.name]),p.program)}</select></label><div id="dashboard-focus-options">${focusOptions(p)}</div><p id="dashboard-degree-error" class="field-error" role="alert"></p><button class="button primary" type="submit">Update my degree</button></form>`);
  }
- function focusOptions(p){const degree=programFor(p);return `${degree.tracks.length?`<label class="field">Focus<select name="track">${options(degree.tracks.map(t=>[t.id,t.name]),p.track)}</select></label>`:''}<label class="field">Minor<select name="minor">${options([['','No minor for now'],...eligibleMinors(p).map(m=>[m.id,m.name])],p.minor)}</select></label><details class="quiet-details"><summary>More choices</summary>${['BBA','BSCSC'].includes(p.program)?`<label class="field">Second focus<select name="secondTrack">${options([['','None'],...degree.tracks.map(t=>[t.id,t.name])],p.secondTrack)}</select></label>`:''}</details>`;}
+ function focusOptions(p){const profile=normalizeProfile(p);return degreeChoiceFields(profile,{program:programFor(profile),minorOptions:eligibleMinors(profile)});}
  function pace(){
   const p=current()?.profile||state().journey.profile;
   h.modal(h.head('Plan settings')+`<form id="dashboard-pace-form"><label class="field">Regular semester<select name="regular">${options([['5','Up to 5 courses'],['6','Up to 6 courses']],String(p.regularCourses))}</select></label><label class="field">Summer<select name="summer">${options([['0','Keep summers free'],['2','Up to 2 courses'],['3','Up to 3 courses']],p.summers?String(p.summerCourses):'0')}</select></label><details class="quiet-details"><summary>Starting year and placement</summary><label class="field">First fall year<input name="year" type="number" min="2000" max="2040" value="${p.startYear}" required></label><label class="field">Language Center semesters<select name="lc">${options([['0','No Language Center semesters'],['1','One semester'],['2','Two semesters']],String(p.lc))}</select></label><p class="small-note">Extra course loads depend on your academic standing or approval.</p></details><p id="dashboard-pace-error" class="field-error" role="alert"></p><button class="button primary" type="submit">Update my semesters</button></form>`);
@@ -181,7 +183,7 @@ export function createDashboardController(h){
   const plan=current(),journey=plan?{...plan.decisions,profile:plan.profile}:state().journey;
   h.modal(h.head(t.name,opportunityLabel(t,type))+opportunityDetail(t,journey,type));
  }
- function why(kind){const a=current()?.decisions?.advice?.academic||state().journey.advice?.academic||{},key={'Degree':'rationale','Focus':'focusRationale','Minor':'minorRationale','Second focus':'secondFocusRationale'}[kind];h.modal(h.head('Why this match?')+`<p>${esc(a[key]||'Your combination connects your stated interests with its academic requirements.')}</p><details class="quiet-details"><summary>More context</summary>${(current()?.decisions?.advice?.assessment||state().journey.advice?.assessment||[]).map(x=>`<p>${esc(x.explanation)}</p>`).join('')}</details>`);}
+ function why(kind){const a=current()?.decisions?.advice?.academic||state().journey.advice?.academic||{},policy=degreePolicy((current()?.profile||state().journey.profile).program),key={'Degree':'rationale',[policy.trackLabel]:'focusRationale','Minor':'minorRationale',[policy.secondaryTrackLabel]:'secondFocusRationale'}[kind];h.modal(h.head('Why this match?')+`<p>${esc(a[key]||'Your combination connects your stated interests with its academic requirements.')}</p><details class="quiet-details"><summary>More context</summary>${(current()?.decisions?.advice?.assessment||state().journey.advice?.assessment||[]).map(x=>`<p>${esc(x.explanation)}</p>`).join('')}</details>`);}
  async function submit(form){
   if(!form.id.startsWith('dashboard-'))return false;
   if(locked||r.busy)return true;
@@ -203,7 +205,7 @@ export function createDashboardController(h){
    try{const p=current(),change={id:form.dataset.courseId,courseCode:String(data.get('course')||''),termId:String(data.get('term')||''),status:String(data.get('status')||'planned')},result=manualCoursePlan(p,change);if(r.dashboardPanel==='semesters'&&data.get('term'))r.selectedTerm=String(data.get('term'));h.close();applyManual(result.candidate,manualChangeMessage(p,result.candidate,change));}catch(e){form.querySelector('#dashboard-course-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-degree-form'){
-   try{const p=current(),old=p?.profile||state().journey.profile,profile=normalizeProfile({...old,program:String(data.get('program')),track:String(data.get('track')||''),secondTrack:String(data.get('secondTrack')||''),minor:String(data.get('minor')||''),choices:String(data.get('program'))===old.program?old.choices:{}});
+   try{const p=current(),old=p?.profile||state().journey.profile,raw={...old,program:String(data.get('program')),track:String(data.get('track')||''),secondTrack:String(data.get('secondTrack')||''),minor:String(data.get('minor')||''),choices:String(data.get('program'))===old.program?old.choices:{},selectionNotices:[]};const issues=degreeSelectionIssues(raw);if(issues.length)throw Error(issues.join(' '));const profile=normalizeProfile(raw);
     if(p){state().draftPlan=manualDegreePlan(p,profile);state().phase='draft';state().journey=newJourney(state().draftPlan);}else{const j=state().journey;j.profile=profile;j.programChosen=true;j.details=null;j.agentStamps={};j.advice={kind:'recommend',summary:'Your degree choices.',themes:[],questions:[],tradeoffs:[],academic:{program:profile.program,track:profile.track,secondTrack:profile.secondTrack,minor:profile.minor,rationale:'Chosen by you.'}};}
     h.close();r.dashboardPanel='direction';commit(p?'Degree updated in your preview. Save when ready.':'Your degree choices are updated.');
    }catch(e){form.querySelector('#dashboard-degree-error').textContent=e.message;}return true;
@@ -267,6 +269,17 @@ export function createDashboardController(h){
   return true;
  }
  function input(target){if(target.id==='dashboard-catalogue-search')filterCatalogue(target.form);}
- function change(target){if(target.id==='dashboard-catalogue-scope'){filterCatalogue(target.form);return;}if(target.id!=='dashboard-degree')return;const old=current()?.profile||state().journey.profile,p=normalizeProfile({...old,program:target.value,track:'',minor:'',secondTrack:''});target.form.querySelector('#dashboard-focus-options').innerHTML=focusOptions(p);}
+ function change(target){
+  if(target.id==='dashboard-catalogue-scope'){filterCatalogue(target.form);return;}
+  if(target.id==='dashboard-degree'){
+   const old=current()?.profile||state().journey.profile,p=normalizeProfile({...old,program:target.value,track:'',minor:'',secondTrack:'',choices:{},selectionNotices:[]});
+   target.form.querySelector('#dashboard-focus-options').innerHTML=focusOptions(p);return;
+  }
+  if(!target.dataset.degreeChoice||target.form?.id!=='dashboard-degree-form')return;
+  const form=target.form,data=new FormData(form),old=current()?.profile||state().journey.profile,profile={...old,program:String(data.get('program')),track:String(data.get('track')||''),secondTrack:String(data.get('secondTrack')||''),minor:String(data.get('minor')||''),selectionNotices:[]};
+  // Preserve the old primary when the student swaps the two selections.
+  if(target.dataset.degreeChoice==='track')profile.track=target.dataset.current;const next=changeDegreeChoice(profile,target.dataset.degreeChoice,target.value,programFor(profile));
+  form.querySelector('#dashboard-focus-options').innerHTML=focusOptions(next);form.querySelector('#dashboard-degree-error').textContent='';
+ }
  return {click,submit,change,input,loadService,authorizeAdvice,reset(){retry=null;r.manualUndo=null;r.manualWelcome=false;},get busy(){return locked;}};
 }

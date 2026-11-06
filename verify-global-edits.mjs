@@ -16,8 +16,8 @@ const update={summary:'Untrusted model prose.',changes:[],limitations:[]};
 const response=value=>openaiFixture({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(value)}]}]});
 const refusal='I cannot safely implement the replacement until the Mathematics minor rules establish that it fits. Unrelated old questionnaire narrative.';
 const q={ambitions:'Build useful software.',activities:'Write programs and solve mathematical problems.',strengths:'Logical analysis.',constraints:'PRIVATE-OLD-NARRATIVE'};
-function seed(program='BSGE'){
- const j=newJourney();j.profile=normalizeProfile({program,track:program==='BSGE'?'CS':'SE',minor:'business-administration',choices:{}});j.questionnaire=q;j.programChosen=true;j.profile=suggestChoices(j).profile;
+function seed(program='BSCSC'){
+ const j=newJourney();j.profile=normalizeProfile({program,track:'SE',minor:'business-administration',choices:{}});j.questionnaire=q;j.programChosen=true;j.profile=suggestChoices(j).profile;
  j.details={choices:j.profile.choices,summary:'Selected courses.',...Object.fromEntries(['internships','exchanges'].map(type=>[type,availableTargets(type,j.profile).slice(0,5).map((t,i)=>({...t,tier:i<3?'reach':i===3?'target':'safety',reason:'Keep this recommendation.'}))]))};
  return makePlan(j);
 }
@@ -25,7 +25,7 @@ const p=seed().profile;
 for(const text of ['Change my minor to Mathematics.','Can you switch my minor to math?','I want Mathematics as my minor.','Please replace my minor with Mathematics.','Keep my degree and change my minor to Mathematics.','Make my minor Mathematics.'])assert.equal(academicEdit(text,p).patch.minor,'mathematics',text);
 for(const text of ['Why did you change my minor?','Explain the Mathematics minor.','How can I change my minor?','Should I switch my minor to Mathematics?'])assert.equal(requestedEdit(text).isEdit,false,text);
 assert.deepEqual(academicEdit('Change my second specialization to AI.',normalizeProfile({program:'BSCSC',track:'SE'})).patch,{secondTrack:'AI'});
-assert.deepEqual(academicEdit('Change my major to BBA Finance and my minor to Computer Science.',p).patch,{program:'BBA',track:'FIN',minor:'computer-science'});
+assert.deepEqual(academicEdit('Change my major to BBA Finance and my minor to Computer Science.',p).patch,{program:'BBA',track:'FIN',secondTrack:'',minor:'computer-science'});
 const refused={kind:'answer',startStep:0,summary:refusal,questions:[],sections:[],rebuild:false,instructions:{direction:'',courses:'',companies:'',exchanges:'',semesters:''}};
 assert.deepEqual(enforceEditRoute(refused,'Change my minor to Mathematics.').sections,['direction']);
 assert.equal(enforceEditRoute(refused,'Change my minor to Mathematics.').kind,'journey');
@@ -69,9 +69,9 @@ try{
   await c.submit({id:'dashboard-command-form',values:{request:text}});assert.equal(runtime.aiError,'',runtime.aiError);assert.equal(state.phase,'draft','An edit must create a real draft, not only an answer.');assert.equal(runtime.service.globalRemaining,remaining-1);assert.equal(JSON.stringify(state.plan),before,'Saved plan stays intact until Save.');assert.ok(state.journey.lastUpdates.global.changes.length);assert.ok(!JSON.stringify(state.journey.lastUpdates.global).includes('Unrelated old questionnaire'));
   validateSavedWorkspace(JSON.parse(JSON.stringify(state)));return structuredClone(state.draftPlan);
  }
- const original=seed();original.tracking.csc1402={status:'completed',note:'PRIVATE-PROTECTED-NOTE'};original.profile.priorCodes.push('CSC1402');
+ const original=seed();original.tracking.csc1401={status:'completed',note:'PRIVATE-PROTECTED-NOTE'};original.profile.priorCodes.push('CSC1401');
  const mathematics=await run(original,'Change my minor to Mathematics.','minor');
- assert.equal(mathematics.profile.minor,'mathematics');assert.equal(mathematics.profile.program,'BSGE');assert.equal(mathematics.profile.track,'CS');assert.equal(mathematics.tracking.csc1402.note,'PRIVATE-PROTECTED-NOTE');assert.deepEqual(mathematics.targets,original.targets);assert.ok(mathematics.courses.some(c=>c.minorId==='mathematics'));assert.ok(mathematics.courses.some(c=>c.minorId==='mathematics'&&c.approvalOnly));assert.match(state.journey.lastUpdates.global.limitations.join(' '),/approval/);assert.deepEqual(providerCalls,['change','direction','courses']);
+ assert.equal(mathematics.profile.minor,'mathematics');assert.equal(mathematics.profile.program,'BSCSC');assert.equal(mathematics.profile.track,'SE');assert.equal(mathematics.tracking.csc1401.note,'PRIVATE-PROTECTED-NOTE');assert.deepEqual(mathematics.targets,original.targets);assert.ok(mathematics.courses.some(c=>c.minorId==='mathematics'));assert.ok(mathematics.courses.some(c=>c.minorId==='mathematics'&&c.approvalOnly));assert.match(state.journey.lastUpdates.global.limitations.join(' '),/approval/);assert.deepEqual(providerCalls,['change','direction','courses']);
  const cs=await run(seed('BSCSC'),'Can you change my minor to Mathematics?','clarify');assert.equal(cs.profile.minor,'mathematics');assert.ok(cs.courses.some(c=>c.id==='mathematics-imath-approved-4'&&!c.code));
  const constraint=await run(original,noExtra,'criteria');assert.notEqual(constraint.profile.minor,original.profile.minor);const fit=minorEditOption(constraint.profile,constraint.profile.minor);assert.equal(fit.noSupplementaryCourses,true);assert.equal(fit.approvalSlots,0);assert.equal(constraint.profile.program,original.profile.program);
  const compoundSeed=seed('BSCSC');compoundSeed.profile.priorCodes.push('CSC1401');compoundSeed.tracking.csc1401={status:'completed',note:'Synthetic prior programming.'};

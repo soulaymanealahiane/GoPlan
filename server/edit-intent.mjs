@@ -6,13 +6,14 @@ import {academicChanges} from '../dist/edit-updates.js';
 import {AXES} from '../dist/evidence.js';
 import {isFreeSlot} from '../dist/prerequisite-slots.js';
 import {checkedMinorPlan} from '../dist/minor-plan.js';
+import {degreePolicy,degreeSelectionIssues} from '../dist/degree-policy.js';
 
 const words=s=>String(s||'').toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 const edit=/\b(?:change|switch|replace|swap|set|add|remove|drop|choose|select|recommend|suggest|find|identify|pick|implement|apply|rebuild|redo|reorder|rerank|rebalance|move|reduce|increase|make|update|use|want|prefer)\b/i;
 const readOnly=/^(?:why|how (?:many|much|do|can|would|should)|what (?:are|is|does|do)|explain|describe|tell me (?:why|about)|should i|would it|is it)\b/i;
 const clauses=s=>String(s||'').split(/[.;\n]|\band\s+(?=(?:please\s+)?(?:change|switch|replace|set|add|remove|drop|choose|select|recommend|rebuild|keep|preserve|retain|leave)\b)|\b(?:while|but|additional detail|follow-up|latest request)\s*:?/i).map(x=>x.trim()).filter(Boolean);
 const changedClauses=s=>clauses(s).filter(c=>edit.test(c)&&!/^\s*(?:keep|preserve|retain|do not|dont|don't|leave .*unchanged)\b/i.test(c));
-const roles={minor:'minor',secondTrack:'(?:second|secondary) (?:focus|specialization|specialisation|concentration|track)',track:'(?<!second )(?<!secondary )(?:primary (?:focus|specialization|specialisation|concentration|track)|specialization|specialisation|concentration|focus|track|major)',program:'(?:degree|program|programme|major)'};
+const roles={minor:'minor',secondTrack:'(?:second|secondary) (?:focus|specialization|specialisation|concentration|thematic area|track)',track:'(?<!second )(?<!secondary )(?:primary (?:focus|specialization|specialisation|concentration|thematic area|track)|specialization|specialisation|concentration|thematic area|focus|track|major)',program:'(?:degree|program|programme|major)'};
 const aliases=(entry,type)=>[entry.id,entry.name,...(type==='program'?[entry.name.replace(/^(?:Bachelor|Master) of (?:Science|Arts|Business Administration)(?: in )?/i,'').trim(),...(entry.id==='BBA'?['business administration']:[])]:[]),...(entry.id==='mathematics'?['math','maths']:[])].map(words).filter(Boolean);
 function named(phrase,entries,type){
  const value=' '+words(phrase)+' ',matches=entries.flatMap(entry=>aliases(entry,type).filter(alias=>value.includes(' '+alias+' ')).map(alias=>({entry,length:alias.length,index:value.lastIndexOf(' '+alias+' ')}))).sort((a,b)=>b.length-a.length||b.index-a.index);
@@ -31,7 +32,7 @@ function labelFor(text,role){
 }
 export function requestedEdit(text){
  const active=changedClauses(text),isEdit=active.length>0&&!readOnly.test(String(text).trim()),sections=[];
- if(isEdit){const value=active.join(' ');for(const [section,pattern] of Object.entries({direction:/\b(?:degree|major|program|programme|minor|speciali[sz]ation|concentration|focus|second track)\b/i,courses:/\b(?:electives?|course choices|course assignments|distribution of courses)\b/i,companies:/\b(?:compan(?:y|ies)|internships?|startups?|firms?|employers?)\b/i,exchanges:/\b(?:exchanges?|destinations?|study abroad|universities)\b/i,semesters:/\b(?:semesters?|summers?|course load|workload|sequence|break|move .*courses?)\b/i}))if(pattern.test(value))sections.push(section);}
+ if(isEdit){const value=active.join(' ');for(const [section,pattern] of Object.entries({direction:/\b(?:degree|major|program|programme|minor|speciali[sz]ation|concentration|thematic area|focus|second track)\b/i,courses:/\b(?:electives?|course choices|course assignments|distribution of courses)\b/i,companies:/\b(?:compan(?:y|ies)|internships?|startups?|firms?|employers?)\b/i,exchanges:/\b(?:exchanges?|destinations?|study abroad|universities)\b/i,semesters:/\b(?:semesters?|summers?|course load|workload|sequence|break|move .*courses?)\b/i}))if(pattern.test(value))sections.push(section);}
  return {isEdit,sections};
 }
 // A routing model may interpret flexible language, but it cannot turn an
@@ -66,8 +67,11 @@ export function academicEdit(text,profile,studentContext,questionnaire={},questi
  // A major can name either a degree or a specialization within that degree.
  const track=focusLabel!==undefined||programLabel!==undefined?named(focusLabel??programLabel,targetProgram.tracks,'track'):null;
  if(track)patch.track=track.id;
- if(secondLabel==='')patch.secondTrack='';else if(secondLabel!==undefined){const second=named(secondLabel,targetProgram.tracks,'track');if(second&&['BBA','BSCSC'].includes(targetProgram.id))patch.secondTrack=second.id;}
- const candidate=compatible(profile,patch),available=eligibleMinors(candidate);
+ if(secondLabel==='')patch.secondTrack='';else if(secondLabel!==undefined){const second=named(secondLabel,targetProgram.tracks,'track');if(second&&degreePolicy(targetProgram).allowSecondTrack)patch.secondTrack=second.id;}
+ if(targetProgram.id==='BBA'&&patch.secondTrack&&minorLabel&&minorLabel!=='')throw Error('Choose two concentrations or one concentration with a minor, rather than all three.');
+ if(patch.secondTrack&&targetProgram.id==='BBA')patch.minor='';
+ if(targetProgram.id==='BBA'&&secondLabel===undefined&&changedClauses(text).some(c=>/\bminor\b/i.test(c)))patch.secondTrack='';
+ const candidate=compatible(profile,patch),available=eligibleMinors({...candidate,...(targetProgram.id==='BBA'&&minorLabel!==undefined?{secondTrack:''}:{})});
  if(minorLabel===undefined){const value=' '+words(changedClauses(text).join(' '))+' ',literal=available.flatMap(m=>aliases(m,'minor').filter(alias=>value.includes(' '+alias+' minor ')).map(alias=>({id:m.id,alias}))).sort((a,b)=>b.alias.length-a.alias.length)[0];if(literal)minorLabel=literal.alias;}
  if(minorLabel==='')patch.minor='';else if(minorLabel!==undefined){const minor=named(minorLabel,available,'minor');if(minor)patch.minor=minor.id;}
  // Every request to recommend an unspecified minor gets an actual curriculum
@@ -81,6 +85,7 @@ export function academicEdit(text,profile,studentContext,questionnaire={},questi
   options=available.filter(m=>m.id!==profile.minor&&!['individual-minor'].includes(m.id)).map(m=>{let option=minorEditOption(candidate,m.id,studentContext,{interests,questionnaire,questionnaireRankings});if(!option.verified){const freed=minorEditOption(candidate,m.id,studentContext,{interests,questionnaire,questionnaireRankings,releaseFree:true});if(freed.verified)option=freed;}return option;}).sort((a,b)=>Number(b.verified)-Number(a.verified)||a.extraCourseCount-b.extraCourseCount||a.extraCredits-b.extraCredits||b.preferenceScore-a.preferenceScore||a.finishOrder-b.finishOrder||a.approvalSlots-b.approvalSlots||a.prerequisiteAllocations.length-b.prerequisiteAllocations.length||a.id.localeCompare(b.id));
   const best=options.find(m=>m.verified);if(best)patch.minor=best.id;
  }
+ if(patch.minor&&targetProgram.id==='BBA')patch.secondTrack='';
  if(patch.minor&&!options.some(m=>m.id===patch.minor))options.unshift(minorEditOption(candidate,patch.minor,studentContext));
  const value=changedClauses(text).join(' '),labels={program:programLabel,minor:minorLabel,track:focusLabel,secondTrack:secondLabel},editableFields=Object.keys(labels).filter(k=>labels[k]!==undefined);if(/\b(?:add|change|switch|remove|drop)\b.*\bsecond\b/i.test(value)&&!editableFields.includes('secondTrack'))editableFields.push('secondTrack');
  return {patch,options,editableFields,compared:compare&&minorLabel===undefined||compare&&patch.minor!==undefined&&options.length>1};
@@ -90,7 +95,8 @@ export function applyAcademicEdit(parsed,request,edit){
  const before=normalizeProfile(request.profile),requestedModelFields=Object.fromEntries((edit.editableFields||[]).filter(k=>typeof parsed.academic?.[k]==='string').map(k=>[k,parsed.academic[k]])),patch={...edit.patch};
  const leastBurden=edit.options.find(m=>m.verified);
  if(edit.compared&&edit.options.some(m=>m.id===parsed.academic?.minor&&m.id!==before.minor&&m.verified&&m.extraCourseCount<=leastBurden.extraCourseCount&&m.extraCredits<=leastBurden.extraCredits))patch.minor=parsed.academic.minor;
- const after=compatible(before,{...requestedModelFields,...patch}),changes=academicChanges(before,after),option=edit.options.find(m=>m.id===after.minor),limitations=[];
+ const requested={...before,...requestedModelFields,...patch},errors=degreeSelectionIssues(requested);if(errors.length)throw Error(errors.join(' '));
+ const after=compatible(before,requested),changes=academicChanges(before,after),option=edit.options.find(m=>m.id===after.minor),limitations=[];
  if(option?.approvalSlots)limitations.push(`${option.name}: ${option.approvalSlots} course slot${option.approvalSlots===1?' needs':'s need'} school approval and ${option.approvalSlots===1?'remains':'remain'} open in the draft.`);
  if(option?.missingPrerequisites.length)limitations.push('This minor is selected for review; some prerequisites still need a place within existing elective slots. No extra course was added.');
  if(edit.compared&&option?.noSupplementaryCourses)limitations.push('Known prerequisites fit within the existing degree slots; no supplementary course was added.');

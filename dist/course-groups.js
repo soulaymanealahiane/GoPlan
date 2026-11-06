@@ -1,4 +1,5 @@
 import {programFor,creditsOf,label,termOrder} from './planner.js';
+import {degreePolicy} from './degree-policy.js';
 
 // A choice is an input mechanism, not an academic category. Classify the
 // requirement slot, so selecting a different course cannot move its credits.
@@ -17,14 +18,14 @@ export function courseGroupKey(course,profile){
 }
 
 export function courseGroups(courses,profile){
- const program=programFor(profile),track=program.tracks.find(t=>t.id===profile.track),second=program.tracks.find(t=>t.id===profile.secondTrack),focus=profile.program==='BBA'?'concentration':['BSGE','BSEMS'].includes(profile.program)?'thematic area':'specialization';
+ const program=programFor(profile),track=program.tracks.find(t=>t.id===profile.track),second=program.tracks.find(t=>t.id===profile.secondTrack),policy=degreePolicy(program),focus=policy.trackLabel.toLowerCase();
  const definitions=[
   ['general','General education','Your general education courses','Language, communication and the wider university curriculum.'],
   ['common','Common core','Your common core courses','University and school foundations.'],
   ['major','Major core','Your major core courses','Required courses for your degree.'],
-  ['specialization',`Your ${focus}`,track?.name||`Your ${focus} courses`,'Courses for your chosen focus.'],
+  ['specialization',`Your ${focus}`,track?.name||`Your ${focus} courses`,`Courses for your chosen ${focus}.`],
   ['minor','Your minor','Your minor courses','Courses that complete your minor.'],
-  ['second',`Second ${focus}`,second?.name||`Second ${focus}`,'Courses for your second focus.'],
+  ['second',policy.secondaryTrackLabel,second?.name||policy.secondaryTrackLabel,`Courses for your ${policy.secondaryTrackLabel.toLowerCase()}.`],
   ['open','Open electives','Your open electives','Choose within your degree’s approved options.'],
   ['free','Free electives','Your free electives','Room to explore beyond your main field.'],
   ['added','Added courses','Courses you added','Personal additions to your plan.'],

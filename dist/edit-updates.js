@@ -1,12 +1,13 @@
 import {normalizeProfile,programFor} from './planner.js';
 import {selectedMinor} from './minors.js';
+import {degreePolicy} from './degree-policy.js';
 
 export function academicChanges(before,after){
  const a=normalizeProfile(before),b=normalizeProfile(after),changes=[],focus=(p,id)=>programFor(p).tracks.find(t=>t.id===id)?.name||id;
  if(a.program!==b.program)changes.push(`Changed degree to ${programFor(b).name}.`);
- if(a.track!==b.track)changes.push(b.track?`Set the primary focus to ${focus(b,b.track)}.`:'Removed the optional primary focus.');
- if(a.secondTrack!==b.secondTrack)changes.push(b.secondTrack?`Added ${focus(b,b.secondTrack)} as the second focus.`:'Removed the second focus.');
- if(a.minor!==b.minor)changes.push(b.minor?`Set the minor to ${selectedMinor(b)?.name||b.minor}.`:'Removed the optional minor.');
+ if(a.track!==b.track)changes.push(b.track?`Set the ${degreePolicy(b.program).trackLabel.toLowerCase()} to ${focus(b,b.track)}.`:`Removed the ${degreePolicy(a.program).trackLabel.toLowerCase()} selection.`);
+ if(a.secondTrack!==b.secondTrack)changes.push(b.secondTrack?`Added ${focus(b,b.secondTrack)} as the ${degreePolicy(b.program).secondaryTrackLabel.toLowerCase()}.`:`Removed the ${degreePolicy(a.program).secondaryTrackLabel.toLowerCase()}.`);
+ if(a.minor!==b.minor)changes.push(b.minor?`Set the minor to ${selectedMinor(b)?.name||b.minor}.`:'Cleared the minor selection.');
  return changes;
 }
 export function targetChanges(before={},after={}){

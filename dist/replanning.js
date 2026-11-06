@@ -1,5 +1,6 @@
 import {DATA,normalizeProfile,coursesFor,generatePlan,validatePlan,programFor,termOrder,label} from './planner.js';
 import {selectedMinor} from './minors.js';
+import {degreePolicy,degreeSelectionIssues} from './degree-policy.js';
 import {courseOptions,needsPersonalConfirmation} from './course-options.js';
 import {prerequisiteCoverage} from './course-eligibility.js';
 import {normalizeScheduling,mergeScheduling,courseAvailability,analyzeCourseAvailability,prerequisiteDependants} from './course-availability.js';
@@ -19,8 +20,8 @@ export function restoreSnapshot(raw){
 export function proposeReplan(plan,change,currentTerm){
  let boundary=parseTerm(currentTerm);const old=normalizeProfile(plan.profile),program=programFor(old);
  const track=change.track??old.track,secondTrack=change.secondTrack??old.secondTrack,minor=change.minor??old.minor;
- if(program.tracks.length&&!program.tracks.some(t=>t.id===track))throw Error('This focus is not offered in the selected degree.');
- if(secondTrack&&(!['BBA','BSCSC'].includes(old.program)||secondTrack===track||!program.tracks.some(t=>t.id===secondTrack)))throw Error('This second focus is not supported.');
+ if(program.tracks.length&&!program.tracks.some(t=>t.id===track))throw Error('This '+degreePolicy(program).trackLabel.toLowerCase()+' is not offered in the selected degree.');
+ const selectionIssues=degreeSelectionIssues({...old,track,secondTrack,minor});if(selectionIssues.length)throw Error(selectionIssues.join(' '));
  if(minor&&!selectedMinor({...old,minor}))throw Error('This minor is not supported for your degree.');
  const profile=normalizeProfile({...old,track,secondTrack,minor,startYear:change.startYear??old.startYear,lc:change.lc??old.lc,regularCourses:change.regularCourses??(change.pace&&change.pace!==old.pace?(change.pace==='accelerated'?6:5):old.regularCourses),summerCourses:change.summerCourses??old.summerCourses,summers:change.summers??old.summers});
  if((profile.regularCourses>old.regularCourses||profile.summers&&profile.summerCourses===3&&(!old.summers||old.summerCourses<3))&&(old.gpa===''?!change.allowConditionalLoad:old.gpa<3))throw Error('Confirm CGPA 3.0 and good standing before increasing to six regular courses or three summer courses.');

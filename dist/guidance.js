@@ -1,6 +1,7 @@
 import {DATA,DEFAULT_PROFILE,normalizeProfile,coursesFor,generatePlan,validatePlan,creditsOf,restoreState} from './planner.js';
 import GUIDED from './guided-data.js';
 import {selectedMinor} from './minors.js';
+import {degreeSelectionIssues} from './degree-policy.js';
 import {courseOptions} from './course-options.js';
 import {eligibleCourseOptions,releaseIneligibleChoices} from './course-eligibility.js';
 import {normalizeScheduling} from './course-availability.js';
@@ -103,6 +104,7 @@ export function validateSavedWorkspace(raw){
   if(!object(plan.program)||!object(plan.profile)||!DATA.programs.some(p=>p.id===plan.profile.program)||!number(plan.program.degreeCredits?.min)||!number(plan.program.degreeCredits?.max)||!Array.isArray(plan.program.tracks)||!Array.isArray(plan.program.notes))throw Error('Invalid saved program.');
   // Older backups stored a single pace. Upgrade its preferences without rebuilding semesters or progress.
   const loads=normalizeProfile(plan.profile);plan.profile.regularCourses=loads.regularCourses;plan.profile.summerCourses=loads.summerCourses;
+  const selectionWarnings=degreeSelectionIssues(plan.profile);if(selectionWarnings.length)plan.degreeSelectionWarnings=selectionWarnings;else delete plan.degreeSelectionWarnings;
   if(plan.program.tracks.some(t=>!object(t)||typeof t.id!=='string'||typeof t.name!=='string'))throw Error('Invalid saved specialization.');
   if(!object(plan.tracking)||!Array.isArray(plan.reports)||!object(plan.targets))throw Error('Missing saved progress.');
   for(const [id,t] of Object.entries(plan.tracking))if(!ids.has(id)||!object(t)||!['planned','in-progress','completed','retake'].includes(t.status))throw Error('Invalid progress record.');

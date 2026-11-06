@@ -1,8 +1,9 @@
 import DATA from './academic-data.js';
+import {degreePolicy} from './degree-policy.js';
 
 export function withSecondFocus(base,profile){
  const program=DATA.programs.find(p=>p.id===profile.program),track=program?.tracks.find(t=>t.id===profile.secondTrack);
- if(!track||track.id===profile.track||!['BBA','BSCSC'].includes(profile.program))return base;
+ if(!track||track.id===profile.track||!degreePolicy(profile).allowSecondTrack)return base;
  const keep=base.filter(r=>profile.program==='BBA'?r.groupId!=='minor':r.id!=='bscsc-computing'&&r.groupId!=='free');
  const used=new Set(keep.map(r=>r.code||profile.choices[r.id]).filter(Boolean));
  const electives=track.requirements.filter(r=>r.choice);
@@ -15,7 +16,7 @@ export function withSecondFocus(base,profile){
    if(profile.program==='BSCSC'&&topics.length){
     // The cybersecurity elective set consists of 1-SCH topics, not 3-SCH courses.
     for(let i=0;i<r.credits;i++)items.push({...r,id:r.id+'-replacement-'+i,code:'',choice:true,credits:1,title:'Distinct cybersecurity topic — approval needed',allowedOptions:structuredClone(topics),options:[],approvalOnly:true,approvalRequired:true,replacementFor:r.code,condition:'One credit of the approved replacement for the overlapping required course. Confirm each registration code and distinct topic with SSE.'});
-   }else items.push({...r,code:'',choice:true,title:'Second-focus elective — approval needed',options:profile.program==='BSCSC'?options.filter(id=>!used.has(id)):[],approvalOnly:true,approvalRequired:true,replacementFor:r.code,condition:'A distinct replacement for '+r.code+' needs school approval; the shared course counts once.'});
+   }else items.push({...r,code:'',choice:true,title:degreePolicy(profile).secondaryTrackLabel+' elective — approval needed',options:profile.program==='BSCSC'?options.filter(id=>!used.has(id)):[],approvalOnly:true,approvalRequired:true,replacementFor:r.code,condition:'A distinct replacement for '+r.code+' needs school approval; the shared course counts once.'});
   }else items.push({...r,excludedCourses:[...(r.excludedCourses||[]),...used]});
  }
  return [...keep,...items];

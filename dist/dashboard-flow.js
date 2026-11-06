@@ -4,6 +4,7 @@ import {planningWorkspace,recordedStudy,buildStudentPlan} from './student-contex
 import {proposeReplan} from './replanning.js';
 import {editManualCourse,retainManualEdits,manualCatalogue} from './manual-plan.js';
 import {courseOptions,needsPersonalConfirmation} from './course-options.js';
+import {degreeSelectionIssues} from './degree-policy.js';
 export function manualCourseOptions(c,profile){return manualCatalogue(profile,{scope:'all'}).filter(x=>!x.requirementId);}
 export function newcomerWorkspace({year=new Date().getFullYear(),name='',degree=''}={}){
  if(degree&&!DATA.programs.some(p=>p.id===degree&&p.level==='undergraduate'))throw Error('Choose an undergraduate degree.');
@@ -17,6 +18,10 @@ export function needsBusinessPlacementRefresh(plan){
 }
 export function refreshMinorDraft(state){
  const plan=state.phase==='draft'?state.draftPlan:state.plan;if(!plan)return state;
+ const warnings=degreeSelectionIssues(plan.profile);if(warnings.length)plan.degreeSelectionWarnings=warnings;else delete plan.degreeSelectionWarnings;
+ // Historical unsupported combinations are retained for review. Do not let an
+ // unrelated automatic prerequisite repair silently discard their study.
+ if(warnings.length)return state;
  if(needsBusinessPlacementRefresh(plan)){
   const result=manualDegreePlan(plan,plan.profile);
   // Repair the generated draft without overwriting the saved original, personal
@@ -42,6 +47,7 @@ export function studyBoundary(plan,profile=plan.profile){
  return {records,currentTerm:records.find(r=>r.status==='in-progress')?.termId||terms.at(-1)?.id||'Fall-'+profile.startYear};
 }
 export function manualDegreePlan(plan,rawProfile){
+ const errors=degreeSelectionIssues(rawProfile);if(errors.length)throw Error(errors.join(' '));
  const profile=normalizeProfile(rawProfile),{records,currentTerm:recordTerm}=studyBoundary(plan,profile),currentTerm=termOrder({season:recordTerm.split('-')[0],year:Number(recordTerm.split('-')[1])})<termOrder({season:'Fall',year:profile.startYear})?'Fall-'+profile.startYear:recordTerm;
  const j=newJourney(plan),degreeChanged=profile.program!==plan.profile.program;
  j.profile=profile;j.programChosen=true;j.minorDataVersion=2;j.studentContext={route:records.length?'continuing':'admitted',degreeIntent:'keep',currentDegree:profile.program,currentTerm,studyStartYear:profile.startYear,records};

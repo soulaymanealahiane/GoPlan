@@ -6,6 +6,7 @@ applyAcademicCorrections(DATA);
 import GUIDED from './guided-data.js';
 import {withMinor,selectedMinor} from './minors.js';
 import {withSecondFocus} from './second-focus.js';
+import {normalizeDegreeSelection,degreeSelectionIssues} from './degree-policy.js';
 import {courseOptions,requiredCourseChoice} from './course-options.js';
 import {allocatePrerequisiteSlots,uncoveredPrerequisites,isFreeSlot} from './prerequisite-slots.js';
 import {businessRule,BUSINESS_SOURCE,describeRule} from './program-rules.js';
@@ -26,7 +27,7 @@ export function normalizeProfile(raw={}){
  const legacyFast=raw.pace==='accelerated';p.regularCourses=program.level==='graduate'?4:([5,6].includes(Number(raw.regularCourses))?Number(raw.regularCourses):legacyFast?6:5);p.summerCourses=program.level==='graduate'?2:([2,3].includes(Number(raw.summerCourses))?Number(raw.summerCourses):legacyFast?3:2);p.pace=p.regularCourses===6?'accelerated':'balanced';p.gpa=p.gpa===''?'':Math.max(0,Math.min(4,Number(p.gpa)||0));
  p.lc=[0,1,2].includes(+p.lc)?+p.lc:0;p.summers=p.summers===true;p.exchange=p.exchange===true;
  p.priorCodes=[...new Set((Array.isArray(p.priorCodes)?p.priorCodes:[]).map(code).filter(c=>DATA.courses[c]))];
- p.choices=p.choices&&typeof p.choices==='object'&&!Array.isArray(p.choices)?{...p.choices}:{};p.secondTrack=['BBA','BSCSC'].includes(p.program)&&p.secondTrack!==p.track&&program.tracks.some(t=>t.id===p.secondTrack)?p.secondTrack:'';p.minor=selectedMinor(p)?.id||'';return p;
+ p.choices=p.choices&&typeof p.choices==='object'&&!Array.isArray(p.choices)?{...p.choices}:{};const selection=normalizeDegreeSelection(p);selection.minor=selectedMinor(selection)?.id||'';return selection;
 }
 export function coursesFor(raw=DEFAULT_PROFILE){
  const p=normalizeProfile(raw),program=programFor(p),track=program.tracks.find(t=>t.id===p.track);
@@ -164,6 +165,8 @@ export function generatePlan(raw=DEFAULT_PROFILE,scheduling={}){
 export function validatePlan(terms,cs,raw,scheduling={}){
  const p=normalizeProfile(raw),program=programFor(p),map=new Map(cs.map(c=>[c.id,c])),seen=new Set(),done=new Set(p.priorCodes),issues=[];
  let earlier=p.priorCodes.reduce((s,id)=>s+(DATA.courses[id]?.credits||0),0),taken=new Set(p.priorCodes);
+ for(const text of degreeSelectionIssues(raw))issues.push({text,level:'conflict',id:'degree-selection'});
+ for(const text of degreeSelectionIssues(raw,{requireComplete:true}).filter(text=>!degreeSelectionIssues(raw).includes(text)))issues.push({text,level:'review',id:'degree-selection'});
  const add=(text,level='conflict',id='')=>issues.push({text,level,id}),final=terms.filter(t=>!['pending','prior'].includes(t.id)&&t.season!=='Summer'&&t.courses.length).at(-1)?.id;
  for(const [index,t] of terms.entries()){
   const list=t.courses.map(id=>map.get(id)).filter(Boolean),cap=termLimits(p,t,scheduling),term=label(t),registrations=(scheduling.currentRegistrations||[]).filter(r=>r.termId===t.id).map(r=>DATA.courses[r.courseCode]);

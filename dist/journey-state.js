@@ -7,9 +7,11 @@ import {questionnaireGoal} from './questionnaire.js';
 import {courseOptions} from './course-options.js';
 import {academicChanges} from './edit-updates.js';
 import {publicStudentContext} from './student-context.js';
+import {degreeSelectionIssues} from './degree-policy.js';
 export function adviceFingerprint(stage,j){const base={agentVersion:16,stage,questionnaire:j.questionnaire,questionnaireRankings:j.questionnaireRankings,goal:j.goal,background:j.background,answers:j.answers,refinement:feedbackFor(j,stage),level:j.level,preferredDegree:j.preferredDegree,...(j.studentContext?{studentContext:publicStudentContext(j.studentContext)}:{})};if(stage!=='setup'&&(stage!=='direction'||j.programChosen))base.profile={program:j.profile.program,track:j.profile.track,secondTrack:j.profile.secondTrack,minor:j.profile.minor,choices:j.profile.choices,regularCourses:j.profile.regularCourses,summerCourses:j.profile.summerCourses,summers:j.profile.summers,acceleratedEligible:j.profile.gpa!==''&&+j.profile.gpa>=3};return JSON.stringify(base);}
 export function acceptAdvice(j,stage,result,editing={}){
  if(result.kind==='answer'||result.kind==='clarify'&&['pace','courses'].includes(stage))return;
+ if(stage==='direction'&&result.kind==='recommend'){const errors=degreeSelectionIssues(result.academic);if(errors.length)throw Error(errors.join(' '));}
  let semesterProposal;
  if(['pace','courses'].includes(stage)&&result.change){
   if(!editing.plan)throw Error('Reopen your semester plan before applying this edit.');
@@ -22,7 +24,7 @@ export function acceptAdvice(j,stage,result,editing={}){
  if(stage==='direction'){
   const before=j.profile;j.advice=result;j.manual=false;
   if(result.kind==='recommend'){
-   const a=result.academic,next=normalizeProfile({...before,...Object.fromEntries(['program','track','secondTrack','minor'].map(k=>[k,a[k]])),choices:{}}),changed=academicChanges(before,next).length>0;
+   const a=result.academic,next=normalizeProfile({...before,...Object.fromEntries(['program','track','secondTrack','minor'].map(k=>[k,a[k]])),selectionNotices:[],choices:{}}),changed=academicChanges(before,next).length>0;
    if(changed||!j.programChosen){
     const options=coursesFor(next),choices={};for(const [id,code]of Object.entries({...before.choices,...j.protectedChoices})){const c=options.find(c=>c.id===id);if(c?.choice&&courseOptions(c,next).some(o=>o.code===code))choices[id]=code;}
     j.profile=normalizeProfile({...next,choices});j.semesterSequence=null;j.choiceReasons={};j.agentChoices={};j.paceAdvice=null;j.agentStamps={};j.detailsDirty=true;
@@ -30,7 +32,7 @@ export function acceptAdvice(j,stage,result,editing={}){
     if(j.details)j.details={summary:'Course choices for your revised direction.',choices,internships:degreeChanged?[]:j.details.internships||[],exchanges:degreeChanged?[]:j.details.exchanges||[]};
     if(degreeChanged){j.internships=[];j.exchanges=[];if(j.studentContext)j.studentContext.degreeIntent='explore';}
     if(j.scheduling)j.scheduling.moves=(j.scheduling.moves||[]).filter(m=>options.some(c=>c.id===m.requirementId));
-   }else j.profile=normalizeProfile({...before,choices:{...before.choices,...j.protectedChoices}});
+   }else j.profile=normalizeProfile({...before,selectionNotices:[],choices:{...before.choices,...j.protectedChoices}});
    j.programChosen=true;
   }else j.step=1;
  }
