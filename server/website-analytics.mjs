@@ -61,7 +61,7 @@ export async function recordWebsiteInquiry(request,env,reference,tracking,now=Da
   if(!enabled(env)||!tracking||request.headers.get('DNT')==='1'||request.headers.get('Sec-GPC')==='1'||await ownerIdentity(request,env))return;
   if(typeof tracking!=='object'||Array.isArray(tracking)||Object.keys(tracking).some(k=>!['visitorId','visitId','viewId'].includes(k))||!['visitorId','visitId','viewId'].every(k=>UUID.test(tracking[k]||'')))return;
   const ids=await keys(tracking);
-  await env.DB.prepare(`INSERT INTO website_conversions(id,view_id,visit_id,created_at) SELECT ?,id,visit_id,? FROM website_views WHERE id=? AND visit_id=? AND visitor_id=? AND path='/' AND last_seen_at>=? ON CONFLICT(id) DO NOTHING`).bind(await hash('website-inquiry:'+reference),now,ids.view,ids.visit,ids.visitor,now-30*60000).run();
+  await env.DB.prepare(`INSERT INTO website_conversions(id,view_id,visit_id,created_at) SELECT ?,v.id,v.visit_id,p.created_at FROM website_views v JOIN partnership_inquiries p ON p.id=? WHERE v.id=? AND v.visit_id=? AND v.visitor_id=? AND v.path='/' AND v.last_seen_at>=? AND v.started_at<=p.created_at AND p.created_at>=? AND p.created_at<=? ON CONFLICT(id) DO NOTHING`).bind(await hash('website-inquiry:'+reference),reference,ids.view,ids.visit,ids.visitor,now-30*60000,now-30*60000,now).run();
  }catch{console.warn('Website inquiry measurement unavailable.');}
 }
 const talkSql=TALK.join('+');
