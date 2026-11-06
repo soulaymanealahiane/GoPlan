@@ -9,10 +9,11 @@ import {hash} from './server/feedback.mjs';
 
 const base='https://planwithgoplan.com',DB=localDatabase(':memory:'),env={DB,ADMIN_EMAILS:'owner@example.invalid',ANALYTICS_ADMIN_KEY:'synthetic-metrics-key'},now=Date.now();
 const owner=await testSession(DB,'traffic-owner','owner@example.invalid'),student=await testSession(DB,'traffic-student');
-const data={consent:true,visitorId:crypto.randomUUID(),visitId:crypto.randomUUID(),viewId:crypto.randomUUID(),path:'/',source:'social',device:'mobile',activeMs:0,events:{}};
+const data={visitorId:crypto.randomUUID(),visitId:crypto.randomUUID(),viewId:crypto.randomUUID(),path:'/',source:'social',device:'mobile',activeMs:0,events:{}};
 const req=(path,body,headers={})=>new Request(base+path,{method:body===undefined?'GET':'POST',headers:{Origin:base,'Content-Type':'application/json','User-Agent':'Mozilla/5.0','CF-IPCountry':'MA',...headers},body:body===undefined?undefined:JSON.stringify(body)});
 const post=(body=data,at=now,headers={})=>handleApi(req('/api/website-analytics',body,headers),env,{now:at});
-assert.equal((await post()).status,200);
+assert.equal((await post()).status,200,'New clients collect without a consent flag');
+assert.equal((await post({...data,consent:true})).status,200,'Already-open legacy clients remain compatible');
 await post({...data,activeMs:30000,events:{nav_talk:1,form_start:1}},now+30000);
 await post({...data,activeMs:30000,events:{nav_talk:1,form_start:1}},now+30000);
 await post({...data,activeMs:1000,events:{nav_talk:0}},now+15000);
@@ -39,7 +40,7 @@ assert.equal((await handleApi(req('/api/partnerships',inquiry),env)).status,201)
 assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM website_conversions').first()).n,1,'Server-confirmed replay counts once');
 snapshot=await websiteTrafficSnapshot(env,7,now+45000);assert.equal(snapshot.totals.savedInquiries,1);assert.equal(snapshot.totals.trackedInquiries,1);assert.equal(snapshot.funnel.submitted,1);assert.equal(snapshot.funnel.clicked,1);assert.equal(snapshot.funnel.started,1);
 await recordWebsiteInquiry(req('/api/partnerships',inquiry),env,crypto.randomUUID(),{...inquiry.traffic,visitorId:crypto.randomUUID()});assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM website_conversions').first()).n,1,'Unmatched attribution ignored');
-const oldInquiry={...inquiry,submissionId:crypto.randomUUID(),traffic:undefined};assert.equal((await handleApi(req('/api/partnerships',oldInquiry),env)).status,201);assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM website_conversions').first()).n,1,'Consent-free inquiry succeeds without attribution');
+const oldInquiry={...inquiry,submissionId:crypto.randomUUID(),traffic:undefined};assert.equal((await handleApi(req('/api/partnerships',oldInquiry),env)).status,201);assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM website_conversions').first()).n,1,'Unattributed inquiry succeeds');
 await DB.prepare('UPDATE partnership_inquiries SET created_at=? WHERE id=?').bind(now-2*3600000,oldInquiry.submissionId).run();assert.equal((await handleApi(req('/api/partnerships',{...oldInquiry,traffic:inquiry.traffic}),env)).status,201);assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM website_conversions').first()).n,1,'An old inquiry replay cannot create a new conversion');
 for(const headers of [{},student])assert.equal((await handleApi(req('/api/admin/website-analytics',undefined,headers),env)).status,401);
 assert.equal((await handleApi(req('/api/admin/website-analytics',undefined,{Authorization:'Bearer synthetic-metrics-key'}),env)).status,403);
@@ -66,17 +67,23 @@ const document={body,head,visibilityState:'visible',referrer:'https://www.linked
 const browser={document,localStorage,sessionStorage,crypto,Blob,URL,URLSearchParams,console,location:{hostname:'planwithgoplan.com',pathname:'/',origin:base,href:base+'/',search:'?utm_source=private-value'},navigator:{userAgent:'Mozilla mobile',sendBeacon:(url,blob)=>{requests.push({url,blob});return true;}},performance:{now:()=>clock},Date:class extends Date{static now(){return wall;}},addEventListener:(name,cb)=>handlers[name]=cb,setInterval:cb=>(interval=cb,1),clearInterval:()=>{interval=null;},fetch:async(url,options)=>{requests.push({url,data:JSON.parse(options.body)});return Response.json({accepted:true});}};
 const script=(await readFile(new URL('./dist/website-analytics.js',import.meta.url),'utf8')).replaceAll('export function ','function ');
 const context=vm.createContext(browser);vm.runInContext(script,context);
-assert.equal(requests.length,0,'No collection before choice');
-let banner=body.children.find(n=>n.className==='goplan-analytics-choice');banner.children.at(-1).children[1].listeners.click();await new Promise(setImmediate);
-assert.equal(requests.length,1);assert.equal(requests[0].data.source,'campaign');assert.ok(!JSON.stringify(requests).includes('private-value'));
+await new Promise(setImmediate);
+assert.equal(body.children.length,0,'No consent dialog or settings button is inserted');
+assert.equal(head.children.length,0,'No consent stylesheet is loaded');
+assert.equal(requests.length,1,'Tracking starts automatically on page load');assert.ok(!('consent' in requests[0].data),'Automatic tracking must not claim visitor consent');assert.equal(requests[0].data.source,'campaign');assert.ok(!JSON.stringify(requests).includes('private-value'));
 clock=30000;wall+=30000;interval();await new Promise(setImmediate);assert.equal(requests.at(-1).data.activeMs,30000);
 document.visibilityState='hidden';docHandlers.visibilitychange();const hiddenCount=requests.length;clock+=120000;wall+=120000;interval();assert.equal(requests.length,hiddenCount,'No hidden-tab heartbeats');
 document.visibilityState='visible';docHandlers.visibilitychange();clock+=10000;wall+=10000;interval();await new Promise(setImmediate);assert.ok(requests.at(-1).data.activeMs<=60000,'Background and idle time excluded');
 handlers.pointerdown();const button={hasAttribute:()=>false,closest:s=>s==='.site-header'?{}:null};docHandlers.click({target:{closest:s=>s==='[data-contact]'?button:null}});
 form.listeners.focusin({target:{matches:()=>true}});assert.ok(context.trafficAttribution());
 const beaconData=JSON.parse(await requests.at(-1).blob.text());assert.equal(beaconData.events.nav_talk,1);assert.equal(beaconData.events.form_start,1);
-const settingsButton=body.children.find(n=>n.className==='goplan-analytics-settings');settingsButton.listeners.click();banner=body.children.filter(n=>n.className==='goplan-analytics-choice').at(-1);banner.children.at(-1).children[0].listeners.click();const afterDecline=requests.length;
-assert.equal(context.trafficAttribution(),null);assert.equal(localStorage.getItem('goplan-analytics-browser-v1'),null);handlers.pointerdown();docHandlers.click({target:{closest:()=>button}});assert.equal(requests.length,afterDecline,'Withdrawal immediately stops collection');
+// Legacy preferences must not leave a hidden consent gate in the new automatic mode.
+for(const value of [true,false]){
+ const legacyStorage=store(),legacyRequests=[];legacyStorage.setItem('goplan-analytics-choice-v1',JSON.stringify({value,expires:now+86400000}));
+ vm.runInContext(script,vm.createContext({...browser,document:{...document,body:new Element('body')},localStorage:legacyStorage,sessionStorage:store(),fetch:async(url,options)=>{legacyRequests.push(JSON.parse(options.body));return Response.json({accepted:true});}}));
+ assert.equal(legacyRequests.length,1,'Old choice cannot silently gate automatic tracking');assert.equal(legacyStorage.getItem('goplan-analytics-choice-v1'),null);
+}
 const gpcRequests=[];vm.runInContext(script,vm.createContext({...browser,document:{...document,body:new Element('body')},navigator:{...browser.navigator,globalPrivacyControl:true},localStorage:store(),sessionStorage:store(),fetch:async()=>{gpcRequests.push(1);}}));assert.equal(gpcRequests.length,0,'Global Privacy Control respected');
-const storageBlocked={...browser,document:{...document,body:new Element('body')}};Object.defineProperty(storageBlocked,'localStorage',{get(){throw Error('Storage blocked by browser');}});assert.doesNotThrow(()=>vm.runInContext(script,vm.createContext(storageBlocked)),'Blocked storage cannot break the contact module that imports the tracker');
-console.log('Website analytics: consent, active/hidden/idle time, withdrawal, GPC, source minimization, deduplicated beacons, visitor/visit distinction, server conversions, failed storage isolation, owner/bot/local exclusion, private exports, authorization, bounded input and 90-day retention passed. Synthetic data only.');
+const blockedRequests=[],storageBlocked={...browser,document:{...document,body:new Element('body')},fetch:async(url,options)=>{blockedRequests.push(JSON.parse(options.body));return Response.json({accepted:true});}};for(const key of ['localStorage','sessionStorage'])Object.defineProperty(storageBlocked,key,{get(){throw Error('Storage blocked by browser');}});const blockedContext=vm.createContext(storageBlocked);assert.doesNotThrow(()=>vm.runInContext(script,blockedContext),'Blocked storage cannot break the contact module that imports the tracker');assert.equal(blockedRequests.length,1,'Blocked browser storage falls back to in-memory collection');assert.ok(blockedContext.trafficAttribution());
+const ownerRequests=[],ownerContext=vm.createContext({...browser,document:{...document,body:new Element('body')},localStorage:store(),sessionStorage:store(),fetch:async(url,options)=>{ownerRequests.push(JSON.parse(options.body));return Response.json({excluded:true});}});vm.runInContext(script,ownerContext);await new Promise(setImmediate);assert.equal(ownerRequests.length,1);assert.equal(ownerContext.trafficAttribution(),null,'Server owner exclusion stops tracking and attribution');
+console.log('Website analytics: automatic startup, no consent UI/flag, legacy preferences, blocked-storage fallback, active/hidden/idle time, GPC, source minimization, deduplicated beacons, visitor/visit distinction, server conversions, failed storage isolation, owner/bot/local exclusion, private exports, authorization, bounded input and 90-day retention passed. Synthetic data only.');

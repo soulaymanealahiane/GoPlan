@@ -10,7 +10,9 @@ const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});}
 const enabled=env=>env.WEBSITE_ANALYTICS_ENABLED!=='false'&&!!env.DB;
 export function validateTraffic(data){
  if(!data||Array.isArray(data)||typeof data!=='object'||Object.keys(data).some(k=>!['consent','visitorId','visitId','viewId','path','source','device','activeMs','events'].includes(k)))fail('Invalid measurement.');
- if(data.consent!==true||!['visitorId','visitId','viewId'].every(k=>UUID.test(data[k]||''))||!PAGES.has(data.path)||!SOURCES.has(data.source)||!DEVICES.has(data.device))fail('Invalid measurement.');
+ // Accept the old true flag for already-open pages, without requiring or inventing consent.
+ if(data.consent!==undefined&&data.consent!==true)fail('Invalid measurement.');
+ if(!['visitorId','visitId','viewId'].every(k=>UUID.test(data[k]||''))||!PAGES.has(data.path)||!SOURCES.has(data.source)||!DEVICES.has(data.device))fail('Invalid measurement.');
  if(!Number.isInteger(data.activeMs)||data.activeMs<0||data.activeMs>4*3600000)fail('Invalid active time.');
  if(!data.events||Array.isArray(data.events)||typeof data.events!=='object'||Object.keys(data.events).some(k=>!TRAFFIC_EVENTS.includes(k)||!Number.isInteger(data.events[k])||data.events[k]<0||data.events[k]>100))fail('Invalid events.');
  if(data.path!=='/'&&Object.keys(data.events).some(k=>data.events[k]>0))fail('Contact events require the homepage.');
@@ -87,7 +89,8 @@ export async function websiteTrafficSnapshot(env,days=30,now=Date.now()){
  const clicks=await env.DB.prepare(`SELECT ${TRAFFIC_EVENTS.map(k=>`COALESCE(SUM(${k}),0) AS ${k}`).join(',')} FROM website_views WHERE started_at>=? AND started_at<?`).bind(start,end).first();
  const funnel=await env.DB.prepare(`WITH visits AS (SELECT visit_id,MAX((${talkSql})>0) AS clicked,MAX(form_start>0) AS started FROM website_views WHERE started_at>=? AND started_at<? GROUP BY visit_id),converted AS (SELECT DISTINCT visit_id FROM website_conversions WHERE created_at>=? AND created_at<?) SELECT COUNT(*) AS visits,COALESCE(SUM(clicked),0) AS clicked,COALESCE(SUM(clicked AND started),0) AS started,COALESCE(SUM(clicked AND started AND visit_id IN (SELECT visit_id FROM converted)),0) AS submitted FROM visits`).bind(start,end,start,end).first();
  return {enabled:enabled(env),days,since:new Date(start).toISOString().slice(0,10),generatedAt:new Date(now).toISOString(),collectionStartedAt:meta?new Date(meta.started_at).toISOString():null,totals,previous,rows,funnel,clicks,pages:await grouped('path'),sources:await grouped('source'),countries:await grouped('country'),devices:await grouped('device'),limits:[
-  'Visits are measured only after optional analytics is accepted. Declined analytics, blockers, known bots, local previews and signed-in owners are excluded. Browser-reported measurements can be incomplete or manipulated.',
+  'Website measurements start automatically. Browser privacy signals (DNT/GPC), blockers, known bots, local previews and signed-in owners are excluded. Browser-reported measurements can be incomplete or manipulated.',
+  'Automatic collection began on 6 November 2026. Earlier measurements, if present, came from the previous opt-in tracker and may have lower coverage.',
   'Visitors are approximate distinct browsers, not people. The random browser ID expires after 90 days; another device or cleared storage counts again. Visits use a per-tab ID that resets after 30 minutes without activity.',
   'Active time counts visible pages with activity in the last 60 seconds, with a maximum of four hours per page view. Background tabs and idle time are excluded. Beacons are best-effort.',
   'The funnel counts distinct visits through contact click → form start → a saved inquiry. Inquiry conversions are confirmed by the server. All saved inquiries also includes submissions without analytics; email clicks are not confirmed inquiries.',

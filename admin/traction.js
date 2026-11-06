@@ -26,7 +26,7 @@ function render(){
  table('traction-clicks',Object.entries(labels).filter(([key])=>key in snapshot.clicks&&key!=='form_start').map(([key])=>({label:key,n:snapshot.clicks[key]})),r=>[labels[r.label],number(r.n)],'No measured clicks.');
  table('traction-daily',snapshot.rows,r=>[r.day,number(r.visitors),number(r.visits),number(r.pageViews),duration(r.activeMs),number(r.talkClicks),number(r.inquiries)]);
  $('traction-limits').replaceChildren(...snapshot.limits.map(s=>el('li',s)));
- $('traction-baseline').textContent=snapshot.collectionStartedAt?'Collection started '+new Date(snapshot.collectionStartedAt).toLocaleString()+'. '+(snapshot.previous?'Comparison uses the prior '+snapshot.days+' days.':'Prior-period comparisons will appear once enough history is available.'):'Collection is ready. The first consenting, non-owner visit will start your baseline.';
+ $('traction-baseline').textContent=snapshot.collectionStartedAt?'Collection started '+new Date(snapshot.collectionStartedAt).toLocaleString()+'. '+(snapshot.previous?'Comparison uses the prior '+snapshot.days+' days.':'Prior-period comparisons will appear once enough history is available.'):'Collection is ready. The first measured public visit will start your baseline.';
  $('traction-status').textContent=(snapshot.enabled?'Updated ':'Collection disabled · Updated ')+new Date(snapshot.generatedAt).toLocaleString()+' · Dates in UTC · Today is incomplete';
  $('traction-download').disabled=false;$('traction-json').disabled=false;chart();
 }
