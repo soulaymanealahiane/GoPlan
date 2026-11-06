@@ -57,6 +57,13 @@
       "when": 1793392800000,
       "tag": "0007_partnership_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1793926684659,
+      "tag": "0008_lethal_shaman",
+      "breakpoints": true
     }
   ]
 }

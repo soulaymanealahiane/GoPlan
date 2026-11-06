@@ -1,6 +1,7 @@
 import {reviewedOpportunityShortlist} from './opportunity-recovery.mjs';
 import {serviceEndpoint,reserveServiceCall,recoverInitialTargets,serviceOwner} from './service-allowance.mjs';
 import {partnershipEndpoint} from './partnerships.mjs';
+import {websiteTrafficEndpoint} from './website-analytics.mjs';
 import {rosterMode} from './university-access.mjs';
 import {authEndpoint,accountIdentity} from './auth.mjs';
 import {advise} from './advisor.mjs';
@@ -25,6 +26,7 @@ export async function handleApi(request,env,options={}){
  const path=new URL(request.url).pathname,origin=request.headers.get('Origin')||'';
  if(!path.startsWith('/api/'))return null;
  if(path==='/api/partnerships')return partnershipEndpoint(request,env,options);
+ if(path==='/api/website-analytics')return websiteTrafficEndpoint(request,env,options);
  if(path.startsWith('/api/auth/'))return authEndpoint(request,env,options);
  if(path==='/api/account'||path.startsWith('/api/account/'))return accountEndpoint(request,env);
  if(path.startsWith('/api/admin/'))return adminEndpoint(request,env,options);

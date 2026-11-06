@@ -1,0 +1,27 @@
+# Website traction
+
+The owner-only **Website traction** section at `/admin` separates public-site acquisition from the existing adviser-operation counters. It provides 7-, 30- and 90-day visitor, visit and page-view trends; active time; contact-button placement counts; a contact funnel; broad traffic sources, devices and countries; and aggregate CSV/JSON downloads. Today is incomplete and all date buckets use UTC. Comparisons require a fully available prior period inside the 90-day retention window. Visits before collection began are unavailable.
+
+## Collection and interpretation
+
+`dist/website-analytics.js` starts only after the visitor accepts optional analytics. **Analytics choices** can withdraw future collection. DNT/GPC, known bot user agents, local collection and signed-in owners are excluded. Owner exclusions are enforced by the server, independently of client preferences. No third-party tracking account, script or new credential is required. Set `WEBSITE_ANALYTICS_ENABLED=false` in the runtime and redeploy to disable collection.
+
+An expiring random browser ID approximates visitors for up to 90 days. A per-tab visit ID resets after 30 minutes without activity. Multiple devices, cleared storage and separate tabs affect these estimates; visitors are not verified people. Distinct browsers are deduplicated across the selected period. Daily or breakdown unique counts are not additive.
+
+Approved pages are homepage aliases, AUI demo aliases, sign-in/account creation, and privacy. Queries and fragments are never recorded. Referrer URLs are reduced locally to direct/internal, search, social, referral or tagged campaign; the actual referrer and UTM values are not sent. Device categories are coarse. Country is the hosting-provided two-letter estimate, with unknown values preserved as unknown. No raw IP, full user agent, account ID, form contents, academic data or private plan enters the measurement tables.
+
+Engagement is cumulative visible-page time with interaction during the preceding 60 seconds, capped at four hours per page view. A 30-second heartbeat and visibility/page-hide beacons send cumulative counters. Duplicate and out-of-order snapshots use maxima, rather than adding counts twice. Server elapsed time also bounds engagement. Hidden tabs do not emit periodic heartbeats. Network loss, blockers and declined analytics undercount activity. The public endpoint is not a verified human-attendance system: clients can manipulate measurements despite validation, bot filtering and rate limits.
+
+Contact clicks are broken down by navigation, hero, campus, university, pricing, closing and footer placements. Demo clicks, email clicks and calculator quantity changes are separate signals. Form-start detection reads neither field values nor individual typing. The funnel uses distinct visits that reached the preceding stages; it is separate from total click counts. The overall visit-to-inquiry rate uses converting measured visits divided by measured visits.
+
+## Confirmed inquiries and failure isolation
+
+The partnership endpoint counts a conversion only after a real inquiry has been saved. An optional attribution object must match the random IDs of a recent recorded homepage view. A hash of the submission ID uniquely identifies the conversion, preventing replay inflation. Inquiry content remains in the existing private inquiry table and is never copied into website analytics. Inquiries without analytics still save and receive the existing email notification; **Saved inquiries** includes them, while **tracked inquiries** only includes attributable submissions. Internal test inquiries, if retained, also contribute to all-inquiry counts. An email-link click does not prove that an email was sent.
+
+Tracking failure is isolated from inquiry persistence and email delivery. Owners may inspect aggregate data only after normal owner authentication; the legacy operator metrics key does not grant access to website analytics. Export routes return aggregates and use private/no-store headers. The collection endpoint accepts only same-origin bounded JSON with strict page, event, integer and random-ID allowlists, and an hourly hashed-IP request limit. No arbitrary event text is stored.
+
+Migration `0008_lethal_shaman.sql` adds three tables and indexes, without altering existing account, plan, usage or inquiry records. Generated SQL for tables already introduced by migrations 0005–0007 was removed from this new migration because those immutable migrations already own them; the new generated snapshot includes the complete current declared schema. Measurement rows older than 90 days are pruned in bounded batches on collection and owner reads. Inquiry retention remains separately 180 days. The collection-start marker has no visitor data and remains to describe coverage.
+
+## Verification
+
+`verify-website-analytics.mjs` exercises the real SQLite migrations, endpoint, deduplication, visitor/session distinction, active-time bounds, PII/invalid-input rejection, owner and operator permissions, confirmed inquiry replay, consent-free inquiry success, storage-outage isolation, retention and exports. It also executes the actual browser tracker against synthetic clocks, storage and event surfaces for consent, background/idle exclusion, privacy signals and withdrawal. Browser QA uses synthetic in-memory records, never fabricated production history.

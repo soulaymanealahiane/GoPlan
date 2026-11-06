@@ -31,7 +31,7 @@ class Element{
 }
 const nodes=Object.fromEntries(ids.map(id=>[id,new Element('div',id)]));
 Object.assign(nodes.period,{value:'30'});Object.assign(nodes.channel,{value:'all'});Object.assign(nodes['roster-mode'],{value:'append'});nodes['roster-fields'].disabled=true;
-const views=['overview','reliability','students','pilots','data'].map(id=>nodes['view-'+id]);
+const views=['overview','traction','reliability','students','pilots','data'].map(id=>nodes['view-'+id]);
 const nav=views.map(v=>{const node=new Element('button');node.dataset.tab=v.id.slice(5);return node;});
 const document={getElementById:id=>{assert.ok(nodes[id],'Missing admin element: '+id);return nodes[id];},createElement:tag=>new Element(tag),body:new Element('body'),querySelectorAll:selector=>selector==='.view'?views:selector==='nav [data-tab]'?nav:selector==='[data-tab]'?nav:[]};
 const calls=[];
@@ -51,8 +51,8 @@ const fetch=async(path,options={})=>{
 const common={document,fetch,AbortSignal,console,Date,location:{hostname:'planwithgoplan.com'},setTimeout};
 const pilots=vm.createContext({...common,offerSummary});
 vm.runInContext((await readFile(new URL('./admin/pilots.js',import.meta.url),'utf8')).replace("import {offerSummary} from '/university-offer.js';",'').replace('export async function refreshPilots','async function refreshPilots'),pilots);
-const context=vm.createContext({...common,refreshPilots:pilots.refreshPilots});
-vm.runInContext((await readFile(new URL('./admin/admin.js',import.meta.url),'utf8')).replace("import {refreshPilots} from './pilots.js';",''),context);
+const context=vm.createContext({...common,refreshPilots:pilots.refreshPilots,refreshTraction:async()=>{}});
+vm.runInContext((await readFile(new URL('./admin/admin.js',import.meta.url),'utf8')).replace("import {refreshPilots} from './pilots.js';",'').replace("import {refreshTraction} from './traction.js';",''),context);
 const settle=async()=>{for(let i=0;i<4;i++)await new Promise(resolve=>setImmediate(resolve));};
 const tab=async name=>{nav.find(n=>n.dataset.tab===name).onclick();await settle();};
 await settle();

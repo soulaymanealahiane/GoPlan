@@ -1,6 +1,7 @@
 import {hash} from './feedback.mjs';
 import {calculateOffer} from '../dist/university-offer.js';
 import {notifyPartnership} from './partnership-mail.mjs';
+import {recordWebsiteInquiry} from './website-analytics.mjs';
 const error=(message,status)=>{throw Object.assign(Error(message),{status});};
 export async function partnershipEndpoint(request,env,options={}){
  const json=(value,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -21,12 +22,13 @@ export async function partnershipEndpoint(request,env,options={}){
   const reference=data.submissionId||crypto.randomUUID(),name=data.name.trim(),university=data.university.trim(),message=data.message.trim(),offerJson=offer?JSON.stringify(offer):null;
   const replay=await env.DB.prepare('SELECT * FROM partnership_inquiries WHERE id=?').bind(reference).first();
   const same=row=>row.name===name&&row.email===email&&row.university===university&&row.message===message&&row.offer_json===offerJson;
-  if(replay){if(!same(replay))error('This inquiry reference was already used. Reopen the form to send a different inquiry.',409);try{await notifyPartnership(reference,env,options);}catch{}return json({reference:reference.slice(0,8)},201);}
+  if(replay){if(!same(replay))error('This inquiry reference was already used. Reopen the form to send a different inquiry.',409);await recordWebsiteInquiry(request,env,reference,data.traffic);try{await notifyPartnership(reference,env,options);}catch{}return json({reference:reference.slice(0,8)},201);}
   const now=Date.now(),bucket=Math.floor(now/3600000),ip=request.headers.get('CF-Connecting-IP')||options.clientAddress||'unknown',id=await hash('partnership:'+ip+':'+bucket);
   const count=await env.DB.prepare('INSERT INTO auth_limits(id,count,expires_at) VALUES(?,1,?) ON CONFLICT(id) DO UPDATE SET count=count+1 RETURNING count').bind(id,(bucket+1)*3600000).first();if(count.count>5)error('Please wait before sending another inquiry.',429);
   await env.DB.prepare('DELETE FROM partnership_inquiries WHERE created_at<?').bind(now-180*86400000).run();
   await env.DB.prepare("INSERT INTO partnership_inquiries(id,name,email,university,message,created_at,offer_json,email_state) VALUES(?,?,?,?,?,?,?,'pending') ON CONFLICT(id) DO NOTHING").bind(reference,name,email,university,message,now,offerJson).run();
   const stored=await env.DB.prepare('SELECT * FROM partnership_inquiries WHERE id=?').bind(reference).first();if(!same(stored))error('This inquiry reference was already used.',409);
+  await recordWebsiteInquiry(request,env,reference,data.traffic);
   // A provider outage cannot discard an inquiry or make the visitor submit twice.
   try{await notifyPartnership(reference,env,options);}catch{}
   return json({reference:reference.slice(0,8)},201);

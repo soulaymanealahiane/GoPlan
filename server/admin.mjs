@@ -5,6 +5,7 @@ import {analyticsExport} from './analytics-export.mjs';
 import {studentDirectory} from './accounts.mjs';
 import {resetStudentTest,undoStudentTestReset} from './test-reset.mjs';
 import {notifyPartnership} from './partnership-mail.mjs';
+import {websiteTrafficSnapshot,websiteTrafficExport} from './website-analytics.mjs';
 export async function adminEndpoint(request,env,options={}){
  const url=new URL(request.url),origin=request.headers.get('Origin');
  const json=(body,status=200)=>Response.json(body,{status,headers:privateHeaders});
@@ -13,6 +14,12 @@ export async function adminEndpoint(request,env,options={}){
  if(!owner&&!service)return json({error:'Owner sign-in required.',code:'OWNER_REQUIRED'},401);
  if(!['/api/admin/analytics','/api/admin/export'].includes(url.pathname)&&!owner&&(!env.FEEDBACK_REVIEW_KEY||request.headers.get('Authorization')!=='Bearer '+env.FEEDBACK_REVIEW_KEY))return json({error:'Owner access required.'},403);
  try{
+  if(['/api/admin/website-analytics','/api/admin/website-export'].includes(url.pathname)){
+   if(!owner)return json({error:'Owner sign-in required.'},403);
+   if(request.method!=='GET')return json({error:'Use GET.'},405);
+   const snapshot=await websiteTrafficSnapshot(env,url.searchParams.get('days'));
+   return url.pathname.endsWith('website-export')?websiteTrafficExport(snapshot,url.searchParams.get('format')||'csv'):json(snapshot);
+  }
   if(url.pathname==='/api/admin/partnerships/retry-email'){
    if(!owner)return json({error:'Owner access required.'},403);
    if(request.method!=='POST'||origin!==url.origin||request.headers.get('Sec-Fetch-Site')==='cross-site')return json({error:'Open this action from GoPlan.'},403);
