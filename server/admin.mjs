@@ -18,7 +18,7 @@ export async function adminEndpoint(request,env,options={}){
    if(!owner)return json({error:'Owner sign-in required.'},403);
    if(request.method!=='GET')return json({error:'Use GET.'},405);
    const snapshot=await websiteTrafficSnapshot(env,url.searchParams.get('days'));
-   return url.pathname.endsWith('website-export')?websiteTrafficExport(snapshot,url.searchParams.get('format')||'csv'):json(snapshot);
+   return url.pathname.endsWith('website-export')?websiteTrafficExport(snapshot,url.searchParams.get('format')||'csv',url.searchParams.get('report')||'daily'):json(snapshot);
   }
   if(url.pathname==='/api/admin/partnerships/retry-email'){
    if(!owner)return json({error:'Owner access required.'},403);

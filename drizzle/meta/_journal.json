@@ -64,6 +64,13 @@
       "when": 1793926684659,
       "tag": "0008_lethal_shaman",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1793988330479,
+      "tag": "0009_reflective_korath",
+      "breakpoints": true
     }
   ]
 }

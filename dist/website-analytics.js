@@ -1,4 +1,5 @@
-// Automatic first-party analytics. Never read form values, account data or URL queries into a payload.
+import {captureTrafficAttribution} from './traffic-attribution.js';
+// Automatic first-party analytics. Only sanitized URLs and approved UTM fields leave the browser.
 const VISITOR='goplan-analytics-browser-v1',VISIT='goplan-analytics-visit-v1',DAY=86400000;
 const paths={'/':'/','/index.html':'/','/site-home.html':'/','/demo':'/demo','/demo/':'/demo','/demo/aui':'/demo','/demo.html':'/demo','/signin.html':'/signin.html','/privacy.html':'/privacy.html'};
 const path=paths[location.pathname],supported=!!path&&['planwithgoplan.com','goplan-aui-demo-k7m9.salahiane9.chatgpt.site','localhost','127.0.0.1'].includes(location.hostname);
@@ -8,7 +9,7 @@ const read=(key,session=false)=>{try{return JSON.parse((session?sessionStorage:l
 const remember=(key,value,session=false)=>{try{(session?sessionStorage:localStorage).setItem(key,JSON.stringify(value));}catch{}};
 function source(){
  try{
-  if(new URLSearchParams(location.search).has('utm_source'))return 'campaign';
+  const params=new URLSearchParams(location.search);if(['utm_source','utm_medium','utm_campaign','utm_term','utm_content','utm_id'].some(k=>params.has(k)))return 'campaign';
   if(!document.referrer)return 'direct';const r=new URL(document.referrer);if(r.origin===location.origin)return 'direct';
   if(/(^|\.)(google\.[a-z.]+|bing\.com|duckduckgo\.com|search\.yahoo\.com|ecosia\.org)$/.test(r.hostname))return 'search';
   if(/(^|\.)(linkedin\.com|lnkd\.in|facebook\.com|instagram\.com|twitter\.com|x\.com|t\.co|tiktok\.com|youtube\.com)$/.test(r.hostname))return 'social';
@@ -20,13 +21,13 @@ function measure(){const now=performance.now();if(wasVisible)activeMs=Math.min(1
 function ensureVisit(){
  const now=Date.now();if(visit&&(now-visit.at<=1800000||!wasVisible||performance.now()-lastInteraction>60000))return;
  const previous=read(VISIT,true);
- visit=previous&&now-previous.at<=1800000?previous:{id:crypto.randomUUID(),at:now,source:source()};
+ visit=previous&&now-previous.at<=1800000?previous:{id:crypto.randomUUID(),at:now,source:source(),attribution:captureTrafficAttribution(document.referrer,location.href)};
  viewId=crypto.randomUUID();activeMs=0;events={};lastTick=performance.now();lastInteraction=lastTick;
  remember(VISIT,visit,true);
 }
 function payload(){
  if(!running||excluded||privacySignal())return null;
- try{ensureVisit();return {visitorId:visitor.id,visitId:visit.id,viewId,path,source:visit.source,device:device(),activeMs:Math.floor(activeMs),events:{...events}};}catch{return null;}
+ try{ensureVisit();return {visitorId:visitor.id,visitId:visit.id,viewId,path,source:visit.source,...(visit.attribution?{attribution:visit.attribution}:{}),device:device(),activeMs:Math.floor(activeMs),events:{...events}};}catch{return null;}
 }
 export function flushTraffic(beacon=false){
  if(!running)return;measure();const data=payload();if(!data)return;

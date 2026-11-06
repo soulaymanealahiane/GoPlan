@@ -22,19 +22,26 @@ function render(){
  $('traction-funnel').replaceChildren(...stages.map(([name,n])=>{const row=el('div',undefined,'traction-funnel-row'),text=el('div',undefined,'panel-head'),track=el('div',undefined,'traction-track'),bar=el('div',undefined,'traction-fill');text.append(el('span',name),el('strong',number(n)));bar.style.width=(f.visits?n/f.visits*100:0)+'%';track.append(bar);row.append(text,track);return row;}));
  const stats=r=>[labels[r.label]||r.label,number(r.visitors),number(r.visits)];
  table('traction-sources',snapshot.sources,stats);table('traction-countries',snapshot.countries,stats);table('traction-devices',snapshot.devices,stats);
+ const attribution=snapshot.attribution||{visits:t.visits,capturedVisits:0,missingReferrerVisits:0,referrers:[],landingPages:[],campaigns:[]};
+ $('traction-attribution-coverage').textContent=number(attribution.capturedVisits)+' of '+number(attribution.visits)+' visits have detailed entry stamps. '+number(attribution.missingReferrerVisits)+' of those supplied no referrer. Earlier visits remain not captured.';
+ const attributionValues=r=>[r.label||'Not provided (direct / app / private)',number(r.visitors),number(r.visits),number(r.convertingVisits)];
+ table('traction-referrers',attribution.referrers,attributionValues,'No referring URLs captured yet.');
+ table('traction-entries',attribution.landingPages,r=>[r.label||'Entry URL unavailable',number(r.visitors),number(r.visits),number(r.convertingVisits)],'No entry links captured yet.');
+ $('traction-campaigns').replaceChildren(...attribution.campaigns.map(r=>{const tr=el('tr');tr.append(el('td',r.utmSource||'—'),el('td',r.utmMedium||'—'));const campaign=el('td');campaign.append(el('strong',r.utmCampaign||'Unnamed campaign'));for(const [name,key] of [['Content','utmContent'],['Term','utmTerm'],['ID','utmId']])if(r[key])campaign.append(el('small',name+': '+r[key],'traction-tag'));tr.append(campaign,...[r.visitors,r.visits,r.convertingVisits].map(n=>el('td',number(n))));return tr;}));
+ if(!attribution.campaigns.length){const tr=el('tr'),td=el('td','No UTM-tagged visits captured yet.');td.colSpan=6;tr.append(td);$('traction-campaigns').append(tr);}
  table('traction-pages',snapshot.pages,r=>[labels[r.label]||r.label,number(r.pageViews),number(r.visitors),r.pageViews?duration(r.activeMs/r.pageViews):'—']);
  table('traction-clicks',Object.entries(labels).filter(([key])=>key in snapshot.clicks&&key!=='form_start').map(([key])=>({label:key,n:snapshot.clicks[key]})),r=>[labels[r.label],number(r.n)],'No measured clicks.');
  table('traction-daily',snapshot.rows,r=>[r.day,number(r.visitors),number(r.visits),number(r.pageViews),duration(r.activeMs),number(r.talkClicks),number(r.inquiries)]);
  $('traction-limits').replaceChildren(...snapshot.limits.map(s=>el('li',s)));
  $('traction-baseline').textContent=snapshot.collectionStartedAt?'Collection started '+new Date(snapshot.collectionStartedAt).toLocaleString()+'. '+(snapshot.previous?'Comparison uses the prior '+snapshot.days+' days.':'Prior-period comparisons will appear once enough history is available.'):'Collection is ready. The first measured public visit will start your baseline.';
  $('traction-status').textContent=(snapshot.enabled?'Updated ':'Collection disabled · Updated ')+new Date(snapshot.generatedAt).toLocaleString()+' · Dates in UTC · Today is incomplete';
- $('traction-download').disabled=false;$('traction-json').disabled=false;chart();
+ $('traction-download').disabled=false;$('traction-json').disabled=false;$('traction-attribution-download').disabled=false;chart();
 }
 export async function refreshTraction(days=30){
  const request=++version;$('traction-error').hidden=true;$('traction-status').textContent='Loading website measurements…';
  try{const response=await fetch('/api/admin/website-analytics?days='+encodeURIComponent(days),{credentials:'same-origin',signal:AbortSignal.timeout(25000)});const data=await response.json();if(!response.ok)throw Error(data.error||'Could not load website analytics.');if(request!==version)return;snapshot=data;render();}
  catch(error){if(request!==version)return;$('traction-error').textContent=error.message;$('traction-error').hidden=false;$('traction-status').textContent=snapshot?'Showing the last successful website snapshot; these numbers are not fresh.':'Website measurements could not load.';}
 }
-function download(format){if(!snapshot)return;const a=el('a');a.href='/api/admin/website-export?days='+snapshot.days+'&format='+format;a.download='GoPlan-website.'+format;document.body.append(a);a.click();a.remove();}
-function init(){if(!$('view-traction'))return;$('traction-download').onclick=()=>download('csv');$('traction-json').onclick=()=>download('json');$('traction-metric').onchange=chart;}
+function download(format,report='daily'){if(!snapshot)return;const a=el('a');a.href='/api/admin/website-export?days='+snapshot.days+'&format='+format+'&report='+report;a.download='GoPlan-website.'+format;document.body.append(a);a.click();a.remove();}
+function init(){if(!$('view-traction'))return;$('traction-download').onclick=()=>download('csv');$('traction-json').onclick=()=>download('json');$('traction-attribution-download').onclick=()=>download('csv','attribution');$('traction-metric').onchange=chart;}
 init();

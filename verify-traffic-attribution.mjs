@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import {captureTrafficAttribution,safeTrafficUrl,safeTag} from './dist/traffic-attribution.js';
+import {handleApi} from './server/api.mjs';
+import {localDatabase} from './server/local-db.mjs';
+import {testSession} from './tests/session-fixture.mjs';
+import {websiteTrafficSnapshot,websiteTrafficExport} from './server/website-analytics.mjs';
+
+const base='https://planwithgoplan.com',DB=localDatabase(':memory:'),env={DB,ADMIN_EMAILS:'attribution-owner@example.invalid'},owner=await testSession(DB,'attribution-owner','attribution-owner@example.invalid'),start=Date.now()-30000;
+const rawRef='https://user:password@news.example.org/posts/goplan-launch?utm_source=newsletter&token=credential&email=private%40example.invalid#secret';
+const entry=base+'/?utm_source=university&utm_medium=email&utm_campaign=autumn_2026&utm_content=campus_button&utm_term=degree_planning&utm_id=pilot_a&access_token=credential#private';
+const a=captureTrafficAttribution(rawRef,entry);
+assert.equal(a.referrerUrl,'https://news.example.org/posts/goplan-launch?utm_source=newsletter');assert.equal(a.utmSource,'university');assert.equal(a.utmContent,'campus_button');assert.equal(a.utmId,'pilot_a');
+assert.ok(!JSON.stringify(a).includes('credential'));assert.ok(!JSON.stringify(a).includes('password'));assert.ok(!JSON.stringify(a).includes('private'));
+for(const url of ['javascript:alert(1)','file:///C:/private/document','data:text/html,private','not a URL'])assert.equal(safeTrafficUrl(url),'');
+assert.equal(safeTrafficUrl('https://example.org/?q=private&password=secret'),'https://example.org/');
+assert.ok(!safeTrafficUrl('https://example.org/private%2540example.invalid/1234567890/abcdefghijklmNOPQRSTUVWXYZ12345678').includes('example.invalid'));
+assert.equal(safeTag('private%2540example.invalid'),'[redacted]');assert.ok(!safeTag('call +212 600 123 456').includes('600'));assert.equal(safeTrafficUrl(a.referrerUrl),a.referrerUrl,'Normalization is idempotent');
+assert.ok(safeTag('x'.repeat(1000)).length<=120);
+const request=(path,body,headers={})=>new Request(base+path,{method:body?'POST':'GET',headers:{Origin:base,'Content-Type':'application/json','User-Agent':'Mozilla/5.0',...headers},...(body?{body:JSON.stringify(body)}:{})});
+const data={visitorId:crypto.randomUUID(),visitId:crypto.randomUUID(),viewId:crypto.randomUUID(),path:'/',source:'campaign',device:'desktop',activeMs:0,events:{nav_talk:1,form_start:1},attribution:a};
+const post=(value,now=start)=>handleApi(request('/api/website-analytics',value),env,{now});
+assert.equal((await post(data)).status,200);
+let stored=await DB.prepare('SELECT * FROM website_views').first();assert.equal(stored.referrer_url,a.referrerUrl);assert.equal(stored.utm_campaign,'autumn_2026');assert.equal(stored.attribution_version,1);
+await post({...data,attribution:captureTrafficAttribution('https://changed.example.org/other',base+'/?utm_campaign=overwrite'),activeMs:5000},start+5000);
+assert.equal((await DB.prepare('SELECT utm_campaign FROM website_views').first()).utm_campaign,'autumn_2026','An entry stamp cannot be overwritten by later beacons');
+await post({...data,viewId:crypto.randomUUID(),path:'/privacy.html',events:{}},start+6000);
+const inquiry={submissionId:crypto.randomUUID(),name:'Synthetic attribution test',email:'fixture@example.invalid',university:'Isolated test',message:'Offline conversion. No external delivery.',traffic:{visitorId:data.visitorId,visitId:data.visitId,viewId:data.viewId}};
+assert.equal((await handleApi(request('/api/partnerships',inquiry),env)).status,201);
+const direct={...data,visitorId:crypto.randomUUID(),visitId:crypto.randomUUID(),viewId:crypto.randomUUID(),source:'direct',attribution:captureTrafficAttribution('',base+'/'),events:{}};
+await post(direct,start+7000);
+const legacy={...data,visitorId:crypto.randomUUID(),visitId:crypto.randomUUID(),viewId:crypto.randomUUID(),attribution:undefined,events:{}};await post(legacy,start+8000);
+let report=await websiteTrafficSnapshot(env,7);assert.equal(report.totals.pageViews,4);assert.equal(report.attribution.visits,3);assert.equal(report.attribution.capturedVisits,2);assert.equal(report.attribution.missingReferrerVisits,1);assert.equal(report.attribution.campaigns[0].visits,1,'Multiple page views do not inflate entry visit counts');assert.equal(report.attribution.campaigns[0].convertingVisits,1);assert.equal(report.attribution.referrers.find(r=>r.label===a.referrerUrl).visitors,1);assert.ok(!JSON.stringify(report).includes('fixture@example.invalid'));
+const invalid={...data,viewId:crypto.randomUUID(),attribution:{...a,unexpected:'private'}};assert.equal((await post(invalid)).status,400);
+assert.equal((await post({...data,viewId:crypto.randomUUID(),attribution:{utmCampaign:{private:true}}})).status,400);
+assert.equal((await post({...data,viewId:crypto.randomUUID(),attribution:{...a,referrerUrl:'x'.repeat(8193)}})).status,413);
+const foreign={...data,viewId:crypto.randomUUID(),visitId:crypto.randomUUID(),attribution:{...a,landingUrl:'https://elsewhere.example.org/private'}};await post(foreign,start+9000);assert.equal((await DB.prepare('SELECT landing_url FROM website_views ORDER BY started_at DESC LIMIT 1').first()).landing_url,'');
+const untrusted={...data,viewId:crypto.randomUUID(),visitId:crypto.randomUUID(),attribution:{...a,utmCampaign:'=HYPERLINK("https://example.invalid")',utmContent:'<img src=x onerror=alert(1)>'}};await post(untrusted,start+10000);report=await websiteTrafficSnapshot(env,7);
+const exported=await handleApi(request('/api/admin/website-export?report=attribution&format=csv',undefined,owner),env);assert.equal(exported.status,200);assert.match(exported.headers.get('Cache-Control'),/no-store/);const csv=await exported.text();assert.ok(csv.includes('referrers'));assert.ok(csv.includes('university'));assert.ok(csv.includes('"\'=HYPERLINK('),'CSV formulas are neutralized');assert.ok(!csv.includes('credential'));
+assert.equal((await handleApi(request('/api/admin/website-export?report=attribution&format=csv'),env)).status,401);
+assert.equal((await handleApi(request('/api/admin/website-export?report=invalid',undefined,owner),env)).status,400);
+assert.ok((await (await websiteTrafficExport(report,'json')).json()).attribution.referrers.length);
+
+// Execute the real admin renderer against a minimal DOM to catch unsafe rendering and new-element wiring.
+const {readFile}=await import('node:fs/promises'),{default:vm}=await import('node:vm');
+const html=await readFile(new URL('./admin/index.html',import.meta.url),'utf8'),ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+class Element{constructor(){this.children=[];this.style={};this.value='visitors';}set textContent(s){this.text=String(s);this.children=[];}get textContent(){return (this.text||'')+this.children.map(n=>n.textContent).join('');}append(...n){this.children.push(...n);}replaceChildren(...n){this.text='';this.children=n;}setAttribute(){}click(){}remove(){}}
+const nodes=Object.fromEntries(ids.map(id=>[id,new Element()])),document={getElementById:id=>{assert.ok(nodes[id],id);return nodes[id];},createElement:()=>new Element(),body:new Element()};
+const context=vm.createContext({document,Date,Number,AbortSignal,fetch:async()=>Response.json(report)});vm.runInContext((await readFile(new URL('./admin/traction.js',import.meta.url),'utf8')).replace('export async function','async function'),context);await context.refreshTraction(7);
+assert.equal(nodes['traction-error'].hidden,true);assert.ok(nodes['traction-referrers'].textContent.includes('https://news.example.org/posts/goplan-launch'));assert.ok(nodes['traction-campaigns'].textContent.includes('<img src=x onerror=alert(1)>'),'Untrusted campaign content is text, never executable HTML');assert.ok(nodes['traction-attribution-coverage'].textContent.includes('Earlier visits remain not captured.'));assert.equal(nodes['traction-attribution-download'].disabled,false);
+DB.close();console.log('Detailed attribution: sanitized URLs and six UTM tags, additive migration, legacy/null coverage, immutable entry stamps, per-visit deduplication, confirmed conversions, bounded validation, private exports, CSV formula protection and text-only admin rendering passed. Synthetic data only.');

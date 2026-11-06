@@ -16,10 +16,11 @@ export const usageDaily=sqliteTable('usage_daily',{
  providerCalls:integer('provider_calls').notNull().default(0),inputTokens:integer('input_tokens').notNull().default(0),outputTokens:integer('output_tokens').notNull().default(0),
 },t=>[index('usage_day_idx').on(t.day)]);
 
-// Optional first-party website measurements: hashed random IDs, never account IDs or form values.
+// First-party website measurements: hashed random IDs, sanitized attribution; no account IDs or form values.
 export const websiteAnalyticsMeta=sqliteTable('website_analytics_meta',{id:text('id').primaryKey(),startedAt:integer('started_at').notNull()});
 export const websiteViews=sqliteTable('website_views',{
  id:text('id').primaryKey(),visitId:text('visit_id').notNull(),visitorId:text('visitor_id').notNull(),path:text('path').notNull(),source:text('source').notNull(),device:text('device').notNull(),country:text('country').notNull(),startedAt:integer('started_at').notNull(),lastSeenAt:integer('last_seen_at').notNull(),activeMs:integer('active_ms').notNull().default(0),
+ attributionVersion:integer('attribution_version'),referrerUrl:text('referrer_url'),landingUrl:text('landing_url'),utmSource:text('utm_source'),utmMedium:text('utm_medium'),utmCampaign:text('utm_campaign'),utmTerm:text('utm_term'),utmContent:text('utm_content'),utmId:text('utm_id'),
  navTalk:integer('nav_talk').notNull().default(0),heroTalk:integer('hero_talk').notNull().default(0),campusTalk:integer('campus_talk').notNull().default(0),universityTalk:integer('university_talk').notNull().default(0),packageTalk:integer('package_talk').notNull().default(0),closingTalk:integer('closing_talk').notNull().default(0),footerContact:integer('footer_contact').notNull().default(0),formStart:integer('form_start').notNull().default(0),demoClick:integer('demo_click').notNull().default(0),emailClick:integer('email_click').notNull().default(0),packageChange:integer('package_change').notNull().default(0),
 },t=>[index('website_views_started_idx').on(t.startedAt),index('website_views_visitor_idx').on(t.visitorId,t.startedAt),index('website_views_visit_idx').on(t.visitId)]);
 export const websiteConversions=sqliteTable('website_conversions',{id:text('id').primaryKey(),viewId:text('view_id').notNull(),visitId:text('visit_id').notNull(),createdAt:integer('created_at').notNull()},t=>[index('website_conversions_created_idx').on(t.createdAt),index('website_conversions_visit_idx').on(t.visitId)]);

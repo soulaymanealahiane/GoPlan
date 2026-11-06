@@ -6,6 +6,7 @@ import {handleApi} from './server/api.mjs';
 import {websiteTrafficSnapshot,recordWebsiteInquiry} from './server/website-analytics.mjs';
 import {testSession} from './tests/session-fixture.mjs';
 import {hash} from './server/feedback.mjs';
+import {captureTrafficAttribution} from './dist/traffic-attribution.js';
 
 const base='https://planwithgoplan.com',DB=localDatabase(':memory:'),env={DB,ADMIN_EMAILS:'owner@example.invalid',ANALYTICS_ADMIN_KEY:'synthetic-metrics-key'},now=Date.now();
 const owner=await testSession(DB,'traffic-owner','owner@example.invalid'),student=await testSession(DB,'traffic-student');
@@ -31,7 +32,7 @@ assert.equal((await post(data,now,{Origin:'https://evil.example'})).status,403);
 assert.equal((await post(data,now,{'Sec-Fetch-Site':'cross-site'})).status,403);
 assert.equal((await handleApi(new Request('http://127.0.0.1:4415/api/website-analytics',{method:'POST',headers:{Origin:'http://127.0.0.1:4415'}}),env)).status,200);
 assert.equal((await (await handleApi(req('/api/website-analytics',data),{...env,WEBSITE_ANALYTICS_ENABLED:'false'})).json()).excluded,true);
-assert.equal((await post({...data,extra:'x'.repeat(3000)})).status,413);
+assert.equal((await post({...data,extra:'x'.repeat(9000)})).status,413);
 const rateId=await hash('website-rate:unknown:'+Math.floor(now/3600000));await DB.prepare('UPDATE auth_limits SET count=1800 WHERE id=?').bind(rateId).run();assert.equal((await post()).status,429);await DB.prepare('UPDATE auth_limits SET count=0 WHERE id=?').bind(rateId).run();
 
 const inquiry={submissionId:crypto.randomUUID(),name:'Synthetic analytics test',email:'synthetic@example.invalid',university:'Synthetic institution',message:'Offline conversion verification; no external delivery.',traffic:{visitorId:data.visitorId,visitId:data.visitId,viewId:data.viewId}};
@@ -64,13 +65,13 @@ const store=()=>{const data=new Map();return {getItem:key=>data.get(key)||null,s
 const localStorage=store(),sessionStorage=store(),body=new Element('body'),head=new Element('head'),handlers={},docHandlers={},form=new Element('form'),calculator=new Element('form'),requests=[];
 let clock=0,wall=now,interval;
 const document={body,head,visibilityState:'visible',referrer:'https://www.linkedin.com/feed/',createElement:tag=>new Element(tag),querySelector:s=>s==='#contact-form'?form:s==='#offer-calculator'?calculator:null,addEventListener:(name,cb)=>docHandlers[name]=cb};
-const browser={document,localStorage,sessionStorage,crypto,Blob,URL,URLSearchParams,console,location:{hostname:'planwithgoplan.com',pathname:'/',origin:base,href:base+'/',search:'?utm_source=private-value'},navigator:{userAgent:'Mozilla mobile',sendBeacon:(url,blob)=>{requests.push({url,blob});return true;}},performance:{now:()=>clock},Date:class extends Date{static now(){return wall;}},addEventListener:(name,cb)=>handlers[name]=cb,setInterval:cb=>(interval=cb,1),clearInterval:()=>{interval=null;},fetch:async(url,options)=>{requests.push({url,data:JSON.parse(options.body)});return Response.json({accepted:true});}};
-const script=(await readFile(new URL('./dist/website-analytics.js',import.meta.url),'utf8')).replaceAll('export function ','function ');
+const browser={captureTrafficAttribution,document,localStorage,sessionStorage,crypto,Blob,URL,URLSearchParams,console,location:{hostname:'planwithgoplan.com',pathname:'/',origin:base,href:base+'/?utm_source=university&utm_medium=email&utm_campaign=autumn_2026&token=do-not-store&email=private%40example.invalid#secret',search:'?utm_source=university'},navigator:{userAgent:'Mozilla mobile',sendBeacon:(url,blob)=>{requests.push({url,blob});return true;}},performance:{now:()=>clock},Date:class extends Date{static now(){return wall;}},addEventListener:(name,cb)=>handlers[name]=cb,setInterval:cb=>(interval=cb,1),clearInterval:()=>{interval=null;},fetch:async(url,options)=>{requests.push({url,data:JSON.parse(options.body)});return Response.json({accepted:true});}};
+const script=(await readFile(new URL('./dist/website-analytics.js',import.meta.url),'utf8')).replace("import {captureTrafficAttribution} from './traffic-attribution.js';",'').replaceAll('export function ','function ');
 const context=vm.createContext(browser);vm.runInContext(script,context);
 await new Promise(setImmediate);
 assert.equal(body.children.length,0,'No consent dialog or settings button is inserted');
 assert.equal(head.children.length,0,'No consent stylesheet is loaded');
-assert.equal(requests.length,1,'Tracking starts automatically on page load');assert.ok(!('consent' in requests[0].data),'Automatic tracking must not claim visitor consent');assert.equal(requests[0].data.source,'campaign');assert.ok(!JSON.stringify(requests).includes('private-value'));
+assert.equal(requests.length,1,'Tracking starts automatically on page load');assert.ok(!('consent' in requests[0].data),'Automatic tracking must not claim visitor consent');assert.equal(requests[0].data.source,'campaign');assert.equal(requests[0].data.attribution.utmSource,'university');assert.equal(requests[0].data.attribution.utmCampaign,'autumn_2026');assert.ok(!JSON.stringify(requests).includes('do-not-store'));assert.ok(!JSON.stringify(requests).includes('private@example.invalid'));
 clock=30000;wall+=30000;interval();await new Promise(setImmediate);assert.equal(requests.at(-1).data.activeMs,30000);
 document.visibilityState='hidden';docHandlers.visibilitychange();const hiddenCount=requests.length;clock+=120000;wall+=120000;interval();assert.equal(requests.length,hiddenCount,'No hidden-tab heartbeats');
 document.visibilityState='visible';docHandlers.visibilitychange();clock+=10000;wall+=10000;interval();await new Promise(setImmediate);assert.ok(requests.at(-1).data.activeMs<=60000,'Background and idle time excluded');
