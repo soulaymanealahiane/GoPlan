@@ -1,7 +1,8 @@
+import {notify as showNotification} from './notifications.js';
 import {bindSemesterBoard} from './semester-board.js';
 import {changeDegreeChoice,retainManualDirection} from './degree-choice-view.js';
 import {unsupportedOperation} from './agent-capabilities.js';
-function showSignInRecovery(output,error){output.innerHTML='<p class="warning">'+esc(error.message)+'</p>';if(['ACCESS_REQUIRED','SIGN_IN_REQUIRED'].includes(error.code))output.insertAdjacentHTML('beforeend','<a class="button primary" href="/signin.html">Sign in to continue</a>');}
+function showSignInRecovery(output,error){output.innerHTML='<p role="alert">'+esc(error.message)+'</p>';if(['ACCESS_REQUIRED','SIGN_IN_REQUIRED'].includes(error.code))output.insertAdjacentHTML('beforeend','<a class="button primary" href="/signin.html">Sign in to continue</a>');}
 import {dashboardView} from './dashboard-view.js';
 import {createDashboardController} from './dashboard-controller.js';
 import {newcomerWorkspace,refreshMinorDraft,studyBoundary} from './dashboard-flow.js';
@@ -30,12 +31,12 @@ let rememberedWorkspace='';try{rememberedWorkspace=localStorage.getItem('goplan-
 const workspaceId=new URLSearchParams(location.search).get('workspace')||rememberedWorkspace;
 const separateWorkspace=/^[a-zA-Z0-9-]{1,80}$/.test(workspaceId);
 let KEY='goplan-aui-v3'+(separateWorkspace?':'+workspaceId:'');
-let dashboard;let state=emptyWorkspace(),view='home',storageFailed=false,loadFailed=false,toastTimer,sourcePages;
+let dashboard;let state=emptyWorkspace(),view='home',storageFailed=false,loadFailed=false,sourcePages;
 const runtime={busy:false,aiError:'',aiStatus:null,validation:{}};let renderedScreen='';let lastStage='direction';
 const active=()=>state.phase==='draft'?state.draftPlan:state.plan;
 const accounts=createAccountWorkspace({read:()=>state,render,notify,modal,head:(...args)=>head(...args),close:()=>close(),startNew:()=>startFresh(),busy:()=>runtime.busy||changeBusy||replanBusy||targetBusy||questionBusy||dashboard?.busy,open:(next,key,begin=false)=>{state=refreshMinorDraft(next);KEY=key;loadFailed=false;storageFailed=false;view=begin?'plan':'home';renderedScreen='';resetWorkspaceAdvice();}});
 try{const saved=localStorage.getItem(KEY);if(saved)state=validateSavedWorkspace(JSON.parse(saved));else if(!separateWorkspace){const legacy=localStorage.getItem('goplan-aui-v2');if(legacy)state=migrateLegacy(JSON.parse(legacy));}}catch{loadFailed=true;storageFailed=true;}
-function notify(message){$('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),6500);}
+function notify(message,kind='status'){showNotification(message,kind);}
 function persist(){if(accounts.signedIn){accounts.schedule(state);return;}if(!loadFailed)try{state.updatedAt=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(state));localStorage.setItem('goplan-last-workspace',KEY.startsWith('goplan-aui-v3:')?KEY.slice('goplan-aui-v3:'.length):'');storageFailed=false;}catch{storageFailed=true;}$('#save-status').textContent=storageFailed?'Saving unavailable · keep this page open':'Saved on this device';}
 function render(){const surface=$('#view-content'),screen=view+':'+state.phase+':'+state.journey.step,same=screen===renderedScreen,focus=surface.contains(document.activeElement)?document.activeElement:null,field=focus?['profile','journey','choice','question'].find(k=>focus.dataset[k]):null,focusValue=field?focus.dataset[field]:null,expanded=same?[...surface.querySelectorAll('details[data-disclosure][open]')].map(d=>d.dataset.disclosure):[];runtime.hasAccess=hasAccessCode();$('#crumb').textContent=view==='home'?'Home':state.phase==='journey'?'Your next step':'Your roadmap';$('#view-content').innerHTML=accounts.gate()||dashboardView(state,runtime,accounts.profile);$('#save-status').textContent=storageFailed?'Saving unavailable':'Saved on this device';for(const key of expanded){const item=surface.querySelector('[data-disclosure="'+CSS.escape(key)+'"]');if(item)item.open=true;}if(same&&field)surface.querySelector('[data-'+field+'="'+CSS.escape(focusValue)+'"]')?.focus({preventScroll:true});renderedScreen=screen;accounts.updateStatus();}
 
@@ -267,7 +268,7 @@ document.addEventListener('submit',async e=>{
 
 document.addEventListener('click',e=>{
  const button=e.target.closest('[data-action="save-course-offerings"]');if(!button)return;const form=button.closest('form'),p=state.plan;
- try{const offerings=offeringChanges(form);if(!offerings.length)throw Error('Select “Use or replace an offering report” first.');p.scheduling=mergeScheduling(p.scheduling||{},{offerings});p.updatedAt=new Date().toISOString();replanPreview=null;changed('Course offerings saved. Ask the agent to revise conflicting semesters.');form.querySelector('#offering-status').textContent='Saved. Your current semesters are unchanged until you accept a revised plan.';}catch(error){form.querySelector('#offering-status').textContent=error.message;}
+ try{const offerings=offeringChanges(form);if(!offerings.length)throw Error('Select “Use or replace an offering report” first.');p.scheduling=mergeScheduling(p.scheduling||{},{offerings});p.updatedAt=new Date().toISOString();replanPreview=null;changed('Course offerings saved. Ask the agent to revise conflicting semesters.');form.querySelector('#offering-status').setAttribute('role','status');form.querySelector('#offering-status').textContent='Saved. Your current semesters are unchanged until you accept a revised plan.';}catch(error){form.querySelector('#offering-status').setAttribute('role','alert');form.querySelector('#offering-status').textContent=error.message;}
 });
 document.addEventListener('change',e=>{
  if(e.target.matches('#replan-form select[name="offeringTerm"]'))loadOfferingEditor(e.target.form,state.plan);

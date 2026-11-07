@@ -277,12 +277,12 @@ export function createDashboardController(h){
   if(!termId)return;
   if(locked||r.busy){h.notify('Wait for the current update to finish.');return;}
   const before=current(),from=before?.terms.find(t=>t.courses.includes(id));if(!before||from?.id===termId)return;
-  try{if(!before.terms.some(t=>t.id===termId)||termId==='prior')throw Error('Choose a semester in your plan.');const candidate=manualCoursePlan(before,{id,termId}).candidate;r.boardOpen={...r.boardOpen,[from?.id]:true,[termId]:true};r.boardLastCourse=id;r.boardError='';r.boardNotice=(before.courses.find(c=>c.id===id)?.code||'Course')+' moved to '+label(before.terms.find(t=>t.id===termId))+'.';applyManual(candidate,r.boardNotice);focusBoardCourse(id);}catch(e){r.boardError=e.message;r.boardNotice='Move not applied. Your plan is unchanged.';display();}
+  try{if(!before.terms.some(t=>t.id===termId)||termId==='prior')throw Error('Choose a semester in your plan.');const candidate=manualCoursePlan(before,{id,termId}).candidate;r.boardOpen={...r.boardOpen,[from?.id]:true,[termId]:true};r.boardLastCourse=id;r.boardError='';r.boardNotice=(before.courses.find(c=>c.id===id)?.code||'Course')+' moved to '+label(before.terms.find(t=>t.id===termId))+'.';applyManual(candidate,r.boardNotice);focusBoardCourse(id);}catch(e){r.boardError=e.message;r.boardNotice='';h.notify(e.message,'error');display();}
  }
  function change(target){
   if(locked||r.busy)return;
   if(target.dataset.boardMove){moveBoardCourse(target.dataset.boardMove,target.value);return;}
-  if(target.dataset.boardStatus){try{const candidate=manualCoursePlan(current(),{id:target.dataset.boardStatus,status:target.value}).candidate;r.boardError='';r.boardLastCourse=target.dataset.boardStatus;applyManual(candidate,'Progress updated.');focusBoardCourse(target.dataset.boardStatus,'data-board-status');}catch(e){r.boardError=e.message;display();}return;}
+  if(target.dataset.boardStatus){try{const candidate=manualCoursePlan(current(),{id:target.dataset.boardStatus,status:target.value}).candidate;r.boardError='';r.boardLastCourse=target.dataset.boardStatus;applyManual(candidate,'Progress updated.');focusBoardCourse(target.dataset.boardStatus,'data-board-status');}catch(e){r.boardError=e.message;h.notify(e.message,'error');display();}return;}
   if(target.hasAttribute?.('data-board-filter')){r.semesterFilter=target.value;display();return;}
   if(target.id==='dashboard-catalogue-scope'){filterCatalogue(target.form);return;}
   if(target.id==='dashboard-degree'){

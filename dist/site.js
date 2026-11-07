@@ -21,7 +21,7 @@ const dialog=$('#contact-dialog');document.querySelectorAll('[data-contact]').fo
  $('#contact-status').textContent='';dialog.showModal();
 }));$('#contact-close').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
 $('#contact-form').addEventListener('submit',async e=>{
- e.preventDefault();const form=e.target,button=form.querySelector('[type=submit]'),status=$('#contact-status');button.disabled=true;status.textContent='Saving your inquiry…';
+ e.preventDefault();const form=e.target,button=form.querySelector('[type=submit]'),status=$('#contact-status');button.disabled=true;status.setAttribute('role','status');status.removeAttribute('data-notification-source');status.textContent='Saving your inquiry…';
  try{
   const data={...Object.fromEntries(new FormData(form)),...(selectedOffer?{offer:selectedOffer}:{})};
   const fingerprint=JSON.stringify(data);if(lastSubmission?.fingerprint!==fingerprint)lastSubmission={fingerprint,id:crypto.randomUUID()};
@@ -29,5 +29,5 @@ $('#contact-form').addEventListener('submit',async e=>{
   const response=await fetch('/api/partnerships',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,submissionId:lastSubmission.id,...(traffic?{traffic}:{})}),signal:AbortSignal.timeout(20000)});
   const result=await response.json();if(!response.ok)throw Error(result.error||'Your inquiry could not be saved. Please retry.');
   form.reset();lastSubmission=null;status.textContent='Your inquiry is saved for the GoPlan team. Reference: '+result.reference+'.';
- }catch(error){status.textContent=error.name==='TimeoutError'?'This is taking longer than expected. Please retry. Your inquiry will not be duplicated.':error.message;}finally{button.disabled=false;}
+ }catch(error){status.setAttribute('role','alert');status.textContent=error.name==='TimeoutError'?'This is taking longer than expected. Please retry. Your inquiry will not be duplicated.':error.message;}finally{button.disabled=false;}
 });
