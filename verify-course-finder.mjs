@@ -4,6 +4,7 @@ import {newJourney,makePlan,emptyWorkspace} from './dist/guidance.js';
 import {normalizeProfile,coursesFor} from './dist/planner.js';
 import {currentCourse} from './dist/course-details.js';
 import {createDashboardController} from './dist/dashboard-controller.js';
+import {semesterBoard} from './dist/semester-board.js';
 const j=newJourney();j.profile=normalizeProfile({program:'BSCSC',track:'SE'});const plan=makePlan(j);plan.finalizedAt=new Date().toISOString();
 const programming=plan.courses.find(c=>c.code==='CSC1401'),arabic=plan.courses.find(c=>c.id.endsWith('-arabic')),calculus=plan.courses.find(c=>c.code==='MTH1311');
 for(const term of plan.terms)term.courses=term.courses.filter(id=>id!==arabic.id);const pending=plan.terms.find(t=>t.id==='pending');if(pending)pending.courses.push(arabic.id);else plan.terms.push({id:'pending',season:'Needs placement',courses:[arabic.id]});
@@ -33,6 +34,7 @@ try{
  assert.equal(controller.searchBoardCourses('CSC1401').matches.find(c=>c.courseId===found.courseId).termId,destination.id,'Search reflects the latest placement');
  const before=JSON.stringify(state);assert.equal(controller.revealBoardCourse(found.courseId),true);await flush();
  assert.equal(runtime.semesterFilter,'all');assert.equal(runtime.boardOpen[destination.id],true);assert.equal(runtime.boardLastCourse,found.courseId);assert.equal(focus.at(-1),found.courseId);assert.equal(scroll.at(-1).term,destination.id);assert.equal(scroll.at(-1).block,'center');assert.equal(scroll.at(-1).behavior,'instant');assert.equal(JSON.stringify(state),before,'Jumping cannot modify saved courses, tracking or decisions');
+ assert.ok(semesterBoard(state.plan,runtime).includes('<span class="board-course-location">Spring 2040</span>'),'The located course keeps its semester visible even when the section heading is off screen');
  assert.equal(controller.revealBoardCourse(arabic.id),true);await flush();assert.equal(scroll.at(-1).term,'pending');
  assert.equal(controller.revealBoardCourse('removed-course'),false);runtime.busy=true;assert.equal(controller.revealBoardCourse(found.courseId),false);
  assert.equal(writes,0);assert.equal(paid,0);assert.equal(runtime.service.globalRemaining,0);
