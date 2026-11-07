@@ -14,7 +14,7 @@ export function acceptAdvice(j,stage,result,editing={}){
  if(stage==='direction'&&result.kind==='recommend'){const errors=degreeSelectionIssues(result.academic);if(errors.length)throw Error(errors.join(' '));}
  let semesterProposal;
  if(['pace','courses'].includes(stage)&&result.change){
-  if(!editing.plan)throw Error('Reopen your semester plan before applying this edit.');
+  if(!editing.plan)throw Error('Reopen your degree roadmap before applying this edit.');
   semesterProposal=proposeReplan(editing.plan,result.change,editing.currentTerm);
   if(!semesterProposal.assessment.canApply)throw Error('This edit leaves course conflicts. Your plan is unchanged.');
   result={...result,update:semesterUpdate(editing.plan,semesterProposal.candidate,semesterProposal.assessment,result.change)};

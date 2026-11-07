@@ -57,7 +57,7 @@ export async function editRoadmap(previous,route,request,call){
  draft=buildProposal(j,previous);
  if(wanted.has('semesters')){const stop=await stage('pace',feedback('semesters'),draft);if(stop)return stop;draft=buildProposal(j,previous);}
  if(verifiedCourses){checkedMinorPlan(draft.profile,{academic:Object.fromEntries(['program','track','secondTrack','minor'].map(k=>[k,draft.profile[k]||''])),choices:draft.profile.choices});const rows=draft.courses.filter(c=>c.minorId===draft.profile.minor),pending=new Set(draft.terms.find(t=>t.id==='pending')?.courses||[]);if(rows.some(c=>!c.code||pending.has(c.id)||!independentCourseEdit&&c.choice&&coursePlan.choices[c.id]!==c.code))throw Error('A placement or later edit prevents the recommended minor courses from fitting. Your saved plan is unchanged.');}
- if(!j.paceAdvice)j.paceAdvice={summary:'Your revised semester map.',pace:j.profile.pace,regularCourses:j.profile.regularCourses,summerCourses:j.profile.summerCourses,summers:j.profile.summers,reason:'Rebuilt from the revised academic choices.',actions:[]};
+ if(!j.paceAdvice)j.paceAdvice={summary:'Your revised degree roadmap.',pace:j.profile.pace,regularCourses:j.profile.regularCourses,summerCourses:j.profile.summerCourses,summers:j.profile.summers,reason:'Rebuilt from the revised academic choices.',actions:[]};
  const update=roadmapUpdate(previous,draft,updates);if(goalsChanged){update.changes.unshift('Updated your stated planning goals.');update.summary='Updated your stated planning goals.'+(update.summary==='Your roadmap is unchanged.'?'':' '+update.summary);}j.lastUpdates={...j.lastUpdates,global:update};draft.decisions=structuredClone(j);draft.updatedAt=new Date().toISOString();
  return {kind:'updated',candidate:draft,journey:j,update};
 }

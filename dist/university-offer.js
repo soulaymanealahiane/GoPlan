@@ -5,7 +5,7 @@ export const OFFER_FIELDS=[
  ['courses','Courses edit prompts / roadmap'],
  ['companies','Companies edit prompts / roadmap'],
  ['exchanges','Exchanges edit prompts / roadmap'],
- ['semesters','Semesters edit prompts / roadmap'],
+ ['semesters','Degree roadmap edit prompts'],
  ['global','Global changes / completed roadmap']
 ];
 export const OFFER_DEFAULTS=Object.fromEntries(OFFER_FIELDS.map(([key])=>[key,1]));

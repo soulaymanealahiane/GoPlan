@@ -20,7 +20,7 @@ import {acceptAdvice} from './journey-state.js';
 import {proposeReplan,replanSnapshot} from './replanning.js';
 import {esc,options,link,opportunityDetail} from './views.js';
 const action=(id,text,extra='')=>`<button type="button" class="button secondary" data-action="${id}" ${extra}>${text}</button>`;
-const stages={direction:'Finding your direction…',courses:'Choosing your courses…',targets:'Finding your matches…',pace:'Mapping your semesters…'};
+const stages={direction:'Finding your direction…',courses:'Choosing your courses…',targets:'Finding your matches…',pace:'Building your degree roadmap…'};
 const friendly=e=>['REQUEST_BUDGET','RESPONSE_INCOMPLETE','ADVISER_TIMEOUT'].includes(e.code)?'This suggestion isn’t ready yet. Try a different request or keep your current plan.':e.message;
 
 export function createDashboardController(h){
@@ -39,7 +39,7 @@ export function createDashboardController(h){
  async function recoverInitialStage(def){
   if(def.agent==='targets')return recoverTargets();const j=state().journey;
   if(def.agent==='courses'){const suggested=suggestChoices(j);j.profile=suggested.profile;acceptAdvice(j,'courses',{source:'reviewed',summary:'Your degree course choices.',choices:{...j.profile.choices},agentChoices:{},choiceReasons:{},openItems:[]});}
-  else if(def.agent==='pace')acceptAdvice(j,'pace',{source:'reviewed',summary:'Your semester map.',pace:j.profile.pace,regularCourses:j.profile.regularCourses,summerCourses:j.profile.summerCourses,summers:j.profile.summers,reason:'Uses your selected course load.',actions:[]});
+  else if(def.agent==='pace')acceptAdvice(j,'pace',{source:'reviewed',summary:'Your degree roadmap.',pace:j.profile.pace,regularCourses:j.profile.regularCourses,summerCourses:j.profile.summerCourses,summers:j.profile.summers,reason:'Uses your selected course load.',actions:[]});
   r.aiError='';r.aiFailure=null;h.persist();return true;
  }
  async function recoverTargets(){
@@ -112,7 +112,7 @@ export function createDashboardController(h){
   }
   if(route.kind==='schedule'){
    const plan=current();if(!plan)throw Error('Save your degree plan before changing individual semesters.');
-   r.busy=true;r.dashboardWork='Updating your semester map…';display();const term=studyBoundary(plan).currentTerm;
+   r.busy=true;r.dashboardWork='Updating your degree roadmap…';display();const term=studyBoundary(plan).currentTerm;
    const result=await requestAdvice('replan',newJourney(plan),{serviceAction:activeAction,plan:replanSnapshot(plan),currentTerm:term,unavailable:[],offerings:[],changeRequest:request});r.busy=false;
    if(result.kind==='clarify'){r.pendingDashboardRequest=request;r.dashboardNotice=result.questions?.[0]||result.summary;return;}
    const proposal=proposeReplan(plan,result.change,term);if(!proposal.assessment.canApply)throw Object.assign(Error('This change needs a different course sequence. Your plan is unchanged.'),{retryable:false});
@@ -222,7 +222,7 @@ export function createDashboardController(h){
   if(form.id==='dashboard-pace-form'){
    try{const p=current(),j=state().journey,old=p?.profile||j.profile,profile=normalizeProfile({...old,regularCourses:Number(data.get('regular')),summers:data.get('summer')!=='0',summerCourses:data.get('summer')==='0'?old.summerCourses:Number(data.get('summer')),startYear:Number(data.get('year')),lc:Number(data.get('lc'))});
     if(p){state().draftPlan=manualDegreePlan(p,profile);state().phase='draft';state().journey=newJourney(state().draftPlan);}else j.profile=profile;
-    h.close();r.dashboardPanel=p?'semesters':'overview';commit(p?'Your updated semester map is ready to review.':'Your pace is set.');
+    h.close();r.dashboardPanel=p?'semesters':'overview';commit(p?'Your updated degree roadmap is ready to review.':'Your pace is set.');
    }catch(e){form.querySelector('#dashboard-pace-error').textContent=e.message;}return true;
   }
   return false;

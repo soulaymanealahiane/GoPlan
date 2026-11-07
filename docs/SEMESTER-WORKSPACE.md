@@ -1,6 +1,6 @@
-# Semester workspace
+# Degree roadmap workspace
 
-The Semesters page shows the whole saved roadmap in one stack. Open semesters independently, expand or collapse all, or show remaining study and Needs placement. Semester headers retain the course count, credits and passed count while closed.
+The Degree roadmap page shows the whole saved roadmap in one stack. Open semesters independently, expand or collapse all, or show remaining study and Needs placement. Semester headers retain the course count, credits and passed count while closed.
 
 - Drag a course's handle onto an open or closed semester. The destination highlights without changing the layout; a successful move opens both semesters and focuses the moved row.
 - The visible **Move to** menu provides the same action for keyboard and touch users. Progress can be updated directly in each row; selecting a course name opens the full editor.

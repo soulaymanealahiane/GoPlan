@@ -1,6 +1,6 @@
 # Roadmap and saved-plan verification
 
-GoPlan guides a newcomer through Direction, Courses, Companies, Exchanges and Semesters, then saves one editable plan. There are two AI change prompts per stage and five global prompts after saving. Manual editing and Excel export remain available at zero allowance. The separate course-unavailable AI feature is retired.
+GoPlan guides a newcomer through Direction, Courses, Companies, Exchanges and Degree roadmap, then saves one editable plan. There are two AI change prompts per stage and five global prompts after saving. Manual editing and Excel export remain available at zero allowance. The separate course-unavailable AI feature is retired.
 
 ## Automated checks
 

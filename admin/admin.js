@@ -1,6 +1,6 @@
 import {refreshPilots} from './pilots.js';
 import {refreshTraction} from './traction.js';
-const $=id=>document.getElementById(id),fmt=n=>Number(n||0).toLocaleString(),names={setup:'Starting point',direction:'Direction',courses:'Courses',targets:'Companies & exchanges',pace:'Semesters',replan:'Course changes',change:'Plan updates',question:'Adviser questions',plan_saved:'Plans saved',plan_updated:'Plan updates accepted',targets_updated:'Destinations updated',excel_requested:'Excel downloads requested'};
+const $=id=>document.getElementById(id),fmt=n=>Number(n||0).toLocaleString(),names={setup:'Starting point',direction:'Direction',courses:'Courses',targets:'Companies & exchanges',pace:'Degree roadmap',replan:'Course changes',change:'Plan updates',question:'Adviser questions',plan_saved:'Plans saved',plan_updated:'Plan updates accepted',targets_updated:'Destinations updated',excel_requested:'Excel downloads requested'};
 let snapshot,refreshVersion=0,currentTab='overview',students=[],studentsTotal=0,studentsLoaded=false,testResetStudent=null,testResetRequest='';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const local=location.hostname==='127.0.0.1'||location.hostname==='localhost';
