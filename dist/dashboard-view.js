@@ -8,7 +8,7 @@ import {planIssues} from './guidance.js';
 import {questionnaireCard,questionNavigation} from './question-cards.js';
 import {selectedMinor} from './minors.js';
 import {dashboardCopy} from './dashboard-copy.js';
-import {currentCourse} from './course-details.js';
+import {currentCourse,languagePlacementHint} from './course-details.js';
 import {courseGroups,courseSemester} from './course-groups.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const short=(s,n=130)=>{s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1).replace(/\s+\S*$/,'')+'…':s;};
@@ -100,7 +100,7 @@ function courseStatus(plan,c){const status=plan?.tracking?.[c.id]?.status;return
 function courseCard(c,profile,plan,showSemester){
  c=currentCourse(c,profile);
  const status=courseStatus(plan,c),role=courseGroups([c],profile)[0]?.title||c.category||'Degree requirement',semester=courseSemester(plan,c);
- return `<button type="button" class="course-flashcard" data-action="dashboard-course" data-course-id="${esc(c.id)}" aria-label="${esc((plan?'Edit ':'View ')+c.title+(status?' · '+status:''))}"><span class="course-card-top"><span class="course-flash-type">${esc(role)}</span>${status?`<span class="course-progress-status">${esc(status)}</span>`:''}</span><h3>${esc(c.title)}</h3><span class="course-code">${esc(c.code||'Requirement')} <b>${c.credits} cr</b></span>${showSemester&&plan?`<span class="course-semester ${semester.termId==='pending'?'unplaced':''}">${esc(semester.text)}</span>`:''}</button>`;
+ return `<button type="button" class="course-flashcard" data-action="dashboard-course" data-course-id="${esc(c.id)}" aria-label="${esc((plan?'Edit ':'View ')+c.title+(status?' · '+status:''))}"><span class="course-card-top"><span class="course-flash-type">${esc(role)}</span>${status?`<span class="course-progress-status">${esc(status)}</span>`:''}</span><h3>${esc(c.title)}</h3>${languagePlacementHint(c)?`<span class="course-placement-note">${esc(languagePlacementHint(c))}</span>`:''}<span class="course-code">${esc(c.code||'Requirement')} <b>${c.credits} cr</b></span>${showSemester&&plan?`<span class="course-semester ${semester.termId==='pending'?'unplaced':''}">${esc(semester.text)}</span>`:''}</button>`;
 }
 
 function serviceCommand(runtime,guide,copy,panel){

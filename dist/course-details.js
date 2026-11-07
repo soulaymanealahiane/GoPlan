@@ -1,6 +1,13 @@
 import {coursesFor,DATA} from './planner.js';
 import {correctedCourse} from './academic-corrections.js';
 
+export function languagePlacementHint(course){
+ if(course.code||!course.choice)return '';
+ if(/-arabic$/.test(course.id))return 'Replace this placeholder with the Arabic course for your placement or school background.';
+ if(/-french$/.test(course.id))return 'Replace this placeholder with the French course or approved alternative for your placement.';
+ return '';
+}
+
 export function currentCourse(course,profile){
  const fresh=coursesFor(profile).find(c=>c.id===course.id&&c.code===course.code);
  return correctedCourse(profile,fresh?{...course,title:fresh.title,prerequisiteFor:fresh.prerequisiteFor,rule:fresh.rule,prerequisiteText:fresh.prerequisiteText,ruleSource:fresh.ruleSource,condition:fresh.condition,source:fresh.source}:course);

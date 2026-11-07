@@ -27,3 +27,4 @@ body{background:var(--dash-paper)}.main-shell{max-width:1240px;margin:auto}.topb
 
 /* A website and one readable explanation, shared by guided and saved targets. */
 .opportunity-website{margin-bottom:12px}.opportunity-website a,.opportunity-fit{overflow-wrap:anywhere}.opportunity-fit{line-height:1.65}
+.course-placement-note{font-size:12px;line-height:1.5;color:#526b4a;font-weight:400;margin:0 0 12px;display:block}.course-flashcard .course-placement-note{margin:-4px 0 14px}
