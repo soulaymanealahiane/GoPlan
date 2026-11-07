@@ -1,6 +1,6 @@
 # Temporary notifications
 
-Public pages, sign-in, the planner and operations share one viewport-level notification surface. Errors appear at the bottom without scrolling or moving keyboard focus. They dismiss after three seconds; hovering or focusing the notification pauses dismissal so it can be read. A close button dismisses it immediately. New messages replace the current one and restart its timer.
+Public pages, sign-in, the planner and operations share one viewport-level notification surface. Errors and update messages appear at the bottom without scrolling or moving keyboard focus. They dismiss after eight seconds; hovering or focusing the notification pauses dismissal so it can be read. A close button dismisses it immediately. New messages replace the current one and restart its timer.
 
 The component uses the browser top layer above modal dialogs, with an ordinary fixed-position fallback. It respects safe-area insets and reduced motion. Errors use an assertive live region; informational messages use a polite one. Content is inserted as text, never HTML.
 

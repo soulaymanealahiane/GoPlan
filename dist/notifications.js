@@ -1,6 +1,6 @@
 // One viewport-level notification surface, shared by public, account and admin pages.
 // Inline validation remains available to application logic but is presented here.
-export const NOTIFICATION_DURATION=3000;
+export const NOTIFICATION_DURATION=8000;
 export function notificationTimer(show,hide,clock=globalThis){
  let timer=null,current='';
  const cancel=()=>{if(timer!==null)clock.clearTimeout(timer);timer=null;};
