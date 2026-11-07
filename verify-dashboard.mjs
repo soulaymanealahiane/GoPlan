@@ -49,14 +49,14 @@ const delayed=structuredClone(state.draftPlan),oldTerm=delayed.terms.find(t=>t.c
 
 const earlierCalls=calls.length;await controller.click({dataset:{action:'dashboard-course-semester',term:placement.termId}});assert.equal(runtime.dashboardPanel,'semesters');assert.equal(runtime.selectedTerm,placement.termId);await controller.click({dataset:{action:'dashboard-panel',panel:'courses'}});await controller.click({dataset:{action:'dashboard-panel',panel:'opportunities'}});assert.equal(calls.length,earlierCalls,'Opening a ready panel must not trigger paid advice.');
 runtime.dashboardPanel='opportunities';state.journey.details.targetResearch={status:'partial',notice:'Verified findings are retained. Research again.'};html=dashboardView(state,runtime);assert.ok(!html.includes('Verified findings'));assert.ok(!html.includes('Research again'));assert.ok(html.includes('Openings and eligibility still need checking.'));
-runtime.dashboardPanel='semesters';html=dashboardView(state,runtime);assert.equal((html.match(/class="semester-focus"/g)||[]).length,1,'Only the selected semester is expanded.');assert.ok(!html.includes('Progress note'));
+runtime.dashboardPanel='semesters';html=dashboardView(state,runtime);assert.equal((html.match(/data-board-term=/g)||[]).length,state.draftPlan.terms.length,'Every semester stays in the one-page overview.');assert.ok(html.includes('Expand all'));assert.ok(html.includes('Move to…'));assert.ok(!html.includes('Progress note'));
 await controller.click({dataset:{action:'dashboard-save'}});assert.equal(state.phase,'saved');assert.equal(state.draftPlan,null);
 const saved=JSON.stringify(state.plan),course=state.plan.courses.find(c=>c.code==='CSC1401'),term=state.plan.terms.find(t=>t.courses.includes(course.id));
 const completed=manualCoursePlan(state.plan,{id:course.id,status:'completed',termId:term.id}).candidate;assert.equal(completed.tracking[course.id].status,'completed');assert.equal(JSON.stringify(state.plan),saved,'Manual preview mutated the saved plan.');
 
 const completedState={...state,plan:completed,journey:newJourney(completed)};
 html=dashboardView(completedState,{dashboardPanel:'overview'});assert.ok(html.includes('4 / '));assert.ok(html.includes('Change your degree'));assert.ok(!html.includes('Your plan is taking shape'));
-html=dashboardView(completedState,{dashboardPanel:'semesters'});assert.ok(html.includes('✓ Completed'));
+html=dashboardView(completedState,{dashboardPanel:'semesters'});assert.ok(html.includes('value="completed" selected>Passed'));
 const resetProgress=manualCoursePlan(completed,{id:course.id,status:'planned',termId:term.id}).candidate;assert.equal(resetProgress.tracking[course.id].status,'planned');assert.ok(!resetProgress.academicRecord.some(r=>r.courseCode===course.code));
 validateSavedWorkspace(JSON.parse(JSON.stringify({...state,plan:resetProgress,journey:newJourney(resetProgress)})));
 const later=state.plan.terms.find(t=>t.id!==term.id&&!['prior','pending'].includes(t.id));
@@ -90,7 +90,7 @@ routeStep=5;state.plan=completed;state.draftPlan=null;state.phase='saved';state.
    formError='';await setLC(count);assert.equal(formError,'');assert.equal(lcState.draftPlan.profile.lc,count);assert.equal(lcState.draftPlan.terms.filter(t=>t.lc).length,count);assert.equal(JSON.stringify(lcState.draftPlan.courses.map(c=>[c.id,c.code,c.credits])),originalRows,'Language Center cannot add degree courses or credits.');
    const terms=lcState.draftPlan.terms,firstDegree=terms.findIndex(t=>t.courses.length);assert.ok(terms.filter(t=>t.lc).every(t=>terms.indexOf(t)<firstDegree&&t.courses.length===0),'Degree courses must follow the Language Center buffer.');
    assert.equal(lcState.plan.profile.lc,0,'Editing creates a preview without changing the saved plan.');validateSavedWorkspace(JSON.parse(JSON.stringify(lcState)));assert.equal(lcRuntime.service.globalRemaining,0);
-   const map=dashboardView(lcState,lcRuntime);assert.ok(map.includes('dashboard-language-center-form'));if(count){assert.ok(map.includes('· Language Center'));assert.ok(map.includes('Reserved for Language Center.'));assert.ok(!map.includes('Space for your next chapter.'));}
+   const map=dashboardView(lcState,lcRuntime);assert.ok(map.includes('dashboard-language-center-form'));if(count){assert.ok(map.includes('<small>Language Center</small>'));assert.ok(map.includes('Reserved for Language Center.'));assert.ok(!map.includes('Space for your next chapter.'));}
   }
   assert.equal(commits,3);const before=JSON.stringify(lcState);await setLC(3);assert.match(formError,/zero, one or two/);assert.equal(JSON.stringify(lcState),before);
   // Current registrations cannot be displaced into a language-only semester.

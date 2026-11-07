@@ -33,7 +33,7 @@ export function createDashboardController(h){
  async function initialStage(){const def=SERVICE_STAGES[r.service.step];if(!def)return;if(def.target){state().journey.refinements||={};state().journey.refinements.targets=def.target==='exchanges'?'Choose exchange destinations and preserve the company recommendations.':'Choose company recommendations.';}const token=await reserveAction('initial');activeAction=token;try{await advice(def.agent);}catch(error){const auth=['SIGN_IN_REQUIRED','ACCESS_REQUIRED'].includes(r.aiFailure?.code);if(!auth&&(def.agent==='targets'||(r.aiFailure?.retryable===false||r.aiFailure?.code==='AGENT_BUSY')&&['courses','pace'].includes(def.agent)))await recoverInitialStage(def);else throw error;}if(def.id==='semesters'){state().draftPlan=buildProposal(state().journey,state().plan);state().phase='draft';}r.dashboardPanel=def.panel;if(def.id==='courses')r.courseGroup=state().journey.profile.minor?'minor':'specialization';r.targetGroup=def.target||'internships';h.persist();}
  async function nextStage(){const def=SERVICE_STAGES[r.service.step];if(def?.target&&!(state().journey.details?.[def.target]?.length))await recoverTargets();if(r.service.step===0&&!state().journey.programChosen)throw Error('Choose your degree before continuing.');r.service=await advanceStage(r.service.step);h.persist();if(r.service.step<5)await initialStage();else{if(!state().draftPlan)state().draftPlan=buildProposal(state().journey,state().plan);state().phase='draft';r.dashboardPanel='overview';h.persist();}}
  function display(){h.render();}
- function commit(message=''){r.aiError='';r.aiFailure=null;retry=null;h.changed(message);}
+ function commit(message=''){r.boardError='';r.aiError='';r.aiFailure=null;retry=null;h.changed(message);}
  function panel(name){if(guided())return;r.dashboardPanel=name;r.dashboardWelcome=false;r.dashboardNotice='';r.dashboardAnswer='';r.aiError='';r.aiFailure=null;display();}
  async function advice(stage,editingPlan){r.dashboardWork=stages[stage];const ok=await h.getAdvice(stage,{serviceAction:activeAction||undefined,editingPlan});if(!ok&&!(stage==='direction'&&state().journey.advice?.kind==='clarify'&&!r.aiError))throw Object.assign(Error(r.aiError||'Tell GoPlan a little more about what you want.'),{handled:true});return true;}
  async function recoverInitialStage(def){
@@ -152,8 +152,8 @@ export function createDashboardController(h){
   const plan=current();if(!plan)return;const last=plan.terms.filter(t=>!['prior','pending'].includes(t.id)).at(-1),season=last?.season==='Fall'?'Spring':last?.season==='Spring'?'Summer':'Fall',year=last?.year+(last?.season==='Fall'?1:0)||new Date().getFullYear();
   h.modal(h.head('Add a semester')+'<form id="dashboard-add-term-form"><div class="field-grid"><label class="field">Season<select name="season">'+options([['Fall','Fall'],['Spring','Spring'],['Summer','Summer']],season)+'</select></label><label class="field">Year<input name="year" type="number" min="2000" max="2099" value="'+year+'" required></label></div><p class="small-note">Then select a course to move it here.</p><p id="dashboard-add-term-error" class="field-error" role="alert"></p><button class="button primary">Add semester</button></form>');
  }
- function applyManual(candidate,message,{undo=false}={}){
-  const before=structuredClone(current());r.manualWelcome=false;r.manualUndo=undo?{before,after:JSON.stringify(candidate)}:null;r.dashboardNotice='';replacePlan(candidate);commit(message);
+ function applyManual(candidate,message,{undo=true}={}){
+  const before=structuredClone(current());r.manualWelcome=false;r.manualUndo=undo?{before,after:JSON.stringify(candidate)}:null;r.dashboardNotice='';r.boardNotice=message;replacePlan(candidate);commit(message);
  }
  function catalogueOptions(profile,scope,search,selected='',plan=current()){
   const found=manualCatalogue(profile,{scope,search}),visible=found.slice(0,120);
@@ -193,10 +193,10 @@ export function createDashboardController(h){
    const text=String(data.get('request')||'');if(form.id==='dashboard-modal-command')h.close();await run(()=>command(text));return true;
   }
   if(form.id==='dashboard-add-term-form'){
-   try{const season=String(data.get('season')),year=Number(data.get('year')),id=season+'-'+year,candidate=addManualSemester(current(),{season,year});replacePlan(candidate);r.selectedTerm=id;r.dashboardPanel='semesters';h.close();r.manualUndo=null;commit('Semester added. Add a course when ready.');}catch(e){form.querySelector('#dashboard-add-term-error').textContent=e.message;}return true;
+   try{const season=String(data.get('season')),year=Number(data.get('year')),id=season+'-'+year,candidate=addManualSemester(current(),{season,year});r.selectedTerm=id;r.boardOpen={...r.boardOpen,[id]:true};r.semesterFilter='all';r.dashboardPanel='semesters';h.close();applyManual(candidate,'Semester added. Add a course when ready.');}catch(e){form.querySelector('#dashboard-add-term-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-add-course-form'){
-   try{const selected=String(data.get('course')||'');if(!selected)throw Error('Choose a course from the list.');const before=current(),change={courseCode:selected,termId:form.dataset.term,anotherAttempt:data.get('anotherAttempt')==='on'},candidate=addManualCourse(before,change);r.selectedTerm=form.dataset.term;h.close();applyManual(candidate,manualChangeMessage(before,candidate,change));}catch(e){form.querySelector('#dashboard-add-course-error').textContent=e.message;}return true;
+   try{const selected=String(data.get('course')||'');if(!selected)throw Error('Choose a course from the list.');const before=current(),change={courseCode:selected,termId:form.dataset.term,anotherAttempt:data.get('anotherAttempt')==='on'},candidate=addManualCourse(before,change);r.selectedTerm=form.dataset.term;r.boardOpen={...r.boardOpen,[form.dataset.term]:true};h.close();applyManual(candidate,manualChangeMessage(before,candidate,change));}catch(e){form.querySelector('#dashboard-add-course-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-term-note-form'){
    try{const candidate=noteManualSemester(current(),form.dataset.term,String(data.get('note')||''));h.close();applyManual(candidate,'Semester note saved.');}catch(e){form.querySelector('#dashboard-term-note-error').textContent=e.message;}return true;
@@ -246,8 +246,10 @@ export function createDashboardController(h){
   else if(a==='dashboard-change')ask();
   else if(a==='dashboard-course-group'){r.courseGroup=b.dataset.group;display();}
   else if(a==='dashboard-target-group'){r.targetGroup=b.dataset.group;display();}
-  else if(a==='dashboard-term'){r.selectedTerm=b.dataset.term;display();}
-  else if(a==='dashboard-course-semester'){r.selectedTerm=b.dataset.term;h.close();panel('semesters');}
+  else if(a==='dashboard-expand-terms'||a==='dashboard-collapse-terms'){r.boardOpen=Object.fromEntries(current().terms.map(t=>[t.id,a==='dashboard-expand-terms']));display();}
+  else if(a==='dashboard-current-terms'){const plan=current(),first=plan.terms.find(t=>!['prior','pending'].includes(t.id)&&t.courses.some(id=>plan.tracking?.[id]?.status!=='completed'))?.id;r.semesterFilter='all';r.boardOpen=Object.fromEntries(plan.terms.map(t=>[t.id,t.id==='pending'||t.id===first||t.courses.some(id=>plan.tracking?.[id]?.status==='in-progress')]));display();}
+  else if(a==='dashboard-term'){r.selectedTerm=b.dataset.term;r.boardOpen={...r.boardOpen,[b.dataset.term]:true};display();}
+  else if(a==='dashboard-course-semester'){r.selectedTerm=b.dataset.term;r.boardOpen={...r.boardOpen,[b.dataset.term]:true};h.close();panel('semesters');}
   else if(a==='dashboard-course')course(b.dataset.courseId);
   else if(a==='dashboard-add-term')addTerm();
   else if(a==='dashboard-add-course')addCourse(b.dataset.term);
@@ -269,7 +271,19 @@ export function createDashboardController(h){
   return true;
  }
  function input(target){if(target.id==='dashboard-catalogue-search')filterCatalogue(target.form);}
+ function focusBoardCourse(id,key='data-board-move'){queueMicrotask(()=>{const el=[...(globalThis.document?.querySelectorAll('['+key+']')||[])].find(x=>x.getAttribute(key)===id);el?.focus({preventScroll:true});if(key==='data-board-move')el?.closest('[data-board-row]')?.scrollIntoView({block:'nearest'});});}
+ function boardToggle(id,open){r.boardOpen||={};r.boardOpen[id]=open;}
+ function moveBoardCourse(id,termId){
+  if(!termId)return;
+  if(locked||r.busy){h.notify('Wait for the current update to finish.');return;}
+  const before=current(),from=before?.terms.find(t=>t.courses.includes(id));if(!before||from?.id===termId)return;
+  try{if(!before.terms.some(t=>t.id===termId)||termId==='prior')throw Error('Choose a semester in your plan.');const candidate=manualCoursePlan(before,{id,termId}).candidate;r.boardOpen={...r.boardOpen,[from?.id]:true,[termId]:true};r.boardLastCourse=id;r.boardError='';r.boardNotice=(before.courses.find(c=>c.id===id)?.code||'Course')+' moved to '+label(before.terms.find(t=>t.id===termId))+'.';applyManual(candidate,r.boardNotice);focusBoardCourse(id);}catch(e){r.boardError=e.message;r.boardNotice='Move not applied. Your plan is unchanged.';display();}
+ }
  function change(target){
+  if(locked||r.busy)return;
+  if(target.dataset.boardMove){moveBoardCourse(target.dataset.boardMove,target.value);return;}
+  if(target.dataset.boardStatus){try{const candidate=manualCoursePlan(current(),{id:target.dataset.boardStatus,status:target.value}).candidate;r.boardError='';r.boardLastCourse=target.dataset.boardStatus;applyManual(candidate,'Progress updated.');focusBoardCourse(target.dataset.boardStatus,'data-board-status');}catch(e){r.boardError=e.message;display();}return;}
+  if(target.hasAttribute?.('data-board-filter')){r.semesterFilter=target.value;display();return;}
   if(target.id==='dashboard-catalogue-scope'){filterCatalogue(target.form);return;}
   if(target.id==='dashboard-degree'){
    const old=current()?.profile||state().journey.profile,p=normalizeProfile({...old,program:target.value,track:'',minor:'',secondTrack:'',choices:{},selectionNotices:[]});
@@ -281,5 +295,5 @@ export function createDashboardController(h){
   if(target.dataset.degreeChoice==='track')profile.track=target.dataset.current;const next=changeDegreeChoice(profile,target.dataset.degreeChoice,target.value,programFor(profile));
   form.querySelector('#dashboard-focus-options').innerHTML=focusOptions(next);form.querySelector('#dashboard-degree-error').textContent='';
  }
- return {click,submit,change,input,loadService,authorizeAdvice,reset(){retry=null;r.manualUndo=null;r.manualWelcome=false;},get busy(){return locked;}};
+ return {click,submit,change,input,boardToggle,moveBoardCourse,loadService,authorizeAdvice,reset(){retry=null;r.manualUndo=null;r.manualWelcome=false;},get busy(){return locked;}};
 }

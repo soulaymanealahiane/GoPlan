@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';
+import {newJourney,suggestChoices,makePlan,emptyWorkspace,validateSavedWorkspace} from './dist/guidance.js';
+import {normalizeProfile} from './dist/planner.js';import {semesterBoard,boardTerms,bindSemesterBoard} from './dist/semester-board.js';
+import {createDashboardController} from './dist/dashboard-controller.js';import {createWorkbook} from './dist/export.js';
+const j=newJourney();j.profile=normalizeProfile({program:'BSCSC',track:'SE'});j.programChosen=true;j.profile=suggestChoices(j).profile;const plan=makePlan(j);plan.finalizedAt=new Date().toISOString();
+let state={...emptyWorkspace(),phase:'saved',plan,journey:newJourney(plan)},runtime={dashboardPanel:'semesters',service:{saved:true,globalRemaining:0}},paid=0;
+const controller=createDashboardController({runtime,read:()=>state,render(){},changed(){},persist(){},notify(){},close(){},getAdvice(){paid++;throw Error('Manual board cannot call AI.');}});
+let html=semesterBoard(state.plan,runtime);assert.equal((html.match(/data-board-term=/g)||[]).length,state.plan.terms.length);assert.equal((html.match(/data-board-row=/g)||[]).length,state.plan.courses.length);assert.ok(html.includes('Expand all')&&html.includes('Collapse all')&&html.includes('Move to…'));
+await controller.click({dataset:{action:'dashboard-expand-terms'}});assert.ok(state.plan.terms.every(t=>runtime.boardOpen[t.id]));await controller.click({dataset:{action:'dashboard-collapse-terms'}});assert.ok(state.plan.terms.every(t=>!runtime.boardOpen[t.id]));
+const leaf=state.plan.courses.find(c=>c.code==='EGR4402'),from=state.plan.terms.find(t=>t.courses.includes(leaf.id)),later={id:'Spring-2040',season:'Spring',year:2040,courses:[],note:'Keep target note'};state.plan.terms.push(later);const before=JSON.stringify(state.plan);
+controller.moveBoardCourse(leaf.id,later.id);assert.ok(state.plan.terms.find(t=>t.id===later.id).courses.includes(leaf.id));assert.equal(state.plan.terms.find(t=>t.id===later.id).note,'Keep target note');assert.ok(runtime.manualUndo);assert.equal(runtime.boardOpen[later.id],true);assert.equal(paid,0);validateSavedWorkspace(state);
+await controller.click({dataset:{action:'dashboard-manual-undo'}});assert.equal(JSON.stringify(state.plan),before,'Undo restores placement, notes and progress exactly');
+const prereq=state.plan.courses.find(c=>c.code==='CSC1401'),unmodified=JSON.stringify(state.plan);controller.moveBoardCourse(prereq.id,later.id);assert.ok(runtime.boardError);assert.equal(JSON.stringify(state.plan),unmodified,'Unsafe move stays atomic');
+controller.change({dataset:{boardStatus:prereq.id},value:'completed'});assert.equal(state.plan.tracking[prereq.id].status,'completed');assert.equal(runtime.service.globalRemaining,0);assert.equal(paid,0);await controller.click({dataset:{action:'dashboard-manual-undo'}});assert.equal(state.plan.tracking[prereq.id]?.status||'planned','planned');
+assert.ok(!boardTerms(state.plan,'remaining').some(t=>t.id==='prior'));assert.ok(boardTerms(state.plan,'unplaced').every(t=>t.id==='pending'));
+// Execute the actual DOM event binding against a synthetic event target. A drag
+// started outside this board cannot mutate a course, even with a forged payload.
+const events={},classes={add(){},remove(){}};const root={addEventListener:(type,fn)=>events[type]=fn,querySelectorAll:()=>[],querySelector:()=>({classList:classes})};const moves=[];bindSemesterBoard(root,{moveBoardCourse:(...x)=>moves.push(x),boardToggle(){}});
+const target={dataset:{boardTerm:later.id},classList:classes};events.drop({target:{closest:()=>target},preventDefault(){},dataTransfer:{getData:()=>prereq.id}});assert.equal(moves.length,0);
+events.dragstart({target:{closest:()=>({dataset:{dragCourse:leaf.id},disabled:false})},dataTransfer:{setData(){}}});events.drop({target:{closest:()=>target},preventDefault(){}});assert.deepEqual(moves,[[leaf.id,later.id]]);
+// Pointer capture, movement threshold, cancelled gestures and stable collapsed
+// destinations run through the same binding used by real mouse/touch input.
+const pointerEvents={},ghost={style:{},setAttribute(){},remove(){}},doc={defaultView:{innerHeight:900,requestAnimationFrame:()=>1,cancelAnimationFrame(){},scrollBy(){}},createElement:()=>ghost,body:{appendChild(){}},elementFromPoint:()=>({closest:()=>target})};
+const pointerRoot={...root,ownerDocument:doc,addEventListener:(name,fn)=>{(pointerEvents[name]||=[]).push(fn);}},emit=(name,e)=>pointerEvents[name]?.forEach(fn=>fn(e));bindSemesterBoard(pointerRoot,{moveBoardCourse:(...x)=>moves.push(x),boardToggle(){}});
+const handle={dataset:{dragCourse:leaf.id},disabled:false,setPointerCapture(){},releasePointerCapture(){},closest:()=>({querySelector:()=>({textContent:'Capstone'})})},gesture=(x,y)=>({target:{closest:()=>handle},button:0,pointerId:1,clientX:x,clientY:y,preventDefault(){}});
+emit('pointerdown',gesture(100,200));emit('pointermove',gesture(102,202));emit('pointerup',gesture(102,202));assert.equal(moves.length,1,'A click must not move a course');
+emit('pointerdown',gesture(100,200));emit('pointermove',gesture(300,400));emit('pointerup',gesture(300,400));assert.deepEqual(moves.at(-1),[leaf.id,later.id]);
+emit('pointerdown',gesture(100,200));emit('pointermove',gesture(300,400));emit('pointercancel',{});emit('pointerup',gesture(300,400));assert.equal(moves.length,2,'Cancelled gesture must not move a course');
+assert.ok(!fs.readFileSync('dist/dashboard.css','utf8').includes('.semester-dragging .semester-drop-hint{display:block}'),'Dragging must not shift drop targets');
+const styles=fs.readFileSync('dist/template-styles.xml','utf8'),bytes=Buffer.from(await createWorkbook(state.plan.terms,state.plan.courses,state.plan.profile,[],[],styles,state.plan)),text=bytes.toString();assert.ok(text.includes('Course name')&&text.includes('Course code')&&text.includes('<f>SUM(D'));assert.ok(text.includes('FF173E35'));assert.ok(text.includes('outlineLevel="1"'));assert.ok(text.includes('Keep target note'));assert.equal(paid,0);
+console.log('Semester board: whole-plan rows, independent expansion, filters, safe moves/atomic rejection/undo, inline progress at zero allowance, real drag handlers, preserved notes and green four-column Excel totals passed.');

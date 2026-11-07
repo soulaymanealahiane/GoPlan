@@ -6,31 +6,43 @@ const xml=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replac
 const cell=(ref,value,style=0)=>typeof value==='number'?`<c r="${ref}" s="${style}"><v>${value}</v></c>`:`<c r="${ref}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${xml(value)}</t></is></c>`;
 const start='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const ns='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-function planSheet(terms,courses,completed){
+function overviewStyles(base){
+ const font=Number(base.match(/<fonts count="(\d+)"/)[1]),fill=Number(base.match(/<fills count="(\d+)"/)[1]),first=Number(base.match(/<cellXfs count="(\d+)"/)[1]);
+ let xml=base.replace(`<fonts count="${font}"`,`<fonts count="${font+2}"`).replace('</fonts>','<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF173E35"/><name val="Calibri"/></font></fonts>');
+ xml=xml.replace(`<fills count="${fill}"`,`<fills count="${fill+2}"`).replace('</fills>','<fill><patternFill patternType="solid"><fgColor rgb="FF173E35"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEAF3EE"/><bgColor indexed="64"/></patternFill></fill></fills>');
+ const xf=(fontId,fillId,align='left')=>`<xf numFmtId="0" fontId="${fontId}" fillId="${fillId}" borderId="0" xfId="0" applyAlignment="1" applyFill="1" applyFont="1"><alignment horizontal="${align}" vertical="top" wrapText="1"/></xf>`;
+ const extra=[xf(font,fill),xf(font+1,fill+1),xf(0,0),xf(0,0,'right'),xf(font+1,fill+1,'right')];
+ xml=xml.replace(`<cellXfs count="${first}"`,`<cellXfs count="${first+extra.length}"`).replace('</cellXfs>',extra.join('')+'</cellXfs>');
+ return {xml,header:first,term:first+1,body:first+2,credit:first+3,total:first+4};
+}
+function planSheet(terms,courses,completed,style){
  terms=[...terms.filter(t=>t.id!=='pending'),...terms.filter(t=>t.id==='pending'&&(t.courses.length||t.note))];
- const lastScheduled=terms.filter(t=>t.id!=='pending').at(-1);
- const map=new Map(courses.map(c=>[c.id,c])),rows=[],merges=[];let row=1;
- for(const [index,t]of terms.entries()){
-  const list=t.courses.map(id=>map.get(id)).filter(Boolean),height=Math.max(3,list.length+(t.note?1:0)),first=row,last=row+height-1;
-  const termStyle=t.id==='pending'?11:t.exchange?15:t===lastScheduled?8:11;
-  for(let i=0;i<height;i++,row++){
-   const c=list[i],title=c?`${c.title}${c.code?` (${c.code})`:''}${completed.includes(c.id)||t.id==='prior'?' — completed':''}`:t.note&&i===list.length?'Note: '+t.note:i===0&&t.internshipOnly?'Internship-only summer — eligibility to confirm':i===0&&t.lc?'Language-center buffer':i===0&&!list.length?'Open semester':'';
-   rows.push(`<row r="${row}" ht="${title.length>108?29:14.4}" customHeight="1">${cell('A'+row,i===0?`${label(t)}${t.lc?' · Language Center':''}${t.exchange?' · Exchange target':''}`:'',termStyle)}${cell('B'+row,title)}</row>`);
+ const map=new Map(courses.map(c=>[c.id,c])),rows=[],merges=['A1:D1','A2:D2'];let row=4;
+ rows.push('<row r="1" ht="30" customHeight="1">'+cell('A1','GoPlan · Your degree plan',style.header)+'</row>');
+ rows.push('<row r="2" ht="22" customHeight="1">'+cell('A2','All semesters, including notes and requirements that still need placement.',style.body)+'</row>');
+ rows.push('<row r="3" ht="24" customHeight="1">'+['Semester','Course name','Course code','Credits'].map((v,i)=>cell(String.fromCharCode(65+i)+'3',v,style.header)).join('')+'</row>');
+ for(const t of terms){
+  const list=t.courses.map(id=>map.get(id)).filter(Boolean),first=row,total=list.reduce((n,c)=>n+c.credits,0),count=Math.max(1,list.length);
+  for(let i=0;i<count;i++,row++){
+   const c=list[i],title=c?c.title+(completed.includes(c.id)||t.id==='prior'?' — completed':''):t.lc?'Language-center buffer':'Open semester';
+   rows.push(`<row r="${row}" ht="${Math.max(24,Math.ceil(title.length/63)*16+8)}" customHeight="1" outlineLevel="1">${cell('A'+row,i===0?label(t)+(t.lc?' · Language Center':'')+(t.exchange?' · Exchange target':''):'',style.term)}${cell('B'+row,title,style.body)}${cell('C'+row,c?.code||(c?'CHOICE PENDING':''),style.body)}${cell('D'+row,c?c.credits:'',style.credit)}</row>`);
   }
-  merges.push(`A${first}:A${last}`);
-  if(index<terms.length-1){rows.push(`<row r="${row}" ht="14.4" customHeight="1">${cell('A'+row,'')}${cell('B'+row,'')}</row>`);row++;}
+  const lastCourse=row-1;
+  if(t.note){rows.push(`<row r="${row}" ht="${Math.min(409,Math.max(30,t.note.split('\n').length*16,Math.ceil(t.note.length/75)*16))}" customHeight="1" outlineLevel="1">${cell('A'+row,'',style.term)}${cell('B'+row,'Note: '+t.note,style.body)}</row>`);merges.push('B'+row+':C'+row);row++;}
+  if(row-first>1)merges.push('A'+first+':A'+(row-1));
+  rows.push(`<row r="${row}" ht="24" customHeight="1">${cell('A'+row,'',style.term)}${cell('B'+row,'Semester total',style.term)}${cell('C'+row,list.length+' courses',style.term)}<c r="D${row}" s="${style.total}"><f>SUM(D${first}:D${lastCourse})</f><v>${total}</v></c></row>`);row++;
+  rows.push('<row r="'+row+'" ht="9" customHeight="1"></row>');row++;
  }
- if(row===1){rows.push('<row r="1">'+cell('A1','Your plan')+cell('B1','No semesters yet')+'</row>');row=2;}
-
- return `${start}<worksheet xmlns="${ns}"><dimension ref="A1:B${row-1}"/><sheetViews><sheetView workbookViewId="0" zoomScale="90" showGridLines="1"/></sheetViews><sheetFormatPr defaultRowHeight="14.4"/><cols><col min="1" max="1" width="55.21875" customWidth="1"/><col min="2" max="2" width="103" customWidth="1"/></cols><sheetData>${rows.join('')}</sheetData>${merges.length?`<mergeCells count="${merges.length}">${merges.map(ref=>`<mergeCell ref="${ref}"/>`).join('')}</mergeCells>`:''}<pageMargins left="0.25" right="0.25" top="0.4" bottom="0.4" header="0.2" footer="0.2"/><pageSetup orientation="landscape" paperSize="9"/></worksheet>`;
+ if(!terms.length){rows.push('<row r="4">'+cell('A4','Your plan',style.term)+cell('B4','No semesters yet',style.body)+'</row>');row=5;}
+ return `${start}<worksheet xmlns="${ns}"><sheetPr><outlinePr summaryBelow="1"/></sheetPr><dimension ref="A1:D${row-1}"/><sheetViews><sheetView workbookViewId="0" zoomScale="90" showGridLines="0"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="24" outlineLevelRow="1"/><cols><col min="1" max="1" width="24" customWidth="1"/><col min="2" max="2" width="65" customWidth="1"/><col min="3" max="3" width="20" customWidth="1"/><col min="4" max="4" width="12" customWidth="1"/></cols><sheetData>${rows.join('')}</sheetData><mergeCells count="${merges.length}">${merges.map(ref=>`<mergeCell ref="${ref}"/>`).join('')}</mergeCells><pageMargins left="0.25" right="0.25" top="0.4" bottom="0.4" header="0.2" footer="0.2"/><pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0"/></worksheet>`;
 }
 function detailsSheet(rows,style){const widths=[30,18,70,12,60,60,60];return `${start}<worksheet xmlns="${ns}"><sheetViews><sheetView workbookViewId="0"/></sheetViews><cols>${widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${rows.map((r,i)=>{if(r.length===2)r=[r[0],'',r[1]];const height=Math.min(409,Math.max(18,...r.map((v,j)=>Math.ceil(String(v??'').length/(widths[j]||60)*1.2)*15+4)));return `<row r="${i+1}" ht="${height}" customHeight="1">${r.map((v,j)=>cell(String.fromCharCode(65+j)+(i+1),v,style)).join('')}</row>`;}).join('')}</sheetData></worksheet>`;}
 const sourceText=s=>`${s?.file||s?.filename||'aui academic catalogue.pdf'}, PDF p${s?.page||s?.pdfPage||1}`;
 let styles;
 export async function createWorkbook(terms,courses,profile,completed,issues,styleOverride,snapshot){
  if(styleOverride)styles=styleOverride;if(!styles){const r=await fetch('template-styles.xml');if(!r.ok)throw Error('Template could not load.');styles=await r.text();}
- const detailStyle=Number(styles.match(/<cellXfs count="(\d+)"/)?.[1]||16),exportStyles=styles.replace(`<cellXfs count="${detailStyle}"`,`<cellXfs count="${detailStyle+1}"`).replace('</cellXfs>','<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>');
- const p=snapshot?.program||programFor(profile),policy=degreePolicy(p),hasMinor=policy.minorMode!=='none'&&!(policy.minorMode==='alternative'&&profile.secondTrack),rows=[['GoPlan academic plan',p.name],['Student',profile.name||''],['Data edition',p.edition],['Plan status',snapshot?.finalizedAt?'Saved personal plan; academic approvals and offerings remain unconfirmed.':'Proposal; offerings, placement and approvals are unconfirmed.'],['Layout','Semester / Course, including a Needs placement section for unscheduled requirements.'],['Published degree credits',p.degreeCredits.min===p.degreeCredits.max?p.degreeCredits.min:`${p.degreeCredits.min}–${p.degreeCredits.max}`],...(p.tracks.length?[[policy.trackLabel,p.tracks.find(t=>t.id===profile.track)?.name||'Not selected']]:[]),...(profile.secondTrack?[[policy.secondaryTrackLabel,p.tracks.find(t=>t.id===profile.secondTrack)?.name||'Not selected']]:[]),...(hasMinor?[['Minor',snapshot?.minor?.name||profile.minor||'Not selected']]:[]),[],['Semester','Course code','Course or requirement','Credits','Requirement source','Prerequisite text','Prerequisite source']];
+ const boardStyle=overviewStyles(styles),detailStyle=boardStyle.body,exportStyles=boardStyle.xml;
+ const p=snapshot?.program||programFor(profile),policy=degreePolicy(p),hasMinor=policy.minorMode!=='none'&&!(policy.minorMode==='alternative'&&profile.secondTrack),rows=[['GoPlan academic plan',p.name],['Student',profile.name||''],['Data edition',p.edition],['Plan status',snapshot?.finalizedAt?'Saved personal plan; academic approvals and offerings remain unconfirmed.':'Proposal; offerings, placement and approvals are unconfirmed.'],['Layout','Semester / Course name / Course code / Credits, including a Needs placement section for unscheduled requirements.'],['Published degree credits',p.degreeCredits.min===p.degreeCredits.max?p.degreeCredits.min:`${p.degreeCredits.min}–${p.degreeCredits.max}`],...(p.tracks.length?[[policy.trackLabel,p.tracks.find(t=>t.id===profile.track)?.name||'Not selected']]:[]),...(profile.secondTrack?[[policy.secondaryTrackLabel,p.tracks.find(t=>t.id===profile.secondTrack)?.name||'Not selected']]:[]),...(hasMinor?[['Minor',snapshot?.minor?.name||profile.minor||'Not selected']]:[]),[],['Semester','Course code','Course or requirement','Credits','Requirement source','Prerequisite text','Prerequisite source']];
  for(const t of terms)if(t.note)rows.push([label(t),'Semester note',t.note]);
  for(const t of terms)for(const id of t.courses){const c=courses.find(x=>x.id===id);rows.push([label(t),c.code||'CHOICE PENDING',c.title,c.credits,sourceText(c.source),c.prerequisiteText||'Review source / unresolved choice',sourceText(c.ruleSource)]);}
  rows.push([],['Review notes']);for(const x of issues)rows.push([x.level,x.text]);rows.push([],['Notes']);for(const n of p.notes)rows.push(['Program',typeof n==='string'?n:JSON.stringify(n)]);
@@ -38,8 +50,8 @@ export async function createWorkbook(terms,courses,profile,completed,issues,styl
  const files={
   '[Content_Types].xml':`${start}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`,
   '_rels/.rels':`${start}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
-  'xl/workbook.xml':`${start}<workbook xmlns="${ns}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/><sheet name="Course details" sheetId="2" r:id="rId2"/></sheets></workbook>`,
+  'xl/workbook.xml':`${start}<workbook xmlns="${ns}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/><sheet name="Course details" sheetId="2" r:id="rId2"/></sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`,
   'xl/_rels/workbook.xml.rels':`${start}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
-  'xl/styles.xml':exportStyles,'xl/worksheets/sheet1.xml':planSheet(terms,courses,completed),'xl/worksheets/sheet2.xml':detailsSheet(rows,detailStyle)
+  'xl/styles.xml':exportStyles,'xl/worksheets/sheet1.xml':planSheet(terms,courses,completed,boardStyle),'xl/worksheets/sheet2.xml':detailsSheet(rows,detailStyle)
  };return zip(files);
 }

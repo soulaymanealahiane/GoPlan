@@ -1,3 +1,4 @@
+import {bindSemesterBoard} from './semester-board.js';
 import {changeDegreeChoice,retainManualDirection} from './degree-choice-view.js';
 import {unsupportedOperation} from './agent-capabilities.js';
 function showSignInRecovery(output,error){output.innerHTML='<p class="warning">'+esc(error.message)+'</p>';if(['ACCESS_REQUIRED','SIGN_IN_REQUIRED'].includes(error.code))output.insertAdjacentHTML('beforeend','<a class="button primary" href="/signin.html">Sign in to continue</a>');}
@@ -277,3 +278,5 @@ document.addEventListener('change',e=>{if(e.target.matches('#replan-form select[
 document.addEventListener('input',e=>{
  if(e.target.matches('#replan-form textarea[name="offeredCodes"],#replan-form textarea[name="unavailableCodes"]'))e.target.form.elements.reportOfferings.checked=true;
 });
+
+bindSemesterBoard(document,dashboard);

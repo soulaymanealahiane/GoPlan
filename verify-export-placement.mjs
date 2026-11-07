@@ -13,10 +13,10 @@ assert.equal(JSON.stringify(plan),before,'Export must not mutate the actual road
 assert.equal((main.match(/>Needs placement</g)||[]).length,1);assert.ok(main.includes('Confirm placement &amp; internship eligibility.'));
 const sheetRows=[...main.matchAll(/<row r="(\d+)"[^>]*>(.*?)<\/row>/gs)],pendingSection=sheetRows.find(row=>row[2].includes('>Needs placement<'));
 assert.ok(pendingSection);const pendingRow=Number(pendingSection[1]);
-assert.ok(pendingSection[2].includes('<c r="A'+pendingRow+'" s="11"'));assert.ok(main.includes('ref="A'+pendingRow+':A'+(pendingRow+ids.length)+'"'));
+assert.ok(pendingSection[2].includes('<c r="A'+pendingRow+'"')); assert.ok(main.includes('ref="A'+pendingRow+':A'+(pendingRow+ids.length)+'"'));
 for(const id of ids){const course=plan.courses.find(c=>c.id===id);assert.ok(course);assert.ok(main.includes(course.title));assert.ok(details.includes(course.title));if(course.code)assert.ok(main.includes(course.code));}
-assert.ok(main.lastIndexOf('Needs placement')>main.lastIndexOf('Fall '));assert.ok(main.includes('s="8"'),'Appending Needs placement must preserve the final scheduled semester style.');
-assert.ok(!main.includes('<c r="C'));assert.ok(details.includes('including a Needs placement section'));assert.ok(details.includes('Needs placement'));
+assert.ok(main.lastIndexOf('Needs placement')>main.lastIndexOf('Fall '));assert.ok(main.includes('Semester total'));assert.ok(main.includes('<f>SUM(D'));assert.ok(entries['xl/styles.xml'].includes('FF173E35'));
+assert.ok(main.includes('<c r="C'));assert.ok(main.includes('<c r="D'));assert.ok(main.includes('Course name'));assert.ok(main.includes('Course code')); assert.ok(details.includes('including a Needs placement section'));assert.ok(details.includes('Needs placement'));
 for(const courses of [[],[plan.courses.find(c=>c.id==='int4301')]]){
  const terms=[{id:'pending',season:'Pending',year:0,courses:courses.map(c=>c.id),note:'Only pending & note'}];
  const xml=unzip(Buffer.from(await createWorkbook(terms,courses,plan.profile,[],[],styles,plan)))['xl/worksheets/sheet1.xml'];assert.ok(xml.includes('Needs placement'));assert.ok(xml.includes('Only pending &amp; note'));
