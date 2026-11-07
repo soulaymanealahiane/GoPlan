@@ -1,4 +1,5 @@
 import {degreeChoiceFields,changeDegreeChoice} from './degree-choice-view.js';
+import {findPlanCourses} from './course-finder.js';
 import {degreePolicy,degreeSelectionIssues} from './degree-policy.js';
 import {editRoadmap} from './roadmap-edit.js';
 import {unsupportedOperation} from './agent-capabilities.js';
@@ -273,12 +274,19 @@ export function createDashboardController(h){
  function input(target){if(target.id==='dashboard-catalogue-search')filterCatalogue(target.form);}
  // Reveal after the replacement DOM is laid out. Account for the toolbar's
  // actual height (it wraps on mobile), and retain keyboard focus at the result.
- function revealBoardTerm(termId,{courseId='',key='data-board-move',scroll=true}={}){
+ function revealBoardTerm(termId,{courseId='',key='data-board-move',scroll=true,block=''}={}){
   const planId=current()?.id,doc=globalThis.document;if(!doc||!termId)return;
-  const reveal=()=>{if(r.dashboardPanel!=='semesters'||current()?.id!==planId)return;const section=[...doc.querySelectorAll('[data-board-term]')].find(x=>x.getAttribute('data-board-term')===termId);if(!section)return;const control=courseId?[...section.querySelectorAll('['+key+']')].find(x=>x.getAttribute(key)===courseId):section.querySelector('summary'),anchor=courseId?control?.closest('[data-board-row]'):section;if(!control||!anchor)return;control.focus({preventScroll:true});if(!scroll)return;anchor.style.scrollMarginTop=((doc.querySelector('.semester-board-toolbar')?.getBoundingClientRect().height||0)+16)+'px';anchor.scrollIntoView({block:courseId?'nearest':'start',behavior:doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});};
+  const reveal=()=>{if(r.dashboardPanel!=='semesters'||current()?.id!==planId)return;const section=[...doc.querySelectorAll('[data-board-term]')].find(x=>x.getAttribute('data-board-term')===termId);if(!section)return;const control=courseId?[...section.querySelectorAll('['+key+']')].find(x=>x.getAttribute(key)===courseId):section.querySelector('summary'),anchor=courseId?control?.closest('[data-board-row]'):section;if(!control||!anchor)return;control.focus({preventScroll:true});if(!scroll)return;anchor.style.scrollMarginTop=((doc.querySelector('.semester-board-toolbar')?.getBoundingClientRect().height||0)+16)+'px';anchor.scrollIntoView({block:block||(courseId?'nearest':'start'),behavior:doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});};
   queueMicrotask(()=>doc.defaultView?.requestAnimationFrame?doc.defaultView.requestAnimationFrame(reveal):reveal());
  }
  function focusBoardCourse(id,key='data-board-move'){const termId=current()?.terms.find(t=>t.courses.includes(id))?.id;revealBoardTerm(termId,{courseId:id,key,scroll:key==='data-board-move'});}
+ function searchBoardCourses(query){return findPlanCourses(current(),query);}
+ function revealBoardCourse(id){
+  if(locked||r.busy)return false;const plan=current(),course=plan?.courses.find(c=>c.id===id),term=plan?.terms.find(t=>t.courses.includes(id));
+  if(!course||!term){h.notify('That course is no longer in your plan. Search again.');return false;}
+  r.semesterFilter='all';r.selectedTerm=term.id;r.boardOpen={...r.boardOpen,[term.id]:true};r.boardLastCourse=id;r.dashboardPanel='semesters';display();
+  revealBoardTerm(term.id,{courseId:id,key:'data-board-course',block:'center'});return true;
+ }
  function boardToggle(id,open){r.boardOpen||={};r.boardOpen[id]=open;}
  function moveBoardCourse(id,termId){
   if(!termId)return;
@@ -302,5 +310,5 @@ export function createDashboardController(h){
   if(target.dataset.degreeChoice==='track')profile.track=target.dataset.current;const next=changeDegreeChoice(profile,target.dataset.degreeChoice,target.value,programFor(profile));
   form.querySelector('#dashboard-focus-options').innerHTML=focusOptions(next);form.querySelector('#dashboard-degree-error').textContent='';
  }
- return {click,submit,change,input,boardToggle,moveBoardCourse,loadService,authorizeAdvice,reset(){retry=null;r.manualUndo=null;r.manualWelcome=false;},get busy(){return locked;}};
+ return {click,submit,change,input,boardToggle,moveBoardCourse,searchBoardCourses,revealBoardCourse,loadService,authorizeAdvice,reset(){retry=null;r.manualUndo=null;r.manualWelcome=false;},get busy(){return locked;}};
 }

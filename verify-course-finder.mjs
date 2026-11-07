@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import {findPlanCourses,courseFinder} from './dist/course-finder.js';
+import {newJourney,makePlan,emptyWorkspace} from './dist/guidance.js';
+import {normalizeProfile,coursesFor} from './dist/planner.js';
+import {currentCourse} from './dist/course-details.js';
+import {createDashboardController} from './dist/dashboard-controller.js';
+const j=newJourney();j.profile=normalizeProfile({program:'BSCSC',track:'SE'});const plan=makePlan(j);plan.finalizedAt=new Date().toISOString();
+const programming=plan.courses.find(c=>c.code==='CSC1401'),arabic=plan.courses.find(c=>c.id.endsWith('-arabic')),calculus=plan.courses.find(c=>c.code==='MTH1311');
+for(const term of plan.terms)term.courses=term.courses.filter(id=>id!==arabic.id);const pending=plan.terms.find(t=>t.id==='pending');if(pending)pending.courses.push(arabic.id);else plan.terms.push({id:'pending',season:'Needs placement',courses:[arabic.id]});
+const retake={...programming,id:'programming-retake'},accent={id:'manual-accent',code:'TEST1001',title:'Économie et société',credits:3},accounting={id:'manual-accounting',code:'TEST1002',title:'Accounting Principles',credits:3},unplacedRecord={id:'not-placed',code:'TEST9999',title:'Missing location',credits:3};
+plan.courses.push(retake,accent,accounting,unplacedRecord);plan.terms.push({id:'Spring-2040',season:'Spring',year:2040,courses:[retake.id,accent.id,accounting.id]});plan.tracking[retake.id]={status:'retake'};
+const snapshot=JSON.stringify(plan);
+const fresh=new Map(coursesFor(plan.profile).map(c=>[c.id,c]));for(const c of [programming,accent,{...programming,title:'Outdated title'},{...programming,code:'OTHER9999',title:'Manual title'}])assert.deepEqual(currentCourse(c,plan.profile,fresh),currentCourse(c,plan.profile),'Batched title lookup preserves current academic corrections and manual records');
+assert.equal(findPlanCourses(plan,'CSC 1401').matches[0].courseId,programming.id);
+assert.equal(findPlanCourses(plan,'cSc-140').matches[0].code,'CSC1401');assert.ok(findPlanCourses(plan,'1401').matches.some(c=>c.courseId===programming.id));
+assert.ok(findPlanCourses(plan,'computer progr').matches.some(c=>c.courseId===programming.id));assert.ok(findPlanCourses(plan,'program computer').matches.some(c=>c.courseId===programming.id));
+assert.ok(findPlanCourses(plan,'claculus').matches.some(c=>c.courseId===calculus.id),'A small transposition should find Calculus');assert.ok(findPlanCourses(plan,'progrmming').matches.some(c=>c.courseId===programming.id));
+assert.ok(findPlanCourses(plan,'acount').matches.some(c=>c.courseId===accounting.id),'A typo in a partially typed word should still suggest the course');
+assert.equal(findPlanCourses(plan,'economie societe').matches[0].courseId,accent.id);
+assert.equal(findPlanCourses(plan,'Arabic').matches[0].termId,'pending');
+const attempts=findPlanCourses(plan,'CSC1401').matches;assert.equal(attempts.length,2);assert.equal(attempts[1].status,'retake');assert.notEqual(attempts[0].semester,attempts[1].semester);
+for(const query of ['',null,'  ','no such imaginary course','TEST9999'])assert.equal(findPlanCourses(plan,query).total,0);
+const many=findPlanCourses(plan,'c',{limit:3});assert.ok(many.total>3);assert.equal(many.matches.length,3);assert.equal(JSON.stringify(plan),snapshot,'Searching must not edit the roadmap');
+assert.ok(courseFinder().includes('role="combobox"')&&courseFinder().includes('aria-controls="board-course-matches"'));assert.ok(courseFinder(true).includes('disabled'));
+
+let state={...emptyWorkspace(),phase:'saved',plan,journey:newJourney(plan)},runtime={dashboardPanel:'semesters',semesterFilter:'unplaced',boardOpen:{},service:{saved:true,globalRemaining:0}},writes=0,paid=0,focus=[],scroll=[];
+const previousDocument=globalThis.document,flush=()=>new Promise(resolve=>setImmediate(resolve));
+globalThis.document={defaultView:{matchMedia:()=>({matches:true})},querySelector:()=>({getBoundingClientRect:()=>({height:170})}),querySelectorAll:()=>state.plan.terms.map(term=>({getAttribute:()=>term.id,querySelectorAll:()=>term.courses.map(id=>({getAttribute:()=>id,focus:()=>focus.push(id),closest:()=>({style:{},scrollIntoView:o=>scroll.push({term:term.id,...o})})}))}))};
+const controller=createDashboardController({runtime,read:()=>state,render(){},changed(){writes++;},persist(){writes++;},notify(){},getAdvice(){paid++;assert.fail('Finding a course cannot call AI.');}});
+try{
+ const found=controller.searchBoardCourses('CSC1401').matches[0],old=state.plan.terms.find(t=>t.courses.includes(found.courseId)),destination=state.plan.terms.find(t=>t.id==='Spring-2040');
+ old.courses=old.courses.filter(id=>id!==found.courseId);destination.courses.push(found.courseId);
+ assert.equal(controller.searchBoardCourses('CSC1401').matches.find(c=>c.courseId===found.courseId).termId,destination.id,'Search reflects the latest placement');
+ const before=JSON.stringify(state);assert.equal(controller.revealBoardCourse(found.courseId),true);await flush();
+ assert.equal(runtime.semesterFilter,'all');assert.equal(runtime.boardOpen[destination.id],true);assert.equal(runtime.boardLastCourse,found.courseId);assert.equal(focus.at(-1),found.courseId);assert.equal(scroll.at(-1).term,destination.id);assert.equal(scroll.at(-1).block,'center');assert.equal(scroll.at(-1).behavior,'instant');assert.equal(JSON.stringify(state),before,'Jumping cannot modify saved courses, tracking or decisions');
+ assert.equal(controller.revealBoardCourse(arabic.id),true);await flush();assert.equal(scroll.at(-1).term,'pending');
+ assert.equal(controller.revealBoardCourse('removed-course'),false);runtime.busy=true;assert.equal(controller.revealBoardCourse(found.courseId),false);
+ assert.equal(writes,0);assert.equal(paid,0);assert.equal(runtime.service.globalRemaining,0);
+}finally{if(previousDocument===undefined)delete globalThis.document;else globalThis.document=previousDocument;}
+console.log('Course finder: partial names/codes, spacing/case/accents, small typos, separate retakes, Needs placement, bounded suggestions, latest placement, focused reveal across filters, no plan writes or AI allowance passed.');

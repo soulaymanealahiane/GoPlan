@@ -8,8 +8,8 @@ export function languagePlacementHint(course){
  return '';
 }
 
-export function currentCourse(course,profile){
- const fresh=coursesFor(profile).find(c=>c.id===course.id&&c.code===course.code);
+export function currentCourse(course,profile,currentCourses){
+ const candidate=currentCourses?currentCourses.get(course.id):coursesFor(profile).find(c=>c.id===course.id&&c.code===course.code),fresh=candidate?.code===course.code?candidate:null;
  return correctedCourse(profile,fresh?{...course,title:fresh.title,prerequisiteFor:fresh.prerequisiteFor,rule:fresh.rule,prerequisiteText:fresh.prerequisiteText,ruleSource:fresh.ruleSource,condition:fresh.condition,source:fresh.source}:course);
 }
 export function courseDetailFacts(course,profile){

@@ -15,7 +15,7 @@ controller.change({dataset:{boardStatus:prereq.id},value:'completed'});assert.eq
 assert.ok(!boardTerms(state.plan,'remaining').some(t=>t.id==='prior'));assert.ok(boardTerms(state.plan,'unplaced').every(t=>t.id==='pending'));
 // Execute the actual DOM event binding against a synthetic event target. A drag
 // started outside this board cannot mutate a course, even with a forged payload.
-const events={},classes={add(){},remove(){}};const root={addEventListener:(type,fn)=>events[type]=fn,querySelectorAll:()=>[],querySelector:()=>({classList:classes})};const moves=[];bindSemesterBoard(root,{moveBoardCourse:(...x)=>moves.push(x),boardToggle(){}});
+const events={},classes={add(){},remove(){}};const root={addEventListener:(type,fn)=>events[type]=fn,querySelectorAll:()=>[],querySelector:selector=>selector===".semester-board"?{classList:classes}:null};const moves=[];bindSemesterBoard(root,{moveBoardCourse:(...x)=>moves.push(x),boardToggle(){}});
 const target={dataset:{boardTerm:later.id},classList:classes};events.drop({target:{closest:()=>target},preventDefault(){},dataTransfer:{getData:()=>prereq.id}});assert.equal(moves.length,0);
 events.dragstart({target:{closest:()=>({dataset:{dragCourse:leaf.id},disabled:false})},dataTransfer:{setData(){}}});events.drop({target:{closest:()=>target},preventDefault(){}});assert.deepEqual(moves,[[leaf.id,later.id]]);
 // Pointer capture, movement threshold, cancelled gestures and stable collapsed
