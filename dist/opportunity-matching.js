@@ -2,6 +2,7 @@
 import {programFor,coursesFor} from './planner.js';
 import {weightedPreferences,cleanRankings} from './preferences.js';
 import {selectedMinor} from './minors.js';
+import {detectCompanySpecialisms,companyPreferenceWeights} from './company-specialisms.js';
 const normalize=value=>String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const themes={
  software:['software','programm','coding','comput','informat','digital product','technology'],
@@ -45,24 +46,27 @@ export function opportunityInterests(request){
 }
 export function rankOpportunityTargets(records,request,type,{limit=records.length}={}){
  const interests=opportunityInterests(request),weights=Object.fromEntries(interests.themes.map(t=>[t.theme,t.weight])),seed=JSON.stringify([request.profile?.program,request.profile?.track,request.profile?.secondTrack,request.profile?.minor,request.questionnaire,request.questionnaireRankings,request.refinement]),preference=normalize([request.refinement,...Object.values(request.questionnaire||{})].join(' '));
+ const specialismWeights=type==='internships'?companyPreferenceWeights(request,interests):{};
  const size=type==='internships'?companySizePreference(request):'',startups=size==='startup',preferNovel=request.preferNovel??(!!String(request.refinement||'').trim()&&((request.currentRecommendation?.[type]?.length||request.seenTargetIds?.[type]?.length)>0||/\b(?:new|different|alternative|alternatives|replace|other|more|refresh|broaden)\b/.test(normalize(request.refinement))));
  const prior=Array.isArray(request.currentRecommendation?.[type])?request.currentRecommendation[type]:[],seenIds=new Set([...(request.seenTargetIds?.[type]||[]),...prior.map(record=>record.id)]);
  const seenRecords=[...prior,...records.filter(record=>seenIds.has(record.id))],seenNames=new Set(seenRecords.map(record=>normalize(record.name)).filter(Boolean)),seenInstitutions=new Set(seenRecords.map(record=>normalize(record.institutionId)).filter(Boolean));
  const pool=records.map(record=>{
   const text=[...(record.tags||[]),...(record.fields||[]),...(record.industries||[]),...(record.disciplines||[]),record.reason,record.researchFit,record.academicFit].join(' '),topics=detectOpportunityThemes(text),matched=topics.filter(t=>weights[t]);
   // Broad conglomerates should not win simply because their record lists every field.
-  const score=matched.reduce((sum,t)=>sum+weights[t],0)/Math.sqrt(Math.max(1,topics.length));
+  const specialisms=type==='internships'?detectCompanySpecialisms(text):[],specificMatches=specialisms.filter(key=>specialismWeights[key]);
+  const specificity=specificMatches.reduce((sum,key)=>sum+specialismWeights[key],0)/Math.sqrt(Math.max(1,specialisms.length));
+  const score=matched.reduce((sum,t)=>sum+weights[t],0)/Math.sqrt(Math.max(1,topics.length))+.6*specificity;
   const location=[record.country,...(record.regions||[])].some(place=>{const text=normalize(place);return text&&text!=='morocco'&&preference.includes(text);})?6:0;
   const seen=seenIds.has(record.id)||seenNames.has(normalize(record.name))||type==='exchanges'&&seenInstitutions.has(normalize(record.institutionId));
-  return {record,topics,matched,seen,score:score+location+(startups&&['startup','scaleup'].includes(record.organizationType)||size==='established'&&record.organizationType==='established'?20:0),tie:hash(seed+record.id)};
+  return {record,topics,matched,specificMatches,seen,score:score+location+(startups&&['startup','scaleup'].includes(record.organizationType)||size==='established'&&record.organizationType==='established'?20:0),tie:hash(seed+record.id)};
  }),out=[],countries=new Map(),sectors=new Map();
  while(pool.length&&out.length<limit){
-  const adjusted=item=>item.score-(type==='exchanges'?(countries.get(item.record.country)||0)*2:(sectors.get(item.record.industries?.[0]||item.topics[0])||0)*1.5);
+  const adjusted=item=>item.score-(type==='exchanges'?(countries.get(item.record.country)||0)*2:(sectors.get(item.record.industries?.[0]||item.topics[0])||0)*(item.specificMatches.length ? .4 : 1.5));
   // When fewer than a full shortlist remain unseen, keep those remaining
   // alternatives first, then fill from the supported history. Never let a
   // familiar high score hide the final unexplored choices.
   pool.sort((a,b)=>(preferNovel?Number(a.seen)-Number(b.seen):0)||adjusted(b)-adjusted(a)||a.tie-b.tie||a.record.id.localeCompare(b.record.id));
-  const item=pool.shift(),r=item.record;out.push({...r,matchThemes:item.matched,matchScore:Math.round(item.score*10)/10});countries.set(r.country,(countries.get(r.country)||0)+1);const sector=r.industries?.[0]||item.topics[0];sectors.set(sector,(sectors.get(sector)||0)+1);
+  const item=pool.shift(),r=item.record;out.push({...r,matchThemes:item.matched,...(type==='internships'?{matchSpecialisms:item.specificMatches}:{}),matchScore:Math.round(item.score*10)/10});countries.set(r.country,(countries.get(r.country)||0)+1);const sector=r.industries?.[0]||item.topics[0];sectors.set(sector,(sectors.get(sector)||0)+1);
  }
  return out;
 }

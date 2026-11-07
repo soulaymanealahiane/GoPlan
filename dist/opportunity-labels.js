@@ -32,7 +32,13 @@ const sectors={
  electronics:'Electronics & semiconductors',banking:'Banking & finance',insurance:'Insurance',
  manufacturing:'Manufacturing',saas:'Business software',ai:'AI & robotics',
  cybersecurity:'Cybersecurity & digital trust',data:'Data & analytics',journalism:'News & media',
- food:'Food & beverages',aviation:'Aviation',technology:'Technology & distribution'
+ food:'Food & beverages',aviation:'Aviation',technology:'Technology & distribution',
+ 'energy-water':'Energy & water','construction-materials':'Construction materials',
+ construction:'Construction & infrastructure',metallurgy:'Steel & metals',chemicals:'Chemicals',
+ 'healthcare-pharma':'Healthcare & pharmaceuticals','retail-consumer':'Retail & consumer goods',
+ 'hospitality-tourism':'Hospitality & tourism','market-research':'Market & social research',
+ 'business-services':'Business services','education-services':'Education & language services',
+ 'creative-services':'Creative services',ecommerce:'E-commerce',beauty:'Beauty & consumer goods'
 };
 export function companySector(target){
  const record=reviewed(target,'internships')||target||{};

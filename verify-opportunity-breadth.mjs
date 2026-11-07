@@ -17,7 +17,7 @@ import {createWorkbook} from './dist/export.js';
 import {STAGE_CHANGES,GLOBAL_CHANGES,AI_REQUEST_BUDGET} from './dist/service-policy.js';
 
 const addition=JSON.parse(fs.readFileSync('data/guidance/companies-breadth-v14.json','utf8'));
-assert.equal(addition.internships.length,52);assert.equal(O.internships.length,92);
+assert.equal(addition.internships.length,52);assert.equal(O.internships.length,185);
 assert.deepEqual([STAGE_CHANGES,GLOBAL_CHANGES,AI_REQUEST_BUDGET],[2,5,0.25]);
 for(const t of addition.internships){
  assert.ok(t.moroccoEvidence&&t.fields.length&&t.programs.length&&t.fitIsInference);
@@ -101,4 +101,4 @@ for(const route of ['Bilateral Exchange','PEL','ISEP Exchange'])assert.ok(workbo
 // Live discovery receives the older shown names too, within the same tool budget.
 let searchWire='';await researchFor({profile:j.profile,questionnaire:{ambitions:'Build software products'},refinement:'Focus the companies on software.',currentTargets:{internships:[{name:'Current company'}]},reviewedShownCompanies:[{name:'Company from first shortlist'}]},'targets',{OPENAI_API_KEY:'synthetic-research-only',OPENAI_WEB_RESEARCH:'on'},async(_,init)=>{searchWire=JSON.stringify(JSON.parse(init.body));return Response.json({error:{message:'Synthetic research unavailable'}},{status:503});});
 assert.ok(searchWire.includes('Company from first shortlist'));assert.ok(searchWire.includes('at least three relevant subsectors'));assert.ok(searchWire.includes('"max_tool_calls":4'));
-console.log('Passed 92 distinct sourced companies, 52 new records, unchanged AUI routes, consistent labels in saved/legacy cards and zero-allowance modals, latest size preferences, full discovery history, and 24 synthetic selections covering both ordinary company revisions across all eight degrees: '+JSON.stringify(coverage));
+console.log('Passed 185 distinct sourced companies, with the original 52-record breadth edition retained, unchanged AUI routes, consistent labels in saved/legacy cards and zero-allowance modals, latest size preferences, full discovery history, and 24 synthetic selections covering both ordinary company revisions across all eight degrees: '+JSON.stringify(coverage));

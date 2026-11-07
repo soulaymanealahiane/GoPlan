@@ -80,7 +80,7 @@ function opportunityFilters(type){return `<div class="deck-filters" role="group"
 function semesterDeck(profile,j,plan,runtime){
  if(!plan)return emptyDeck('Your degree roadmap','We’ll organize your full degree into semesters.','dashboard-build','Build my degree roadmap →');
  const saved=runtime.service?.saved||!!plan.finalizedAt;
- const planningNote='<p class="roadmap-planning-note"><strong>Intersessions aren’t included in this roadmap.</strong> As you progress, ask your adviser about courses offered in these short sessions between semesters; eligible courses may shorten your degree timeline.</p>';
+ const planningNote='<p class="roadmap-planning-note"><strong>Intersessions aren’t included in this roadmap.</strong> As you progress, check courses offered in these short sessions between semesters; eligible courses may shorten your degree timeline.</p>';
  return '<div class="deck-heading"><div><h2>Your degree roadmap</h2><p>'+plan.courses.length+' courses · '+creditsOf(plan.courses)+' credits in your plan</p></div><div class="semester-tools">'+button('dashboard-add-term','+ Add semester',true,isBusy(runtime)?'disabled':'')+button('dashboard-pace','Plan settings',false,isBusy(runtime)?'disabled':'')+'</div></div>'+planningNote+(saved?'<details class="manual-language-settings"><summary>Language Center</summary>'+languageCenterControl(profile,runtime)+'</details>':languageCenterControl(profile,runtime))+'<div class="semester-overview-layout">'+semesterBoard(plan,runtime)+degreeCheck(plan)+'</div>';
 }
 function degreeCheck(plan){
