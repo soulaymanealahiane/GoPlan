@@ -193,16 +193,16 @@ export function createDashboardController(h){
    const text=String(data.get('request')||'');if(form.id==='dashboard-modal-command')h.close();await run(()=>command(text));return true;
   }
   if(form.id==='dashboard-add-term-form'){
-   try{const season=String(data.get('season')),year=Number(data.get('year')),id=season+'-'+year,candidate=addManualSemester(current(),{season,year});r.selectedTerm=id;r.boardOpen={...r.boardOpen,[id]:true};r.semesterFilter='all';r.dashboardPanel='semesters';h.close();applyManual(candidate,'Semester added. Add a course when ready.');}catch(e){form.querySelector('#dashboard-add-term-error').textContent=e.message;}return true;
+   try{const season=String(data.get('season')),year=Number(data.get('year')),id=season+'-'+year,candidate=addManualSemester(current(),{season,year});r.selectedTerm=id;r.boardOpen={...r.boardOpen,[id]:true};r.semesterFilter='all';r.dashboardPanel='semesters';h.close();applyManual(candidate,'Semester added. Add a course when ready.');revealBoardTerm(id);}catch(e){form.querySelector('#dashboard-add-term-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-add-course-form'){
-   try{const selected=String(data.get('course')||'');if(!selected)throw Error('Choose a course from the list.');const before=current(),change={courseCode:selected,termId:form.dataset.term,anotherAttempt:data.get('anotherAttempt')==='on'},candidate=addManualCourse(before,change);r.selectedTerm=form.dataset.term;r.boardOpen={...r.boardOpen,[form.dataset.term]:true};h.close();applyManual(candidate,manualChangeMessage(before,candidate,change));}catch(e){form.querySelector('#dashboard-add-course-error').textContent=e.message;}return true;
+   try{const selected=String(data.get('course')||'');if(!selected)throw Error('Choose a course from the list.');const before=current(),change={courseCode:selected,termId:form.dataset.term,anotherAttempt:data.get('anotherAttempt')==='on'},candidate=addManualCourse(before,change),added=candidate.courses.find(c=>!before.courses.some(x=>x.id===c.id))||candidate.courses.find(c=>c.code===selected);r.selectedTerm=form.dataset.term;r.boardOpen={...r.boardOpen,[form.dataset.term]:true};r.semesterFilter='all';r.boardLastCourse=added?.id;h.close();applyManual(candidate,manualChangeMessage(before,candidate,change));if(added)focusBoardCourse(added.id);else revealBoardTerm(form.dataset.term);}catch(e){form.querySelector('#dashboard-add-course-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-term-note-form'){
-   try{const candidate=noteManualSemester(current(),form.dataset.term,String(data.get('note')||''));h.close();applyManual(candidate,'Semester note saved.');}catch(e){form.querySelector('#dashboard-term-note-error').textContent=e.message;}return true;
+   try{const candidate=noteManualSemester(current(),form.dataset.term,String(data.get('note')||''));r.boardOpen={...r.boardOpen,[form.dataset.term]:true};h.close();applyManual(candidate,'Semester note saved.');revealBoardTerm(form.dataset.term);}catch(e){form.querySelector('#dashboard-term-note-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-course-form') {
-   try{const p=current(),change={id:form.dataset.courseId,courseCode:String(data.get('course')||''),termId:String(data.get('term')||''),status:String(data.get('status')||'planned')},result=manualCoursePlan(p,change);if(r.dashboardPanel==='semesters'&&data.get('term'))r.selectedTerm=String(data.get('term'));h.close();applyManual(result.candidate,manualChangeMessage(p,result.candidate,change));}catch(e){form.querySelector('#dashboard-course-error').textContent=e.message;}return true;
+   try{const p=current(),change={id:form.dataset.courseId,courseCode:String(data.get('course')||''),termId:String(data.get('term')||''),status:String(data.get('status')||'planned')},result=manualCoursePlan(p,change);if(r.dashboardPanel==='semesters'&&change.termId){r.selectedTerm=change.termId;r.boardOpen={...r.boardOpen,[change.termId]:true};r.semesterFilter='all';r.boardLastCourse=change.id;}h.close();applyManual(result.candidate,manualChangeMessage(p,result.candidate,change));if(r.dashboardPanel==='semesters')focusBoardCourse(change.id);}catch(e){form.querySelector('#dashboard-course-error').textContent=e.message;}return true;
   }
   if(form.id==='dashboard-degree-form'){
    try{const p=current(),old=p?.profile||state().journey.profile,raw={...old,program:String(data.get('program')),track:String(data.get('track')||''),secondTrack:String(data.get('secondTrack')||''),minor:String(data.get('minor')||''),choices:String(data.get('program'))===old.program?old.choices:{},selectionNotices:[]};const issues=degreeSelectionIssues(raw);if(issues.length)throw Error(issues.join(' '));const profile=normalizeProfile(raw);
@@ -247,9 +247,9 @@ export function createDashboardController(h){
   else if(a==='dashboard-course-group'){r.courseGroup=b.dataset.group;display();}
   else if(a==='dashboard-target-group'){r.targetGroup=b.dataset.group;display();}
   else if(a==='dashboard-expand-terms'||a==='dashboard-collapse-terms'){r.boardOpen=Object.fromEntries(current().terms.map(t=>[t.id,a==='dashboard-expand-terms']));display();}
-  else if(a==='dashboard-current-terms'){const plan=current(),first=plan.terms.find(t=>!['prior','pending'].includes(t.id)&&t.courses.some(id=>plan.tracking?.[id]?.status!=='completed'))?.id;r.semesterFilter='all';r.boardOpen=Object.fromEntries(plan.terms.map(t=>[t.id,t.id==='pending'||t.id===first||t.courses.some(id=>plan.tracking?.[id]?.status==='in-progress')]));display();}
-  else if(a==='dashboard-term'){r.selectedTerm=b.dataset.term;r.boardOpen={...r.boardOpen,[b.dataset.term]:true};display();}
-  else if(a==='dashboard-course-semester'){r.selectedTerm=b.dataset.term;r.boardOpen={...r.boardOpen,[b.dataset.term]:true};h.close();panel('semesters');}
+  else if(a==='dashboard-current-terms'){const plan=current(),taking=plan.terms.find(t=>t.courses.some(id=>plan.tracking?.[id]?.status==='in-progress'))?.id,first=plan.terms.find(t=>!['prior','pending'].includes(t.id)&&t.courses.some(id=>plan.tracking?.[id]?.status!=='completed'))?.id,destination=plan.terms.find(t=>t.id==='pending')?.id||taking||first||plan.terms.find(t=>t.id!=='prior')?.id;r.semesterFilter='all';r.selectedTerm=destination;r.boardOpen=Object.fromEntries(plan.terms.map(t=>[t.id,t.id==='pending'||t.id===first||t.id===destination||t.courses.some(id=>plan.tracking?.[id]?.status==='in-progress')]));display();revealBoardTerm(destination);}
+  else if(a==='dashboard-term'){r.selectedTerm=b.dataset.term;r.semesterFilter='all';r.boardOpen={...r.boardOpen,[b.dataset.term]:true};display();revealBoardTerm(b.dataset.term);}
+  else if(a==='dashboard-course-semester'){r.selectedTerm=b.dataset.term;r.semesterFilter='all';r.boardOpen={...r.boardOpen,[b.dataset.term]:true};h.close();panel('semesters');revealBoardTerm(b.dataset.term);}
   else if(a==='dashboard-course')course(b.dataset.courseId);
   else if(a==='dashboard-add-term')addTerm();
   else if(a==='dashboard-add-course')addCourse(b.dataset.term);
@@ -271,19 +271,26 @@ export function createDashboardController(h){
   return true;
  }
  function input(target){if(target.id==='dashboard-catalogue-search')filterCatalogue(target.form);}
- function focusBoardCourse(id,key='data-board-move'){queueMicrotask(()=>{const el=[...(globalThis.document?.querySelectorAll('['+key+']')||[])].find(x=>x.getAttribute(key)===id);el?.focus({preventScroll:true});if(key==='data-board-move')el?.closest('[data-board-row]')?.scrollIntoView({block:'nearest'});});}
+ // Reveal after the replacement DOM is laid out. Account for the toolbar's
+ // actual height (it wraps on mobile), and retain keyboard focus at the result.
+ function revealBoardTerm(termId,{courseId='',key='data-board-move',scroll=true}={}){
+  const planId=current()?.id,doc=globalThis.document;if(!doc||!termId)return;
+  const reveal=()=>{if(r.dashboardPanel!=='semesters'||current()?.id!==planId)return;const section=[...doc.querySelectorAll('[data-board-term]')].find(x=>x.getAttribute('data-board-term')===termId);if(!section)return;const control=courseId?[...section.querySelectorAll('['+key+']')].find(x=>x.getAttribute(key)===courseId):section.querySelector('summary'),anchor=courseId?control?.closest('[data-board-row]'):section;if(!control||!anchor)return;control.focus({preventScroll:true});if(!scroll)return;anchor.style.scrollMarginTop=((doc.querySelector('.semester-board-toolbar')?.getBoundingClientRect().height||0)+16)+'px';anchor.scrollIntoView({block:courseId?'nearest':'start',behavior:doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});};
+  queueMicrotask(()=>doc.defaultView?.requestAnimationFrame?doc.defaultView.requestAnimationFrame(reveal):reveal());
+ }
+ function focusBoardCourse(id,key='data-board-move'){const termId=current()?.terms.find(t=>t.courses.includes(id))?.id;revealBoardTerm(termId,{courseId:id,key,scroll:key==='data-board-move'});}
  function boardToggle(id,open){r.boardOpen||={};r.boardOpen[id]=open;}
  function moveBoardCourse(id,termId){
   if(!termId)return;
   if(locked||r.busy){h.notify('Wait for the current update to finish.');return;}
   const before=current(),from=before?.terms.find(t=>t.courses.includes(id));if(!before||from?.id===termId)return;
-  try{if(!before.terms.some(t=>t.id===termId)||termId==='prior')throw Error('Choose a semester in your plan.');const candidate=manualCoursePlan(before,{id,termId}).candidate;r.boardOpen={...r.boardOpen,[from?.id]:true,[termId]:true};r.boardLastCourse=id;r.boardError='';r.boardNotice=(before.courses.find(c=>c.id===id)?.code||'Course')+' moved to '+label(before.terms.find(t=>t.id===termId))+'.';applyManual(candidate,r.boardNotice);focusBoardCourse(id);}catch(e){r.boardError=e.message;r.boardNotice='';h.notify(e.message,'error');display();}
+  try{if(!before.terms.some(t=>t.id===termId)||termId==='prior')throw Error('Choose a semester in your plan.');const candidate=manualCoursePlan(before,{id,termId}).candidate;r.semesterFilter='all';r.boardOpen={...r.boardOpen,[from?.id]:true,[termId]:true};r.boardLastCourse=id;r.boardError='';r.boardNotice=(before.courses.find(c=>c.id===id)?.code||'Course')+' moved to '+label(before.terms.find(t=>t.id===termId))+'.';applyManual(candidate,r.boardNotice);focusBoardCourse(id);}catch(e){r.boardError=e.message;r.boardNotice='';h.notify(e.message,'error');display();}
  }
  function change(target){
   if(locked||r.busy)return;
   if(target.dataset.boardMove){moveBoardCourse(target.dataset.boardMove,target.value);return;}
   if(target.dataset.boardStatus){try{const candidate=manualCoursePlan(current(),{id:target.dataset.boardStatus,status:target.value}).candidate;r.boardError='';r.boardLastCourse=target.dataset.boardStatus;applyManual(candidate,'Progress updated.');focusBoardCourse(target.dataset.boardStatus,'data-board-status');}catch(e){r.boardError=e.message;h.notify(e.message,'error');display();}return;}
-  if(target.hasAttribute?.('data-board-filter')){r.semesterFilter=target.value;display();return;}
+  if(target.hasAttribute?.('data-board-filter')){r.semesterFilter=target.value;if(target.value==='unplaced')r.boardOpen={...r.boardOpen,pending:true};display();if(target.value==='unplaced')revealBoardTerm('pending');return;}
   if(target.id==='dashboard-catalogue-scope'){filterCatalogue(target.form);return;}
   if(target.id==='dashboard-degree'){
    const old=current()?.profile||state().journey.profile,p=normalizeProfile({...old,program:target.value,track:'',minor:'',secondTrack:'',choices:{},selectionNotices:[]});
