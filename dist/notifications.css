@@ -2,10 +2,12 @@
 :is([role="alert"],.field-error,.offer-error,[data-toast-error],[data-notification-source]):not(#goplan-notification):not([data-notification-container]){display:none!important}
 [data-notification-container]{background:none!important;border:0!important;padding:0!important}
 #goplan-notification[hidden]{display:none!important}
-#goplan-notification{position:fixed;inset:auto 0 max(18px,env(safe-area-inset-bottom)) 0;margin:0 auto;width:max-content;max-width:min(620px,calc(100vw - 32px));max-height:45vh;overflow:auto;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px;border:1px solid #3b6959;border-radius:14px;padding:16px 18px;background:#173e35;color:#fff;box-shadow:0 12px 40px #0b281d33;font:500 14px/1.5 'Segoe UI',Arial,sans-serif;z-index:2147483647;animation:notification-in .18s ease-out;text-align:left;overflow-wrap:anywhere}
+#goplan-notification{position:fixed;inset:auto 0 max(18px,env(safe-area-inset-bottom)) 0;margin:0 auto;width:max-content;max-width:min(620px,calc(100vw - 32px));max-height:45vh;overflow:auto;box-sizing:border-box;display:flex;align-items:flex-start;gap:16px;border:1px solid #3b6959;border-radius:14px;padding:16px 18px;background:#173e35;color:#fff;box-shadow:0 12px 40px #0b281d33;font:500 14px/1.5 'Segoe UI',Arial,sans-serif;z-index:2147483647;animation:notification-in var(--notification-motion-duration,220ms) ease-out;text-align:left;overflow-wrap:anywhere}
+#goplan-notification.notification-exiting{animation:notification-out var(--notification-motion-duration,220ms) ease-in forwards;pointer-events:none}
 #goplan-notification[data-kind="error"]{background:#64352f;border-color:#8c5146}
 #goplan-notification .notification-text{white-space:pre-line;flex:1;min-width:0}
 #goplan-notification .notification-close{border:0;background:transparent;color:inherit;font:24px/1 'Segoe UI',Arial,sans-serif;padding:0;min-width:26px;min-height:26px;cursor:pointer;border-radius:4px;flex:none}
 #goplan-notification .notification-close:focus-visible{outline:2px solid #fff;outline-offset:3px}
 @keyframes notification-in{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
-@media(prefers-reduced-motion:reduce){#goplan-notification{animation:none}}
+@keyframes notification-out{from{opacity:1;translate:0 0}to{opacity:0;translate:0 12px}}
+@media(prefers-reduced-motion:reduce){#goplan-notification,#goplan-notification.notification-exiting{animation:none}}

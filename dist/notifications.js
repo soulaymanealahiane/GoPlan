@@ -1,6 +1,18 @@
 // One viewport-level notification surface, shared by public, account and admin pages.
 // Inline validation remains available to application logic but is presented here.
 export const NOTIFICATION_DURATION=6000;
+export const NOTIFICATION_EXIT_DURATION=220;
+// Keep the toast mounted through its exit, and invalidate completion callbacks
+// when a newer message arrives. The fallback also handles cancelled animations.
+export function notificationExit(hide,animate,clock=globalThis){
+ let pending=null,cleanup=null,version=0;
+ const cancel=()=>{version++;if(pending!==null)clock.clearTimeout(pending);pending=null;cleanup?.();cleanup=null;};
+ return {cancel,start(reducedMotion=false){
+  cancel();if(reducedMotion){hide();return;}const current=version;
+  const finish=()=>{if(current!==version)return;cancel();hide();};
+  cleanup=animate(finish);pending=clock.setTimeout(finish,NOTIFICATION_EXIT_DURATION+80);
+ }};
+}
 export function notificationTimer(show,hide,clock=globalThis){
  let timer=null,current='';
  const cancel=()=>{if(timer!==null)clock.clearTimeout(timer);timer=null;};
@@ -16,12 +28,19 @@ export function installNotifications(doc){
  const win=doc.defaultView;if(!win||doc.getElementById('goplan-notification'))return;
  const box=doc.createElement('div');box.id='goplan-notification';box.className='goplan-notification';box.hidden=true;box.setAttribute('popover','manual');box.setAttribute('role','status');box.setAttribute('aria-live','polite');box.setAttribute('aria-atomic','true');
  const text=doc.createElement('span'),close=doc.createElement('button');text.className='notification-text';close.type='button';close.className='notification-close';close.setAttribute('aria-label','Dismiss notification');close.textContent='×';box.append(text,close);doc.body.append(box);
+ box.style.setProperty('--notification-motion-duration',NOTIFICATION_EXIT_DURATION+'ms');
+ const exit=notificationExit(()=>{box.classList.remove('notification-visible');box.hidden=true;try{box.hidePopover?.();}catch{}text.textContent='';},finish=>{
+  const ended=event=>{if(event.target===box&&event.animationName==='notification-out')finish();};
+  box.addEventListener('animationend',ended);box.classList.add('notification-exiting');
+  return ()=>{box.removeEventListener('animationend',ended);box.classList.remove('notification-exiting');};
+ },win);
  const timer=notificationTimer((message,kind)=>{
+  exit.cancel();
   const host=[...doc.querySelectorAll('dialog[open]')].at(-1)||doc.body;
   if(box.parentElement!==host){try{box.hidePopover?.();}catch{}host.append(box);}
   box.hidden=false;box.dataset.kind=kind;box.setAttribute('role',kind==='error'?'alert':'status');box.setAttribute('aria-live',kind==='error'?'assertive':'polite');text.textContent=message;
   try{box.showPopover?.();}catch{}box.classList.add('notification-visible');
- },()=>{box.classList.remove('notification-visible');box.hidden=true;try{box.hidePopover?.();}catch{}text.textContent='';},win);
+ },()=>exit.start(box.hidden||!!win.matchMedia?.('(prefers-reduced-motion: reduce)').matches),win);
  center=timer;if(pending){timer.push(pending.message,pending.kind);pending=null;}close.addEventListener('click',timer.dismiss);box.addEventListener('pointerenter',timer.pause);box.addEventListener('pointerleave',timer.resume);box.addEventListener('focusin',timer.pause);box.addEventListener('focusout',timer.resume);
  // Preserve retry/sign-in buttons when an existing error container also owns actions.
  function sources(node,force){
