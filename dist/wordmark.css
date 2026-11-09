@@ -1,0 +1,9 @@
+/* One cover-derived wordmark across public, planning, account and owner views. */
+.goplan-wordmark{display:block;max-width:100%;height:auto;flex:none}
+a.brand{display:inline-flex;align-items:center;line-height:1;background:transparent;padding:0;text-decoration:none}
+a.brand .goplan-wordmark{width:118px;height:auto}
+.logo .goplan-wordmark{width:150px;height:auto}
+.account-welcome a.brand .goplan-wordmark,.login a.brand .goplan-wordmark{width:132px}
+.sidebar a.brand .goplan-wordmark{width:132px}
+a.brand-back{gap:10px;margin-bottom:20px}
+a.brand-back .goplan-wordmark{width:110px}
