@@ -247,6 +247,7 @@ export function createDashboardController(h){
   else if(a==='dashboard-change')ask();
   else if(a==='dashboard-course-group'){r.courseGroup=b.dataset.group;display();}
   else if(a==='dashboard-target-group'){r.targetGroup=b.dataset.group;display();}
+  else if(a==='dashboard-toggle-degree-check'){r.degreeCheckCollapsed=!r.degreeCheckCollapsed;display();globalThis.document?.querySelector('[data-action="dashboard-toggle-degree-check"]')?.focus({preventScroll:true});}
   else if(a==='dashboard-expand-terms'||a==='dashboard-collapse-terms'){r.boardOpen=Object.fromEntries(current().terms.map(t=>[t.id,a==='dashboard-expand-terms']));display();}
   else if(a==='dashboard-current-terms'){const plan=current(),taking=plan.terms.find(t=>t.courses.some(id=>plan.tracking?.[id]?.status==='in-progress'))?.id,first=plan.terms.find(t=>!['prior','pending'].includes(t.id)&&t.courses.some(id=>plan.tracking?.[id]?.status!=='completed'))?.id,destination=plan.terms.find(t=>t.id==='pending')?.id||taking||first||plan.terms.find(t=>t.id!=='prior')?.id;r.semesterFilter='all';r.selectedTerm=destination;r.boardOpen=Object.fromEntries(plan.terms.map(t=>[t.id,t.id==='pending'||t.id===first||t.id===destination||t.courses.some(id=>plan.tracking?.[id]?.status==='in-progress')]));display();revealBoardTerm(destination);}
   else if(a==='dashboard-term'){r.selectedTerm=b.dataset.term;r.semesterFilter='all';r.boardOpen={...r.boardOpen,[b.dataset.term]:true};display();revealBoardTerm(b.dataset.term);}

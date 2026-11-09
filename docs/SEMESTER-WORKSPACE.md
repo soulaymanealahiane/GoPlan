@@ -2,6 +2,8 @@
 
 The Degree roadmap page shows the whole saved roadmap in one stack. Open semesters independently, expand or collapse all, or show remaining study and Needs placement. Semester headers retain the course count, credits and passed count while closed.
 
+Degree check starts expanded and has a keyboard-accessible Collapse/Expand button. Its display choice stays in place across roadmap edits and panel navigation during the current page session. A short note explains that the checker may lack context about school-level or individual prerequisite waivers and special-topic arrangements, and that students can collapse recommendations that do not fit their situation. Collapsing changes only the panel display; it does not change course data, warnings or validation rules.
+
 - Drag a course's handle onto an open or closed semester. The destination highlights without changing the layout; a successful move opens both semesters and focuses the moved row.
 - The visible **Move to** menu provides the same action for keyboard and touch users. Progress can be updated directly in each row; selecting a course name opens the full editor.
 - Add courses and notes inside a semester. Remove courses from their row, and remove a semester once empty. Manual changes have one-step undo; a later edit invalidates the previous undo rather than overwriting newer work.

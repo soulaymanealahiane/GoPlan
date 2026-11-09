@@ -39,3 +39,6 @@ body{background:var(--dash-paper)}.main-shell{max-width:1240px;margin:auto}.topb
 .board-finder-popup[data-above="true"]{top:auto;bottom:calc(100% + 5px)}
 
 .board-course-location{display:block;width:fit-content;margin-top:5px;padding:2px 7px;border-radius:12px;background:#eaf4ed;color:#315c48;font-size:10px;font-weight:600;line-height:1.5}
+
+/* The context-limited check can be put away while editing the roadmap. */
+.degree-check-header{display:flex;align-items:center;justify-content:space-between;gap:8px}.degree-check-header .dashboard-kicker{margin:0}.degree-check-toggle{flex:none;min-height:32px;padding:6px 8px;border:1px solid #cad9cf;border-radius:8px;background:#fff;color:#31583e;font:inherit;font-size:11px;line-height:1.3;cursor:pointer}.degree-check-toggle:hover{background:#edf4ef}.degree-check-toggle:focus-visible{outline:3px solid #8fc5a5;outline-offset:3px}.degree-check-body[hidden]{display:none}.degree-check-body>p{color:#6a7c65;font-size:12px;line-height:1.6;margin:0 0 16px}.degree-check-body>.degree-check-context{color:#617369;font-size:11px;line-height:1.6;margin:0 0 14px}@media(max-width:760px){.degree-check-toggle{min-height:36px}}
