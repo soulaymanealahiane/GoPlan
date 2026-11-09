@@ -1,6 +1,6 @@
 import {opportunityLabel} from './opportunity-labels.js';
 import {zip} from './xlsx-zip.js';
-import {programFor,label} from './planner.js';
+import {programFor,label,termOrder} from './planner.js';
 import {degreePolicy} from './degree-policy.js';
 const xml=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'');
 const cell=(ref,value,style=0)=>typeof value==='number'?`<c r="${ref}" s="${style}"><v>${value}</v></c>`:`<c r="${ref}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${xml(value)}</t></is></c>`;
@@ -8,18 +8,18 @@ const start='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const ns='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 function overviewStyles(base){
  const font=Number(base.match(/<fonts count="(\d+)"/)[1]),fill=Number(base.match(/<fills count="(\d+)"/)[1]),first=Number(base.match(/<cellXfs count="(\d+)"/)[1]);
- let xml=base.replace(`<fonts count="${font}"`,`<fonts count="${font+2}"`).replace('</fonts>','<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF173E35"/><name val="Calibri"/></font></fonts>');
+ let xml=base.replace(`<fonts count="${font}"`,`<fonts count="${font+3}"`).replace('</fonts>','<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FF173E35"/><name val="Calibri"/></font><font><sz val="9"/><color rgb="FF567064"/><name val="Calibri"/></font></fonts>');
  xml=xml.replace(`<fills count="${fill}"`,`<fills count="${fill+2}"`).replace('</fills>','<fill><patternFill patternType="solid"><fgColor rgb="FF173E35"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEAF3EE"/><bgColor indexed="64"/></patternFill></fill></fills>');
  const xf=(fontId,fillId,align='left')=>`<xf numFmtId="0" fontId="${fontId}" fillId="${fillId}" borderId="0" xfId="0" applyAlignment="1" applyFill="1" applyFont="1"><alignment horizontal="${align}" vertical="top" wrapText="1"/></xf>`;
- const extra=[xf(font,fill),xf(font+1,fill+1),xf(0,0),xf(0,0,'right'),xf(font+1,fill+1,'right')];
+ const extra=[xf(font,fill),xf(font+1,fill+1),xf(0,0),xf(0,0,'right'),xf(font+1,fill+1,'right'),xf(font+2,0),xf(font+2,0,'right')];
  xml=xml.replace(`<cellXfs count="${first}"`,`<cellXfs count="${first+extra.length}"`).replace('</cellXfs>',extra.join('')+'</cellXfs>');
- return {xml,header:first,term:first+1,body:first+2,credit:first+3,total:first+4};
+ return {xml,header:first,term:first+1,body:first+2,credit:first+3,total:first+4,cumulative:first+5,cumulativeCredit:first+6};
 }
-function planSheet(terms,courses,completed,style){
- terms=[...terms.filter(t=>t.id!=='pending'),...terms.filter(t=>t.id==='pending'&&(t.courses.length||t.note))];
- const map=new Map(courses.map(c=>[c.id,c])),rows=[],merges=['A1:D1','A2:D2'];let row=4;
+function planSheet(terms,courses,completed,style,degreeCredits){
+ terms=[...terms.filter(t=>t.id==='prior'),...terms.filter(t=>t.id!=='pending'&&t.id!=='prior').sort((a,b)=>termOrder(a)-termOrder(b)),...terms.filter(t=>t.id==='pending'&&(t.courses.length||t.note))];
+ const map=new Map(courses.map(c=>[c.id,c])),rows=[],merges=['A1:D1','A2:D2'],required=degreeCredits.min===degreeCredits.max?degreeCredits.min:`${degreeCredits.min}–${degreeCredits.max}`;let row=4,cumulative=0,previousCumulativeRow;
  rows.push('<row r="1" ht="30" customHeight="1">'+cell('A1','GoPlan · Your degree plan',style.header)+'</row>');
- rows.push('<row r="2" ht="22" customHeight="1">'+cell('A2','All semesters, including notes and requirements that still need placement.',style.body)+'</row>');
+ rows.push('<row r="2" ht="22" customHeight="1">'+cell('A2','Cumulative totals include prior study and planned semesters, excluding Needs placement.',style.body)+'</row>');
  rows.push('<row r="3" ht="24" customHeight="1">'+['Semester','Course name','Course code','Credits'].map((v,i)=>cell(String.fromCharCode(65+i)+'3',v,style.header)).join('')+'</row>');
  for(const t of terms){
   const list=t.courses.map(id=>map.get(id)).filter(Boolean),first=row,total=list.reduce((n,c)=>n+c.credits,0),count=Math.max(1,list.length);
@@ -30,7 +30,14 @@ function planSheet(terms,courses,completed,style){
   const lastCourse=row-1;
   if(t.note){rows.push(`<row r="${row}" ht="${Math.min(409,Math.max(30,t.note.split('\n').length*16,Math.ceil(t.note.length/75)*16))}" customHeight="1" outlineLevel="1">${cell('A'+row,'',style.term)}${cell('B'+row,'Note: '+t.note,style.body)}</row>`);merges.push('B'+row+':C'+row);row++;}
   if(row-first>1)merges.push('A'+first+':A'+(row-1));
+  const totalRow=row;
   rows.push(`<row r="${row}" ht="24" customHeight="1">${cell('A'+row,'',style.term)}${cell('B'+row,'Semester total',style.term)}${cell('C'+row,list.length+' courses',style.term)}<c r="D${row}" s="${style.total}"><f>SUM(D${first}:D${lastCourse})</f><v>${total}</v></c></row>`);row++;
+  if(t.id!=='pending'){
+   cumulative+=total;
+   const formula=previousCumulativeRow?`SUM(D${previousCumulativeRow},D${totalRow})`:`D${totalRow}`;
+   rows.push(`<row r="${row}" ht="20" customHeight="1">${cell('B'+row,'Cumulative planned credits',style.cumulative)}${cell('C'+row,required+' required',style.cumulative)}<c r="D${row}" s="${style.cumulativeCredit}"><f>${formula}</f><v>${cumulative}</v></c></row>`);
+   previousCumulativeRow=row++;
+  }
   rows.push('<row r="'+row+'" ht="9" customHeight="1"></row>');row++;
  }
  if(!terms.length){rows.push('<row r="4">'+cell('A4','Your plan',style.term)+cell('B4','No semesters yet',style.body)+'</row>');row=5;}
@@ -52,6 +59,6 @@ export async function createWorkbook(terms,courses,profile,completed,issues,styl
   '_rels/.rels':`${start}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
   'xl/workbook.xml':`${start}<workbook xmlns="${ns}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/><sheet name="Course details" sheetId="2" r:id="rId2"/></sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>`,
   'xl/_rels/workbook.xml.rels':`${start}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
-  'xl/styles.xml':exportStyles,'xl/worksheets/sheet1.xml':planSheet(terms,courses,completed,boardStyle),'xl/worksheets/sheet2.xml':detailsSheet(rows,detailStyle)
+  'xl/styles.xml':exportStyles,'xl/worksheets/sheet1.xml':planSheet(terms,courses,completed,boardStyle,p.degreeCredits),'xl/worksheets/sheet2.xml':detailsSheet(rows,detailStyle)
  };return zip(files);
 }
