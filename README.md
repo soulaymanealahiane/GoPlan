@@ -6,6 +6,10 @@ GoPlan helps students turn their interests into an editable degree plan: academi
 
 [Public website](https://planwithgoplan.com) · [AUI demo](https://planwithgoplan.com/demo) · [Architecture](docs/ARCHITECTURE.md) · [Development](CONTRIBUTING.md) · [Security](SECURITY.md)
 
+## Course team
+
+CSC 3324: Soulaymane Alahiane, Amr Kabelma and Haytam Zidani.
+
 ## Application features
 
 - Separate website (`/`) and AUI planner (`/demo`) routes with shared styles and SVG branding.
@@ -61,7 +65,17 @@ pnpm test
 pnpm build
 ```
 
-Tests cover degree/minor combinations, prerequisite ordering, independent course loads, AI schema validation, progress preservation, feedback consent, account isolation, CSRF checks, session revocation and sync conflicts. The 44-script suite includes 28 integrated roadmap resilience groups, 96 opportunity-selection checks and 22 post-AI workspace groups (765 catalogue/requirement selections and 40 validated HTTP saves). Provider calls are fixtures, not live model evaluations. See [verification](docs/MVP-VALIDATION.md). No unmeasured accuracy or performance claim is implied.
+Tests cover degree/minor combinations, prerequisite ordering, independent course loads, AI schema validation, progress preservation, feedback consent, account isolation, CSRF checks, session revocation and sync conflicts. The 69-script suite includes 28 integrated roadmap resilience groups, 96 opportunity-selection checks and 22 post-AI workspace groups (765 catalogue/requirement selections and 40 validated HTTP saves). Provider calls are fixtures, not live model evaluations. See [verification](docs/MVP-VALIDATION.md). No unmeasured accuracy or performance claim is implied.
+
+## Focused unit test
+
+Run one deterministic calculation test without dependencies, accounts, API keys or network access:
+
+```sh
+node verify-university-offer.mjs
+```
+
+Or run `npm run test:unit`. The test calls `calculateOffer` in `dist/university-offer.js` and checks expected package estimates, scaling, rounding and rejected inputs. These are financial-model calculations, not measured provider costs or AI accuracy. See [course testing notes](docs/COURSE_TESTING.md) for the app walkthrough and the distinction between unit tests, integration fixtures and live AI evaluation.
 
 ## Repository map
 

@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "dashboard": "node scripts/admin-console.mjs",
     "analytics": "node scripts/analytics.mjs",
+    "test:unit": "node verify-university-offer.mjs",
     "test:mvp": "node scripts/verify-mvp-live.mjs --stress",
     "test:mvp:live": "node scripts/verify-mvp-live.mjs --live",
     "test:electives": "node verify-elective-prerequisites.mjs"
