@@ -22,7 +22,7 @@ export function calculateOffer(values){
  const sol=solCalls*(10000*2+2000*10)/1000000;
  const luna=lunaCalls*(10000*0.1+2000*0.5)/1000000+inputs.roadmaps*2*4*0.01;
  const api=jev+sol+luna,buffered=api*(1+OFFER_BUFFER),total=buffered*(1+OFFER_MARKUP);
- return {inputs,guidedEditsPerRoadmap:guided,backendRequestsPerRoadmap:requests,apiCost:api,bufferedApiCost:buffered,price:Math.round((total+Number.EPSILON)*100)/100,buffer:OFFER_BUFFER,markup:OFFER_MARKUP};
+ return {inputs,guidedEditsPerRoadmap:guided,backendRequestsPerRoadmap:requests,apiCost:api,providerCosts:{jev,sol,luna},calls:{jev:jevCalls,sol:solCalls,luna:lunaCalls},bufferedApiCost:buffered,price:Math.round((total+Number.EPSILON)*100)/100,buffer:OFFER_BUFFER,markup:OFFER_MARKUP};
 }
 export const offerPrice=value=>'US$'+value.toFixed(2);
 export function offerSummary(offer){
