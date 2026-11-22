@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {build} from 'esbuild';
 const root=path.resolve(import.meta.dirname,'..'),dist=path.join(root,'dist');
-const publicFiles=fs.readdirSync(dist,{withFileTypes:true}).filter(e=>e.isFile()&&/\.(html|js|css|svg|json|xml|png|jpg|mp4|vtt)$/.test(e.name));
-const mime={jpg:'image/jpeg',mp4:'video/mp4',vtt:'text/vtt; charset=utf-8',png:'image/png',html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',json:'application/json',xml:'application/xml',svg:'image/svg+xml',apk:'application/vnd.android.package-archive'};
+const publicFiles=fs.readdirSync(dist,{withFileTypes:true}).filter(e=>e.isFile()&&/\.(html|js|css|svg|json|xml|png|jpg|webp|mp4|vtt)$/.test(e.name));
+const mime={jpg:'image/jpeg',webp:'image/webp',mp4:'video/mp4',vtt:'text/vtt; charset=utf-8',png:'image/png',html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',json:'application/json',xml:'application/xml',svg:'image/svg+xml',apk:'application/vnd.android.package-archive'};
 // Self-contained Worker output works without provider-specific asset bindings.
 const assets=Object.fromEntries(publicFiles.map(f=>['/'+f.name,{mime:mime[f.name.split('.').at(-1)],base64:fs.readFileSync(path.join(dist,f.name)).toString('base64')}]));
 for(const f of ['index.html','admin.js','admin.css','pilots.js','traction.js'])assets['/admin/'+f]={mime:mime[f.split('.').at(-1)],base64:fs.readFileSync(path.join(root,'admin',f)).toString('base64')};
