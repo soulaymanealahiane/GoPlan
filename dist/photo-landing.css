@@ -93,8 +93,9 @@ body.photo-landing { --paper:#f5f8f5; --ink:#173e35; --muted:#586b61; background
 }
 @media(max-width:740px) {
  /* One continuous opening: campus scene, soft fade, then the headline. */
- .photo-landing .nav { min-height:76px; }
- .photo-landing .nav-links { top:76px; }
+ .photo-landing .nav { min-height:64px; }
+ .photo-landing .logo img { width:116px; }
+ .photo-landing .nav-links { top:64px; }
  .photo-landing .photo-hero { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:clamp(350px,100vw,490px) auto; min-height:0; align-items:stretch; }
  .photo-hero-layout { position:relative; z-index:1; grid-column:1; grid-row:2; margin-top:-20px; padding-top:0; padding-bottom:32px; }
  .photo-hero-copy { width:100%; max-width:none; }
