@@ -97,8 +97,9 @@ export function installNotifications(doc){
  },true);
  doc.addEventListener('input',event=>{const field=event.target;if(field.hasAttribute?.('data-notification-invalid')&&field.validity?.valid){field.removeAttribute('aria-invalid');field.removeAttribute('data-notification-invalid');}});
  doc.addEventListener('close',event=>{if(event.target.contains?.(box))timer.dismiss();},true);
- win.addEventListener('error',event=>{if(event.error)timer.push('Something could not be completed. Please try again.','error');});
- win.addEventListener('unhandledrejection',()=>timer.push('Something could not be completed. Please try again.','error'));
+ // Only explicit application messages and validation describe failed actions.
+ // Background/third-party exceptions keep their native browser diagnostics;
+ // turning every runtime error into "try again" interrupts ordinary browsing.
  return {notify:timer.push,dismiss:timer.dismiss,disconnect:()=>observer.disconnect()};
 }
 if(typeof document!=='undefined'){
