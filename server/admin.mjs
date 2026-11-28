@@ -1,3 +1,4 @@
+import {listDemoProblems} from './demo-problems.mjs';
 import {rosterSummary,replaceRoster,appendRoster} from './university-access.mjs';
 import {ownerIdentity,privateHeaders} from './admin-auth.mjs';
 import {isAnalyticsAdmin,analyticsSnapshot} from './analytics.mjs';
@@ -14,6 +15,11 @@ export async function adminEndpoint(request,env,options={}){
  if(!owner&&!service)return json({error:'Owner sign-in required.',code:'OWNER_REQUIRED'},401);
  if(!['/api/admin/analytics','/api/admin/export'].includes(url.pathname)&&!owner&&(!env.FEEDBACK_REVIEW_KEY||request.headers.get('Authorization')!=='Bearer '+env.FEEDBACK_REVIEW_KEY))return json({error:'Owner access required.'},403);
  try{
+  if(url.pathname==='/api/admin/demo-problems'){
+   if(!owner)return json({error:'Owner sign-in required.'},403);
+   if(request.method!=='GET')return json({error:'Use GET.'},405);
+   return json(await listDemoProblems(env.DB,url.searchParams.get('before')));
+  }
   if(['/api/admin/website-analytics','/api/admin/website-export'].includes(url.pathname)){
    if(!owner)return json({error:'Owner sign-in required.'},403);
    if(request.method!=='GET')return json({error:'Use GET.'},405);

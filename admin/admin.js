@@ -1,6 +1,7 @@
 import {refreshPilots} from './pilots.js';
 import {refreshTraction} from './traction.js';
 const $=id=>document.getElementById(id),fmt=n=>Number(n||0).toLocaleString(),names={setup:'Starting point',direction:'Direction',courses:'Courses',targets:'Companies & exchanges',pace:'Degree roadmap',replan:'Course changes',change:'Plan updates',question:'Adviser questions',plan_saved:'Plans saved',plan_updated:'Plan updates accepted',targets_updated:'Destinations updated',excel_requested:'Excel downloads requested'};
+let problemCursor = null, problemLoad = 0;
 let snapshot,refreshVersion=0,currentTab='overview',students=[],studentsTotal=0,studentsLoaded=false,testResetStudent=null,testResetRequest='';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const local=location.hostname==='127.0.0.1'||location.hostname==='localhost';
@@ -26,9 +27,35 @@ function render(){if(!snapshot)return;const rows=filtered(),t={operations:0,succ
  $('status').textContent=(snapshot.enabled?'Updated ':'Measurement disabled · Updated ')+new Date(snapshot.generatedAt).toLocaleString();$('export').disabled=false;$('export-json').disabled=false;
 }
 function eventRow(label,value){const n=el('div',undefined,'event');n.append(el('span',label),el('strong',value));return n;}
-async function refresh(){const version=++refreshVersion;$('refresh').disabled=true;$('error').hidden=true;try{if(currentTab==='traction'){await refreshTraction($('period').value);return;}if(currentTab==='pilots'){await refreshPilots();return;}if(currentTab==='students'){await loadStudents();return;}const data=await api('analytics?days='+$('period').value);if(version!==refreshVersion)return;snapshot=data;render();}catch(e){if(version!==refreshVersion)return;if($('error').hidden){$('error').textContent=e.message;$('error').hidden=false;}$('status').textContent=snapshot?'Showing the last successful snapshot; these numbers are not fresh.':'No data loaded.';}finally{if(version===refreshVersion)$('refresh').disabled=false;}}
-const titles={traction:'Website traction',pilots:'University access',students:'Students',overview:'Overview',reliability:'Adviser health',data:'Data & exports'};
-function showTab(tab){if(!titles[tab])return;currentTab=tab;document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='view-'+tab);document.querySelectorAll('nav [data-tab]').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false'));$('section-label').textContent='GOPLAN';$('page-title').textContent=titles[tab];const measured=['overview','traction','reliability','data'].includes(tab);$('period-control').hidden=!measured;$('status').hidden=!measured||tab==='traction';if(tab==='traction')refresh();if(tab==='students'&&!studentsLoaded)loadStudents();if(tab==='pilots')refreshPilots();}
+async function loadProblems(older = false) {
+ const version = ++problemLoad;
+ const status = $('problem-list-status'), list = $('problem-list'), more = $('older-problems');
+ const path = older ? 'demo-problems?before=' + problemCursor : 'demo-problems';
+ more.disabled = true;
+ status.textContent = 'Loading reports…';
+ try {
+  const {reports, nextBefore} = await api(path);
+  if (version !== problemLoad) return;
+  if (!older) list.replaceChildren();
+  for (const report of reports) {
+   const article = el('article', undefined, 'demo-problem');
+   article.append(el('h3', report.email), el('small', new Date(report.createdAt).toLocaleString()), el('p', report.message));
+   list.append(article);
+  }
+  problemCursor = nextBefore;
+  more.hidden = !nextBefore;
+  status.textContent = list.children.length ? 'Newest reports first.' : 'No problems reported yet.';
+ } catch (error) {
+  if (version !== problemLoad) return;
+  status.textContent = error.message;
+ } finally {
+  if (version === problemLoad) more.disabled = false;
+ }
+}
+$('older-problems').onclick = () => loadProblems(true);
+async function refresh(){const version=++refreshVersion;$('refresh').disabled=true;$('error').hidden=true;try{if(currentTab==='problems'){await loadProblems();return;}if(currentTab==='traction'){await refreshTraction($('period').value);return;}if(currentTab==='pilots'){await refreshPilots();return;}if(currentTab==='students'){await loadStudents();return;}const data=await api('analytics?days='+$('period').value);if(version!==refreshVersion)return;snapshot=data;render();}catch(e){if(version!==refreshVersion)return;if($('error').hidden){$('error').textContent=e.message;$('error').hidden=false;}$('status').textContent=snapshot?'Showing the last successful snapshot; these numbers are not fresh.':'No data loaded.';}finally{if(version===refreshVersion)$('refresh').disabled=false;}}
+const titles={problems:'Demo reports',traction:'Website traction',pilots:'University access',students:'Students',overview:'Overview',reliability:'Adviser health',data:'Data & exports'};
+function showTab(tab){if(!titles[tab])return;currentTab=tab;document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='view-'+tab);document.querySelectorAll('nav [data-tab]').forEach(b=>b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false'));$('section-label').textContent='GOPLAN';$('page-title').textContent=titles[tab];const measured=['overview','traction','reliability','data'].includes(tab);$('period-control').hidden=!measured;$('status').hidden=!measured||tab==='traction';if(tab==='traction'||tab==='problems')refresh();if(tab==='students'&&!studentsLoaded)loadStudents();if(tab==='pilots')refreshPilots();}
 function download(type){if(!snapshot)return;const a=el('a');a.href='/api/admin/export?days='+snapshot.days+'&channel='+encodeURIComponent($('channel').value)+'&format='+type;a.download='GoPlan-usage.'+type;document.body.append(a);a.click();a.remove();}
 $('export').onclick=()=>download('csv');$('export-json').onclick=()=>download('json');$('refresh').onclick=refresh;$('period').onchange=refresh;$('channel').onchange=render;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));refresh();
 

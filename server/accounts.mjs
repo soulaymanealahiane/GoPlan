@@ -77,13 +77,14 @@ export async function accountEndpoint(request,env){
   }
   if(url.pathname==='/api/account/export'&&request.method==='GET'){
    const plans=(await db.prepare('SELECT id,title,state,revision,updated_at FROM student_workspaces WHERE user_id=? ORDER BY updated_at DESC').bind(uid).all()).results.map(p=>({...p,state:JSON.parse(p.state)}));
-   return new Response(JSON.stringify({profile:profile(row),workspaces:plans,serviceAllowance:allowanceView(await serviceEntitlement(db,uid)),exportedAt:new Date(now).toISOString()},null,2),{headers:{...privateHeaders,'Content-Type':'application/json','Content-Disposition':'attachment; filename="GoPlan-account.json"'}});
+   const {results:problemReports}=await db.prepare('SELECT message,created_at AS createdAt FROM demo_problem_reports WHERE user_id=? ORDER BY id DESC').bind(uid).all();
+   return new Response(JSON.stringify({profile:profile(row),workspaces:plans,problemReports,serviceAllowance:allowanceView(await serviceEntitlement(db,uid)),exportedAt:new Date(now).toISOString()},null,2),{headers:{...privateHeaders,'Content-Type':'application/json','Content-Disposition':'attachment; filename="GoPlan-account.json"'}});
   }
   if(url.pathname==='/api/account'&&request.method==='DELETE'){
    const data=await body(request);if(data.confirm!=='DELETE MY GOPLAN DATA')fail('Confirm account deletion.');
    await purgeTestArchives(db,uid);
    await serviceEntitlement(db,uid);await db.prepare('DELETE FROM service_calls WHERE owner=?').bind(await serviceOwner(uid)).run();
-   await db.batch([db.prepare('DELETE FROM student_workspaces WHERE user_id=?').bind(uid),db.prepare('DELETE FROM student_profiles WHERE id=?').bind(uid),db.prepare('DELETE FROM auth_sessions WHERE user_id=?').bind(uid)]);return json({deleted:true});
+   await db.batch([db.prepare('DELETE FROM demo_problem_reports WHERE user_id=?').bind(uid),db.prepare('DELETE FROM student_workspaces WHERE user_id=?').bind(uid),db.prepare('DELETE FROM student_profiles WHERE id=?').bind(uid),db.prepare('DELETE FROM auth_sessions WHERE user_id=?').bind(uid)]);return json({deleted:true});
   }
   return json({error:'Unsupported account request.'},405);
  }catch(e){return json({error:e.status?e.message:'Account storage is temporarily unavailable. Keep your device copy and retry.'},e.status||503);}

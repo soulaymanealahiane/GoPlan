@@ -1,4 +1,4 @@
-import {sqliteTable,text,integer,index,primaryKey} from 'drizzle-orm/sqlite-core';
+import {sqliteTable,text,integer,index,uniqueIndex,primaryKey} from 'drizzle-orm/sqlite-core';
 
 export const studentProfiles=sqliteTable('student_profiles',{
  id:text('id').primaryKey(),email:text('email').notNull(),firstName:text('first_name').notNull(),lastName:text('last_name').notNull(),
@@ -24,6 +24,18 @@ export const websiteViews=sqliteTable('website_views',{
  navTalk:integer('nav_talk').notNull().default(0),heroTalk:integer('hero_talk').notNull().default(0),campusTalk:integer('campus_talk').notNull().default(0),universityTalk:integer('university_talk').notNull().default(0),packageTalk:integer('package_talk').notNull().default(0),closingTalk:integer('closing_talk').notNull().default(0),footerContact:integer('footer_contact').notNull().default(0),formStart:integer('form_start').notNull().default(0),demoClick:integer('demo_click').notNull().default(0),emailClick:integer('email_click').notNull().default(0),packageChange:integer('package_change').notNull().default(0),
 },t=>[index('website_views_started_idx').on(t.startedAt),index('website_views_visitor_idx').on(t.visitorId,t.startedAt),index('website_views_visit_idx').on(t.visitId)]);
 export const websiteConversions=sqliteTable('website_conversions',{id:text('id').primaryKey(),viewId:text('view_id').notNull(),visitId:text('visit_id').notNull(),createdAt:integer('created_at').notNull()},t=>[index('website_conversions_created_idx').on(t.createdAt),index('website_conversions_visit_idx').on(t.visitId)]);
+
+export const demoProblemReports = sqliteTable('demo_problem_reports', {
+ id: integer('id').primaryKey({autoIncrement: true}),
+ userId: text('user_id').notNull(),
+ requestId: text('request_id').notNull(),
+ email: text('email').notNull(),
+ message: text('message').notNull(),
+ createdAt: integer('created_at').notNull(),
+}, t => [
+ uniqueIndex('demo_problem_request_idx').on(t.userId, t.requestId),
+ index('demo_problem_rate_idx').on(t.userId, t.createdAt),
+]);
 
 export const feedbackReports=sqliteTable('feedback_reports',{
  id:text('id').primaryKey(),receiptHash:text('receipt_hash').notNull(),payloadHash:text('payload_hash').notNull(),
